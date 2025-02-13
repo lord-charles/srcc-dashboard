@@ -4,10 +4,13 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/dashboard",
+        destination: "/analytics",
         permanent: false,
       },
     ];
+  },
+  images: {
+    domains: ['i0.wp.com'], // Add the external image domain
   },
 };
 

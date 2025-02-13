@@ -10,7 +10,6 @@ import { statuses } from "../data/data";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Download, PlusCircle } from "lucide-react";
-import Link from "next/link";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -25,14 +24,14 @@ export function DataTableToolbar<TData>({
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
-          placeholder="Filter by names | email| phone | position | department | role..."
+          placeholder="Filter by project name, client, project manager..."
           value={
             (table.getColumn("combinedSearch")?.getFilterValue() as string) ?? ""
           }
           onChange={(event) =>
             table.getColumn("combinedSearch")?.setFilterValue(event.target.value)
           }
-          className="h-8 w-[150px] lg:w-[500px]"
+          className="h-8 w-[150px] lg:w-[450px]"
         />
         {table.getColumn("status") && (
           <DataTableFacetedFilter

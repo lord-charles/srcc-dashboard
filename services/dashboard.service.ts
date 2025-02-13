@@ -14,10 +14,7 @@ import { startOfMonth, endOfMonth } from "date-fns";
 
 export async function handleUnauthorized() {
   "use server";
-  // const cookieStore = cookies();
-  // (await cookieStore).delete("token");
-  // (await cookieStore).delete("next-auth.session-token");
-  redirect("/login");
+  redirect("/unauthorized");
 }
 
 
@@ -27,7 +24,7 @@ const getAxiosConfig = async () => {
   const token = cookieStore.get("token");
 
 
-  
+
   return {
     headers: {
       Authorization: token ? `Bearer ${token.value}` : "",

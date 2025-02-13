@@ -1,0 +1,14 @@
+{
+    "typescript.tsserver.maxTsServerMemory": 4096,
+    "typescript.disableAutomaticTypeAcquisition": true,
+    "files.watcherExclude": {
+        "**/node_modules/**": true,
+        "**/.git/**": true,
+        "**/dist/**": true
+    },
+    "emmet.preferences": {},
+    "emmet.includeLanguages": {
+        "javascript": "javascriptreact"
+    },
+    "emmet.useInlineCompletions": true
+}

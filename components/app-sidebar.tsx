@@ -35,7 +35,7 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/analytics",
       icon: "LayoutDashboard",
     },
     {
@@ -64,7 +64,7 @@ const data = {
         },
         {
           title: "New Contract",
-          url: "/contracts/new",
+          url: "/contract/new",
         }
       ],
     },
@@ -74,7 +74,7 @@ const data = {
       icon: "DollarSign",
       items: [
         {
-          title: "Budget Overview",
+          title: "Budget",
           url: "/budget",
         },
         
@@ -97,7 +97,7 @@ const data = {
     },
     {
       title: "Users",
-      url: "#",
+      url: "/users",
       icon: "Users",
     },
     {

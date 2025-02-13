@@ -1,44 +1,45 @@
 import DashboardProvider from "@/app/dashboard-provider";
-import EmployeeDetailsPage from "@/components/employee/employee-details";
 import { Header } from "@/components/header";
-import { getEmployeeById } from "@/services/employees.service";
+import ProjectDetails from "@/components/projects/project-details";
+import { getProjectById } from "@/services/projects-service";
 import React from "react";
 
 
 
+
 async function Page({ params }) {
-  // const employeeId = params.employee;
+  const projectId = params.project;
 
   try {
-    // const employee = await getEmployeeById(employeeId); // Fetch employee details
+    const project = await getProjectById(projectId);
 
-    // if (!employee) {
-    //   return (
-    //     <DashboardProvider>
-    //       <Header />
-    //       <div className="flex items-center justify-center h-screen">
-    //         <p className="text-xl text-gray-600">
-    //           Employee not found or has incomplete details
-    //         </p>
-    //       </div>
-    //     </DashboardProvider>
-    //   );
-    // }
+    if (!project) {
+      return (
+        <DashboardProvider>
+          <Header />
+          <div className="flex items-center justify-center h-screen">
+            <p className="text-xl text-gray-600">
+              Project not found or has incomplete details
+            </p>
+          </div>
+        </DashboardProvider>
+      );
+    }
 
     return (
       <DashboardProvider>
         <Header />
-        {/* <EmployeeDetailsPage employee={employee} /> */}
+        <ProjectDetails project={project} />
       </DashboardProvider>
     );
   } catch (error) {
-    // Handle any potential errors from the fetch operation
+    console.error("Failed to fetch project details:", error);
     return (
       <DashboardProvider>
         <Header />
         <div className="flex items-center justify-center h-screen">
           <p className="text-xl text-red-600">
-            Something went wrong while fetching the employee details.
+            Something went wrong while fetching the project details.
           </p>
         </div>
       </DashboardProvider>

@@ -32,8 +32,12 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
-, "app/employees/[employee]/update/page.jsx", "app/employees/[employee]/page.jsx", "app/settings/page.jsx"  ],
+    ".next/types/**/*.ts",
+    "app/employees/[employee]/update/page.jsx",
+    "app/employees/[employee]/page.jsx",
+    "app/settings/page.jsx",
+    "app/projects/[project]/page.jsx"
+  ],
   "exclude": [
     "node_modules"
   ]

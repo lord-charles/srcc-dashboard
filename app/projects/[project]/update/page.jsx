@@ -1,13 +1,9 @@
 import DashboardProvider from "@/app/dashboard-provider";
-import { UpdateEmployeeComponent } from "@/components/employee/update-employee";
 import { Header } from "@/components/header";
 import { getEmployeeById } from "@/services/employees.service";
 import React from "react";
 
-
-
 async function Page({ params }) {
-  // Wait for params to be fully resolved
   const resolvedParams = await params;
   const employeeId = resolvedParams.employee;
 
@@ -40,7 +36,7 @@ async function Page({ params }) {
   return (
     <DashboardProvider>
       <Header />
-      <UpdateEmployeeComponent employee={employee} />
+      <UpdateProjectComponent project={employee} />
     </DashboardProvider>
   );
 }

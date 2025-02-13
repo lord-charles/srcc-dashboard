@@ -30,10 +30,10 @@ import { columns } from "./components/columns";
 import { Project } from "@/types/project";
 
 interface DataTableProps {
-  projects: Project[];
+  projects: any
 }
 
-export default function ProjectTable({ projects }: DataTableProps) {
+export default function ProjectTable({ projects }: any) {
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);

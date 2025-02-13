@@ -63,7 +63,7 @@ export const columns: ColumnDef<Project>[] = [
         <div className="flex flex-col">
           <span className="font-medium">{row.getValue("name")}</span>
           <span className="text-sm text-muted-foreground">
-            {row.original.description}
+            {row.original.description.split(" ").slice(0, 6).join(" ")}
           </span>
         </div>
       );
@@ -79,7 +79,7 @@ export const columns: ColumnDef<Project>[] = [
         <div className="flex flex-col">
           <span className="font-medium">{row.getValue("client")}</span>
           <span className="text-sm text-muted-foreground">
-            {row.original.projectManager}
+            {row.original.client}
           </span>
         </div>
       );
@@ -174,14 +174,14 @@ export const columns: ColumnDef<Project>[] = [
         <div className="flex flex-col">
           <span>{months} months</span>
           <span className="text-sm text-muted-foreground">
-            {formatDate(row.original.contractStartDate)} - {formatDate(row.original.contractEndDate)}
+            {formatDate(start.toISOString())} - {formatDate(end.toISOString())}
           </span>
         </div>
       );
     },
   },
   {
-    id: "actions",
+    accessorKey: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ];

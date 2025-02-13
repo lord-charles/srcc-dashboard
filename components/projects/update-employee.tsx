@@ -22,7 +22,6 @@ import {
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Header } from "../header";
 import * as z from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -100,13 +99,13 @@ const employeeSchema = z
 
 type EmployeeFormData = z.infer<typeof employeeSchema>;
 
-export function UpdateEmployeeComponent({ employee }: any) {
+export function UpdateProjectComponent({ project }: any) {
   const { toast } = useToast();
 
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<
     "bank" | "mpesa" | "cash" | "wallet"
-  >(employee?.paymentMethod || "mpesa");
+  >(project?.paymentMethod || "mpesa");
 
   const {
     register,
@@ -117,30 +116,30 @@ export function UpdateEmployeeComponent({ employee }: any) {
   } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
-      firstName: employee?.firstName || "",
-      lastName: employee?.lastName || "",
-      email: employee?.email || "",
-      phoneNumber: employee?.phoneNumber || "",
-      nationalId: employee?.nationalId || "",
-      dateOfBirth: employee?.dateOfBirth
-        ? new Date(employee.dateOfBirth)
+      firstName: project?.firstName || "",
+      lastName: project?.lastName || "",
+      email: project?.email || "",
+      phoneNumber: project?.phoneNumber || "",
+      nationalId: project?.nationalId || "",
+      dateOfBirth: project?.dateOfBirth
+        ? new Date(project.dateOfBirth)
         : undefined,
-      department: employee?.department || "",
-      position: employee?.position || "",
-      employmentType: employee?.employmentType || "full-time",
-      baseSalary: employee?.baseSalary || 0,
-      employmentStartDate: employee?.employmentStartDate
-        ? new Date(employee.employmentStartDate)
+      department: project?.department || "",
+      position: project?.position || "",
+      employmentType: project?.employmentType || "full-time",
+      baseSalary: project?.baseSalary || 0,
+      employmentStartDate: project?.employmentStartDate
+        ? new Date(project.employmentStartDate)
         : new Date(),
-      employmentEndDate: employee?.employmentEndDate
-        ? new Date(employee.employmentEndDate)
+      employmentEndDate: project?.employmentEndDate
+        ? new Date(project.employmentEndDate)
         : undefined,
-      paymentMethod: employee?.paymentMethod || "mpesa",
-      bankDetails: employee?.bankDetails || undefined,
-      mpesaDetails: employee?.mpesaDetails || undefined,
-      emergencyContact: employee?.emergencyContact || undefined,
-      status: employee?.status || "active",
-      roles: employee?.roles || ["employee"],
+      paymentMethod: project?.paymentMethod || "mpesa",
+      bankDetails: project?.bankDetails || undefined,
+      mpesaDetails: project?.mpesaDetails || undefined,
+      emergencyContact: project?.emergencyContact || undefined,
+      status: project?.status || "active",
+      roles: project?.roles || ["employee"],
     },
     mode: "onChange",
   });
@@ -153,7 +152,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
       });
 
       // Update instead of register
-      await updateEmployee(employee._id, data as CreateEmployeeDto);
+      await updateEmployee(project._id, data as CreateEmployeeDto);
 
       // Show success toast
       toast({
@@ -163,7 +162,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
 
       // Redirect after a short delay to ensure toast is visible
       setTimeout(() => {
-        router.push("/employees");
+        router.push("/project");
       }, 4500);
     } catch (error) {
       toast({
