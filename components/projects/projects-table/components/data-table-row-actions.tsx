@@ -34,7 +34,7 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
-  const employee = row.original as any;
+  const project = row.original as any;
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -43,7 +43,7 @@ export function DataTableRowActions<TData>({
     if (isDeleting) return;
     try {
       setIsDeleting(true);
-      await deleteProject(employee._id);
+      await deleteProject(project._id);
       toast({
         title: "Success",
         description: "Project deleted successfully",
@@ -75,15 +75,21 @@ export function DataTableRowActions<TData>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[160px]">
-          <Link href={`/projects/${employee._id}`}>
+          <Link href={`/projects/${project._id}`}>
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </Link>
-          <Link href={`/projects/${employee._id}/update`}>
+          <Link href={`/budget/new?projectId=${project._id}`}>
+            <DropdownMenuItem>Add Budget</DropdownMenuItem>
+          </Link>
+          <Link href={`/contract/new?projectId=${project._id}`}>
+            <DropdownMenuItem>Add Contract</DropdownMenuItem>
+          </Link>
+          <Link href={`/projects/${project._id}/update`}>
             <DropdownMenuItem>Edit project</DropdownMenuItem>
           </Link>
 
           <DropdownMenuSeparator />
-          
+
           <DialogTrigger asChild>
             <DropdownMenuItem className="text-red-600">
               Delete Project

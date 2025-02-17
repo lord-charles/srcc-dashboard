@@ -15,6 +15,10 @@ import { useForm, Controller, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useToast } from "@/hooks/use-toast"
 import { createBudget } from "@/services/budget.service"
+import { useSearchParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { getProjectById } from "@/services/projects-service"
+import { Project } from "@/types/project"
 
 // Define the validation schema
 const budgetSchema = z.object({
@@ -44,6 +48,11 @@ type BudgetFormData = z.infer<typeof budgetSchema>
 export default function BudgetForm() {
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [project, setProject] = useState<Project | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const projectId = searchParams.get("projectId")
 
   const {
     register,
@@ -51,6 +60,7 @@ export default function BudgetForm() {
     control,
     formState: { errors, isSubmitting },
     watch,
+    setValue,
   } = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
     defaultValues: {
@@ -65,25 +75,64 @@ export default function BudgetForm() {
     name: "budgetItems",
   })
 
+  // Fetch project data
+  useEffect(() => {
+    async function fetchProjectData() {
+      if (!projectId) {
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        const projectData = await getProjectById(projectId)
+        setProject(projectData)
+
+      } catch (error) {
+        console.error("Error fetching project:", error)
+        toast({
+          title: "Error",
+          description: "Failed to fetch project details",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProjectData()
+  }, [projectId, toast])
+
+  useEffect(() => {
+    if (project) {
+      // Pre-populate form with project data
+      setValue("projectName", project.name)
+      setValue("projectValue", project.totalProjectValue)
+      setValue("currency", project.currency as "KES" | "USD" | "EUR" | "GBP")
+      setValue("budgetStartDate", new Date(project.contractStartDate))
+      setValue("budgetEndDate", new Date(project.contractEndDate))
+      setValue("status", "active")
+    }
+  }, [project, setValue])
+
   const onSubmit = async (data: BudgetFormData) => {
     try {
       const result = await createBudget({
         ...data,
         budgetStartDate: data.budgetStartDate.toISOString(),
         budgetEndDate: data.budgetEndDate.toISOString(),
-        projectId: "65be1234c52d3e001234abce", // You might want to get this from context or props
+        projectId: projectId || "65be1234c52d3e001234abce", // You might want to get this from context or props
         budgetOwner: "65be1234c52d3e001234abcf", // You might want to get this from auth context
       });
 
       if (!result) {
         throw new Error("Failed to create budget");
       }
-      
+
       toast({
         title: "Success",
         description: "Budget created successfully",
       });
-      
+
       router.push("/budget");
     } catch (error: any) {
       console.error("Budget creation error:", error);

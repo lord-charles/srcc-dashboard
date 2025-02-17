@@ -15,44 +15,68 @@ export interface EmergencyContact {
   alternativePhoneNumber?: string;
 }
 
-export type PaymentMethod = "bank" | "mpesa" | "cash" | "wallet";
-export type UserStatus = "active" | "inactive" | "suspended" | "terminated";
-export type EmploymentType = "full-time" | "part-time" | "contract" | "intern";
-export type UserRole = "employee" | "admin" | "hr" | "finance";
+export interface Skill {
+  name: string;
+  yearsOfExperience: string | number;
+  proficiencyLevel: "beginner" | "intermediate" | "advanced" | "expert";
+}
+
+export interface Education {
+  institution: string;
+  qualification: string;
+  yearOfCompletion: string;
+}
+
+export interface Certification {
+  name: string;
+  issuingOrganization: string;
+  certificationId: string;
+}
+
+export interface AcademicCertificate {
+  documentUrl: string;
+}
+
+export type UserStatus = "active" | "pending" | "rejected" | "suspended";
+export type UserRole = "consultant" | "admin" | "hr" | "finance";
+export type Availability = "available" | "unavailable" | "busy";
 
 export interface User {
-  id: string;
   _id: string;
   firstName: string;
   lastName: string;
+  middleName?: string;
   email: string;
   phoneNumber: string;
+  alternativePhoneNumber?: string;
   nationalId: string;
-  walletBalance: number;
-  totalAdvances: number;
-  totalLoans: number;
+  kraPinNumber?: string;
+  nhifNumber?: string;
+  nssfNumber?: string;
   status: UserStatus;
-  dateOfBirth?: Date;
-  bankDetails?: BankDetails;
-  mpesaDetails?: MpesaDetails;
-  paymentMethod?: PaymentMethod;
+  dateOfBirth?: string | Date;
+  physicalAddress?: string;
+  postalAddress?: string;
+  county?: string;
+  skills?: Skill[];
+  education?: Education[];
+  certifications?: Certification[];
+  cvUrl?: string;
+  academicCertificates?: AcademicCertificate[];
+  yearsOfExperience: number;
+  hourlyRate: number;
+  availability: Availability;
+  preferredWorkTypes?: string[];
   roles: UserRole[];
-  employeeId?: string;
   department: string;
-  position: string;
-  baseSalary: number;
-  employmentStartDate: Date;
-  employmentEndDate?: Date;
-  employmentType: EmploymentType;
   nhifDeduction?: number;
   nssfDeduction?: number;
   emergencyContact?: EmergencyContact;
-  advances?: string[];
-  loans?: string[];
-  mpesaTransactions?: string[];
-  walletTransactions?: string[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  bankDetails?: BankDetails;
+  mpesaDetails?: MpesaDetails;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  employeeId: string;
 }
 
 export interface PaginatedUsers {

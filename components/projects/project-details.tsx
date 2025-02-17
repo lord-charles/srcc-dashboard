@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { format } from "date-fns"
+import { format, isValid, parseISO } from "date-fns"
 import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -69,12 +69,16 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "Not specified";
+
     try {
-      return format(new Date(dateString), "MMM d, yyyy")
+      const date = parseISO(dateString);
+      if (!isValid(date)) return "Invalid date";
+      return format(date, "MMM d, yyyy");
     } catch (error) {
-      console.error("Invalid date format:", error)
-      return "Invalid date"
+      console.error("Error formatting date:", error);
+      return "Invalid date";
     }
   }
 
@@ -149,14 +153,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                 <span className='font-bold text-lg'>Project Manager</span>
                 <div className="flex items-center gap-2">
                   <div className="bg-blue-100 text-blue-700 rounded-full h-6 w-6 flex items-center justify-center font-semibold text-xs">
-                    {projectData.createdBy.firstName[0]}
-                    {projectData.createdBy.lastName[0]}
+                    {projectData.createdBy?.firstName[0] || "N/A"}
+                    {projectData.createdBy?.lastName[0] || "N/A"}
                   </div>
                   <div className="flex flex-col">
                     <span className="text-gray-700 dark:text-gray-300">
-                      {projectData.createdBy.firstName} {projectData.createdBy.lastName}
+                      {projectData.createdBy?.firstName} {projectData.createdBy?.lastName}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{projectData.createdBy.email}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{projectData.createdBy?.email}</span>
                   </div>
                 </div>
               </div>
@@ -320,14 +324,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                           className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded-full h-10 w-10 flex items-center justify-center font-semibold"
                           aria-hidden="true"
                         >
-                          {member.userId.firstName[0]}
-                          {member.userId.lastName[0]}
+                          {member.userId?.firstName[0] || "N/A"}
+                          {member.userId?.lastName[0] || "N/A"}
                         </div>
                         <div className="space-y-1">
                           <h3 className="font-medium text-gray-800 dark:text-gray-200">
-                            {member.userId.firstName} {member.userId.lastName}
+                            {member.userId?.firstName || "N/A"} {member.userId?.lastName || "N/A"}
                           </h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{member.userId.email}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">{member.userId?.email || "N/A"}</p>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {member.responsibilities.map((responsibility, idx) => (
                               <Badge
@@ -335,14 +339,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                                 variant="outline"
                                 className="text-xs py-0 text-gray-500 dark:text-gray-400"
                               >
-                                {responsibility}
+                                {responsibility || "N/A"}
                               </Badge>
                             ))}
                           </div>
                           <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                             <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
-                              <span>Start: {formatDate(member.startDate)}</span>
+                              <span>Start: {formatDate(member.startDate) || "N/A"}</span>
                             </div>
                             <div className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
@@ -464,10 +468,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
                     </div>
                     <div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Last assessment: {formatDate(projectData.riskAssessment.lastAssessmentDate)}
+                        Last assessment: {projectData.riskAssessment?.lastAssessmentDate ? formatDate(projectData.riskAssessment.lastAssessmentDate) : 'Not assessed yet'}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Next assessment: {formatDate(projectData.riskAssessment.nextAssessmentDate)}
+                        Next assessment: {projectData.riskAssessment?.nextAssessmentDate ? formatDate(projectData.riskAssessment.nextAssessmentDate) : 'Not scheduled'}
                       </p>
                     </div>
                   </div>
@@ -633,4 +637,3 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 }
 
 export default ProjectDetails
-

@@ -56,7 +56,7 @@ export const FileUpload = ({
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
-        
+
         {file ? (
           <div className="flex items-center justify-between p-2 bg-white dark:bg-neutral-900 rounded-md">
             <p className="text-sm text-neutral-700 dark:text-neutral-300 truncate max-w-[200px]">
@@ -97,11 +97,10 @@ export function GridPattern() {
           return (
             <div
               key={`${col}-${row}`}
-              className={`w-10 h-10 flex flex-shrink-0 rounded-[2px] ${
-                index % 2 === 0
-                  ? "bg-gray-50 dark:bg-neutral-950"
-                  : "bg-gray-50 dark:bg-neutral-950 shadow-[0px_0px_1px_3px_rgba(255,255,255,1)_inset] dark:shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
-              }`}
+              className={`w-10 h-10 flex flex-shrink-0 rounded-[2px] ${index % 2 === 0
+                ? "bg-gray-50 dark:bg-neutral-950"
+                : "bg-gray-50 dark:bg-neutral-950 shadow-[0px_0px_1px_3px_rgba(255,255,255,1)_inset] dark:shadow-[0px_0px_1px_3px_rgba(0,0,0,1)_inset]"
+                }`}
             />
           );
         })

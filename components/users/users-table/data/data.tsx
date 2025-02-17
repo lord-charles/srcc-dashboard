@@ -14,8 +14,8 @@ export const statuses = [
     textColor: "#000000", // Black text
   },
   {
-    value: "inactive",
-    label: "Inactive",
+    value: "pending",
+    label: "Pending",
     icon: UserMinusIcon,
     color: "#FF8C33", // Orange background
     textColor: "#000000", // Black text
