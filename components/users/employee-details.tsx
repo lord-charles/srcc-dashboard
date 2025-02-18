@@ -20,7 +20,10 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
-import { approveConsultant, rejectConsultant } from "@/services/consultant.service";
+import {
+  approveConsultant,
+  rejectConsultant,
+} from "@/services/consultant.service";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -62,9 +65,13 @@ export default function EmployeeDetailsPage({ employee }: any) {
         throw new Error("Failed to approve consultant");
       }
     } catch (error) {
+      console.log(error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to approve consultant",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to approve consultant",
         variant: "destructive",
       });
     } finally {
@@ -90,7 +97,10 @@ export default function EmployeeDetailsPage({ employee }: any) {
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to reject consultant",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to reject consultant",
         variant: "destructive",
       });
     } finally {
@@ -139,19 +149,25 @@ export default function EmployeeDetailsPage({ employee }: any) {
               </Avatar>
               <div className="text-center">
                 <h2 className="text-2xl font-bold ">
-                  {[employee?.firstName, employee?.middleName, employee?.lastName]
+                  {[
+                    employee?.firstName,
+                    employee?.middleName,
+                    employee?.lastName,
+                  ]
                     .filter(Boolean)
                     .join(" ")}
                 </h2>
-                <p className="text-gray-600">{employee?.employeeId || "No ID"}</p>
+                <p className="text-gray-600">
+                  {employee?.employeeId || "No ID"}
+                </p>
               </div>
               <Badge
                 variant={
                   (employee?.status === "active"
                     ? "success"
                     : employee?.status === "pending"
-                      ? "warning"
-                      : "destructive") as "default"
+                    ? "warning"
+                    : "destructive") as "default"
                 }
                 className="text-sm"
               >
@@ -166,7 +182,9 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       onClick={() => setShowApproveDialog(true)}
                       disabled={isApproving || isRejecting}
                     >
-                      {isApproving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isApproving && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Approve
                     </Button>
                     <Button
@@ -175,49 +193,67 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       onClick={() => setShowRejectDialog(true)}
                       disabled={isApproving || isRejecting}
                     >
-                      {isRejecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isRejecting && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Reject
                     </Button>
                   </div>
 
-                  <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+                  <AlertDialog
+                    open={showApproveDialog}
+                    onOpenChange={setShowApproveDialog}
+                  >
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Approve Consultant</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to approve this consultant? This action cannot be undone.
+                          Are you sure you want to approve this consultant? This
+                          action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isApproving}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isApproving}>
+                          Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => approveConsultantHandler(employee._id)}
                           disabled={isApproving}
                           className="bg-primary hover:bg-primary/90"
                         >
-                          {isApproving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {isApproving && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
                           Approve
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
 
-                  <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+                  <AlertDialog
+                    open={showRejectDialog}
+                    onOpenChange={setShowRejectDialog}
+                  >
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Reject Consultant</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to reject this consultant? This action cannot be undone.
+                          Are you sure you want to reject this consultant? This
+                          action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isRejecting}>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel disabled={isRejecting}>
+                          Cancel
+                        </AlertDialogCancel>
                         <AlertDialogAction
                           onClick={() => rejectConsultantHandler(employee._id)}
                           disabled={isRejecting}
                           className="bg-destructive hover:bg-destructive/90"
                         >
-                          {isRejecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {isRejecting && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
                           Reject
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -279,20 +315,30 @@ export default function EmployeeDetailsPage({ employee }: any) {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Department</p>
-                      <p className="font-medium">{employee?.department || "Not assigned"}</p>
+                      <p className="font-medium">
+                        {employee?.department || "Not assigned"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Availability</p>
-                      <p className="font-medium capitalize">{employee?.availability || "Not specified"}</p>
+                      <p className="font-medium capitalize">
+                        {employee?.availability || "Not specified"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Experience (Years)</p>
-                      <p className="font-medium">{employee?.yearsOfExperience || 0}</p>
+                      <p className="text-sm text-gray-500">
+                        Experience (Years)
+                      </p>
+                      <p className="font-medium">
+                        {employee?.yearsOfExperience || 0}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Hourly Rate</p>
                       <p className="font-medium">
-                        {employee?.hourlyRate ? `KES ${employee.hourlyRate}` : "Not set"}
+                        {employee?.hourlyRate
+                          ? `KES ${employee.hourlyRate}`
+                          : "Not set"}
                       </p>
                     </div>
                   </div>
@@ -303,10 +349,14 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       {employee?.skills?.length > 0 ? (
                         employee.skills.map((skill: any, index: number) => (
                           <div key={index} className="p-3 border rounded-lg">
-                            <p className="font-medium capitalize">{skill.name}</p>
+                            <p className="font-medium capitalize">
+                              {skill.name}
+                            </p>
                             <div className="text-sm text-gray-500 mt-1">
                               <p>Experience: {skill.yearsOfExperience} years</p>
-                              <p className="capitalize">Level: {skill.proficiencyLevel}</p>
+                              <p className="capitalize">
+                                Level: {skill.proficiencyLevel}
+                              </p>
                             </div>
                           </div>
                         ))
@@ -323,12 +373,18 @@ export default function EmployeeDetailsPage({ employee }: any) {
                         employee.education.map((edu: any, index: number) => (
                           <div key={index} className="p-3 border rounded-lg">
                             <p className="font-medium">{edu.qualification}</p>
-                            <p className="text-sm text-gray-500">{edu.institution}</p>
-                            <p className="text-sm text-gray-500">Completed: {edu.yearOfCompletion}</p>
+                            <p className="text-sm text-gray-500">
+                              {edu.institution}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Completed: {edu.yearOfCompletion}
+                            </p>
                           </div>
                         ))
                       ) : (
-                        <p className="text-gray-500">No education history listed</p>
+                        <p className="text-gray-500">
+                          No education history listed
+                        </p>
                       )}
                     </div>
                   </div>
@@ -347,18 +403,20 @@ export default function EmployeeDetailsPage({ employee }: any) {
                           <span>Download CV</span>
                         </a>
                       )}
-                      {employee?.academicCertificates?.map((cert: any, index: number) => (
-                        <a
-                          key={index}
-                          href={cert.documentUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center p-3 border rounded-lg hover:bg-gray-50"
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          <span>Academic Certificate {index + 1}</span>
-                        </a>
-                      ))}
+                      {employee?.academicCertificates?.map(
+                        (cert: any, index: number) => (
+                          <a
+                            key={index}
+                            href={cert.documentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center p-3 border rounded-lg hover:bg-gray-50"
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            <span>Academic Certificate {index + 1}</span>
+                          </a>
+                        )
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -414,7 +472,6 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       className="h-2 bg-green-200 [&>[role=progressbar]]:bg-green-600"
                     />
                   </div>
-
                 </CardContent>
               </Card>
             </TabsContent>
@@ -432,25 +489,36 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       <p className="text-sm text-gray-500">Date of Birth</p>
                       <p className="font-medium">
                         {employee?.dateOfBirth
-                          ? format(new Date(employee.dateOfBirth), "dd MMM yyyy")
+                          ? format(
+                              new Date(employee.dateOfBirth),
+                              "dd MMM yyyy"
+                            )
                           : "Not provided"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">National ID</p>
-                      <p className="font-medium">{employee?.nationalId || "Not provided"}</p>
+                      <p className="font-medium">
+                        {employee?.nationalId || "Not provided"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">KRA PIN</p>
-                      <p className="font-medium">{employee?.kraPinNumber || "Not provided"}</p>
+                      <p className="font-medium">
+                        {employee?.kraPinNumber || "Not provided"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">NHIF Number</p>
-                      <p className="font-medium">{employee?.nhifNumber || "Not provided"}</p>
+                      <p className="font-medium">
+                        {employee?.nhifNumber || "Not provided"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">NSSF Number</p>
-                      <p className="font-medium">{employee?.nssfNumber || "Not provided"}</p>
+                      <p className="font-medium">
+                        {employee?.nssfNumber || "Not provided"}
+                      </p>
                     </div>
                   </div>
 
@@ -458,16 +526,24 @@ export default function EmployeeDetailsPage({ employee }: any) {
                     <h3 className="font-semibold mb-2">Address Information</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-500">Physical Address</p>
-                        <p className="font-medium">{employee?.physicalAddress || "Not provided"}</p>
+                        <p className="text-sm text-gray-500">
+                          Physical Address
+                        </p>
+                        <p className="font-medium">
+                          {employee?.physicalAddress || "Not provided"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Postal Address</p>
-                        <p className="font-medium">{employee?.postalAddress || "Not provided"}</p>
+                        <p className="font-medium">
+                          {employee?.postalAddress || "Not provided"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">County</p>
-                        <p className="font-medium capitalize">{employee?.county || "Not provided"}</p>
+                        <p className="font-medium capitalize">
+                          {employee?.county || "Not provided"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -480,19 +556,27 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-gray-500">Name</p>
-                          <p className="font-medium">{employee.emergencyContact.name}</p>
+                          <p className="font-medium">
+                            {employee.emergencyContact.name}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Relationship</p>
-                          <p className="font-medium">{employee.emergencyContact.relationship}</p>
+                          <p className="font-medium">
+                            {employee.emergencyContact.relationship}
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Phone</p>
-                          <p className="font-medium">{employee.emergencyContact.phoneNumber}</p>
+                          <p className="font-medium">
+                            {employee.emergencyContact.phoneNumber}
+                          </p>
                         </div>
                         {employee.emergencyContact.alternativePhoneNumber && (
                           <div>
-                            <p className="text-sm text-gray-500">Alternative Phone</p>
+                            <p className="text-sm text-gray-500">
+                              Alternative Phone
+                            </p>
                             <p className="font-medium">
                               {employee.emergencyContact.alternativePhoneNumber}
                             </p>
@@ -500,7 +584,9 @@ export default function EmployeeDetailsPage({ employee }: any) {
                         )}
                       </div>
                     ) : (
-                      <p className="text-gray-500">No emergency contact provided</p>
+                      <p className="text-gray-500">
+                        No emergency contact provided
+                      </p>
                     )}
                   </div>
                 </CardContent>
@@ -527,15 +613,21 @@ export default function EmployeeDetailsPage({ employee }: any) {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Bank Name</p>
-                      <p className="font-medium">{employee.bankDetails.bankName}</p>
+                      <p className="font-medium">
+                        {employee.bankDetails.bankName}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Account Number</p>
-                      <p className="font-medium">{employee.bankDetails.accountNumber}</p>
+                      <p className="font-medium">
+                        {employee.bankDetails.accountNumber}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Branch Code</p>
-                      <p className="font-medium">{employee.bankDetails.branchCode}</p>
+                      <p className="font-medium">
+                        {employee.bankDetails.branchCode}
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -548,7 +640,9 @@ export default function EmployeeDetailsPage({ employee }: any) {
                 {employee?.mpesaDetails?.phoneNumber ? (
                   <div>
                     <p className="text-sm text-gray-500">Phone Number</p>
-                    <p className="font-medium">{employee.mpesaDetails.phoneNumber}</p>
+                    <p className="font-medium">
+                      {employee.mpesaDetails.phoneNumber}
+                    </p>
                   </div>
                 ) : (
                   <p className="text-gray-500">No M-Pesa details provided</p>

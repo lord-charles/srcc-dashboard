@@ -29,7 +29,6 @@ export async function registerConsultant(formData: FormData): Promise<any> {
         },
       }
     );
-    console.log(response.data);
     return response.data;
   } catch (error: any) {
     console.log(error.response?.data);
@@ -50,12 +49,13 @@ export async function approveConsultant(consultantId: string): Promise<boolean> 
       config
     );
     return true;
-  } catch (error) {
+  } catch (error:any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to approve consultant:", error);
-    return false;
+      throw error.response?.data.message
+
   }
 }
 
@@ -68,11 +68,11 @@ export async function rejectConsultant(consultantId: string): Promise<boolean> {
       config
     );
     return true;
-  } catch (error) {
+  } catch (error:any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to reject consultant:", error);
-    return false;
+    throw error.response?.data.message
   }
 }
