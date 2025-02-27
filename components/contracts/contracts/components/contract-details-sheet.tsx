@@ -66,7 +66,7 @@ export function ContractDetailsSheet({
     newStatus: string
   ) => {
     const validTransitions: { [key: string]: string[] } = {
-      pending: ["active", "terminated"],
+      draft: ["active", "terminated"],
       active: ["completed", "terminated"],
       completed: [],
       terminated: [],
@@ -100,38 +100,15 @@ export function ContractDetailsSheet({
           </SheetTitle>
           <SheetDescription>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-              Created on {contract?.createdAt ? format(new Date(contract.createdAt), "PPP") : "N/A"}
+              Created on{" "}
+              {contract?.createdAt
+                ? format(new Date(contract.createdAt), "PPP")
+                : "N/A"}
             </div>
           </SheetDescription>
         </SheetHeader>
 
         <div className="space-y-6">
-          {/* Status Change Section */}
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold mb-4">Update Status</h3>
-              <div className="flex items-center space-x-4">
-                <Select onValueChange={setNewStatus}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select new status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["pending", "active", "completed", "terminated"].map(
-                      (status) => (
-                        <SelectItem key={status} value={status}>
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
-                        </SelectItem>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleStatusChange} disabled={!newStatus}>
-                  Update Status
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Contract Information */}
           <Card className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950 dark:to-slate-950">
             <CardContent className="pt-6">
@@ -140,19 +117,21 @@ export function ContractDetailsSheet({
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-muted-foreground">Contract Number</span>
+                  <span className="text-sm text-muted-foreground">
+                    Contract Number
+                  </span>
                   <p className="font-medium">{contract.contractNumber}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-muted-foreground">Reference Number</span>
-                  <p className="font-medium">{contract.procurementReferenceNumber}</p>
+                  <span className="text-sm text-muted-foreground">Project</span>
+                  <p className="font-medium">
+                    {contract.projectId?.name || "N/A"}
+                  </p>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-sm text-muted-foreground">Title</span>
-                  <p className="font-medium">{contract.title}</p>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-sm text-muted-foreground">Description</span>
+                  <span className="text-sm text-muted-foreground">
+                    Description
+                  </span>
                   <p className="font-medium">{contract.description}</p>
                 </div>
               </div>
@@ -165,37 +144,34 @@ export function ContractDetailsSheet({
               <h3 className="text-lg font-semibold mb-4">Financial Details</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-muted-foreground">Contract Value</span>
+                  <span className="text-sm text-muted-foreground">
+                    Contract Value
+                  </span>
                   <p className="font-medium">
                     {formatCurrency(contract.contractValue, contract.currency)}
                   </p>
                 </div>
                 <div>
-                  <span className="text-sm text-muted-foreground">Performance Security</span>
-                  <p className="font-medium">
-                    {contract.requiresPerformanceSecurity
-                      ? formatCurrency(
-                          contract.performanceSecurityAmount,
-                          contract.currency
-                        )
-                      : "Not Required"}
-                  </p>
+                  <span className="text-sm text-muted-foreground">
+                    Currency
+                  </span>
+                  <p className="font-medium">{contract.currency}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-muted-foreground">Start Date</span>
+                  <span className="text-sm text-muted-foreground">
+                    Start Date
+                  </span>
                   <p className="font-medium">
                     {format(new Date(contract.startDate), "PPP")}
                   </p>
                 </div>
                 <div>
-                  <span className="text-sm text-muted-foreground">End Date</span>
+                  <span className="text-sm text-muted-foreground">
+                    End Date
+                  </span>
                   <p className="font-medium">
                     {format(new Date(contract.endDate), "PPP")}
                   </p>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Procurement Method</span>
-                  <p className="font-medium">{contract.procurementMethod}</p>
                 </div>
                 <div>
                   <span className="text-sm text-muted-foreground">Status</span>
@@ -207,115 +183,65 @@ export function ContractDetailsSheet({
             </CardContent>
           </Card>
 
-          {/* Deliverables */}
-          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
+          {/* Contractor Information */}
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
             <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold mb-4">Deliverables</h3>
-              <div className="space-y-4">
-                {contract.deliverables.map((deliverable) => (
-                  <div
-                    key={deliverable._id}
-                    className="border-b pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{deliverable.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {deliverable.description}
-                        </p>
-                        <div className="mt-2">
-                          <span className="text-sm text-muted-foreground">
-                            Due: {format(new Date(deliverable.dueDate), "PPP")}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge
-                        className={
-                          deliverable.completed
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }
-                      >
-                        {deliverable.completed ? "Completed" : "Pending"}
-                      </Badge>
-                    </div>
-                    {deliverable.acceptanceCriteria.length > 0 && (
-                      <div className="mt-2">
-                        <span className="text-sm text-muted-foreground">
-                          Acceptance Criteria:
-                        </span>
-                        <ul className="list-disc list-inside text-sm">
-                          {deliverable.acceptanceCriteria.map((criteria, index) => (
-                            <li key={index}>{criteria}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Schedule */}
-          <Card className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold mb-4">Payment Schedule</h3>
-              <div className="space-y-4">
-                {contract.paymentSchedule.map((payment) => (
-                  <div
-                    key={payment._id}
-                    className="border-b pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-medium">{payment.milestone}</h4>
-                        <div className="mt-1">
-                          <span className="text-sm text-muted-foreground">
-                            Amount:{" "}
-                            {formatCurrency(payment.amount, contract.currency)}
-                          </span>
-                        </div>
-                        <div className="mt-1">
-                          <span className="text-sm text-muted-foreground">
-                            Due: {format(new Date(payment.dueDate), "PPP")}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge
-                        className={
-                          payment.paid
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }
-                      >
-                        {payment.paid ? "Paid" : "Pending"}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+              <h3 className="text-lg font-semibold mb-4">
+                Contractor Information
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-muted-foreground">Name</span>
+                  <p className="font-medium">
+                    {contract.contractedUserId?.firstName}{" "}
+                    {contract.contractedUserId?.lastName}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Email</span>
+                  <p className="font-medium">
+                    {contract.contractedUserId?.email}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Phone</span>
+                  <p className="font-medium">
+                    {contract.contractedUserId?.phoneNumber}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Amendments */}
-          {contract.amendments.length > 0 && (
+          {contract.amendments && contract.amendments.length > 0 && (
             <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-950 dark:to-cyan-950">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-semibold mb-4">Amendments</h3>
                 <div className="space-y-4">
-                  {contract.amendments.map((amendment) => (
+                  {contract.amendments.map((amendment, index) => (
                     <div
-                      key={amendment._id}
+                      key={amendment._id || index}
                       className="border-b pb-4 last:border-0 last:pb-0"
                     >
-                      <h4 className="font-medium">
-                        Amendment {amendment.amendmentNumber}
-                      </h4>
-                      <p className="text-sm mt-1">{amendment.description}</p>
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        Date: {format(new Date(amendment.date), "PPP")}
-                      </div>
+                      <h4 className="font-medium">Amendment {index + 1}</h4>
+                      <p className="text-sm mt-1">
+                        {amendment.description || "No description"}
+                      </p>
+                      {amendment.date && (
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          Date: {format(new Date(amendment.date), "PPP")}
+                        </div>
+                      )}
+                      {amendment.changedFields &&
+                        amendment.changedFields.length > 0 && (
+                          <div className="mt-2 text-sm">
+                            <span className="text-muted-foreground">
+                              Changed fields:{" "}
+                            </span>
+                            {amendment.changedFields.join(", ")}
+                          </div>
+                        )}
                     </div>
                   ))}
                 </div>

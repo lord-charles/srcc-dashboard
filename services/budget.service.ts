@@ -1,24 +1,13 @@
 "use server";
 
 import axios, { AxiosError } from "axios";
-import { Budget } from "@/types/budget";
-import { cookies } from "next/headers";
-import { handleUnauthorized } from "./dashboard.service";
+import { Budget, BudgetCategory } from "@/types/project";
+import { getAxiosConfig, handleUnauthorized } from "./dashboard.service";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://innova.cognitron.co.ke/srcc/api";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://innova.cognitron.co.ke/srcc/api";
 
-const getAxiosConfig = async () => {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token");
-  return {
-    headers: {
-      Authorization: token ? `Bearer ${token.value}` : "",
-      "Content-Type": "application/json",
-    },
-  };
-};
-
-export async function createBudget(budgetData: any) {
+export async function createInternalBudget(budgetData: any) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Budget>(
@@ -27,29 +16,58 @@ export async function createBudget(budgetData: any) {
       config
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to create budget:", error);
-    return null;
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function createExternalBudget(budgetData: any) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Budget>(
+      `${API_URL}/budgets`,
+      budgetData,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function approveBudget(budgetId: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Budget>(
+      `${API_URL}/budgets/${budgetId}/approve`,
+      {},
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error;
   }
 }
 
 export async function getAllBudgets(): Promise<Budget[] | null> {
   try {
     const config = await getAxiosConfig();
-    const response = await axios.get<Budget[]>(
-      `${API_URL}/budgets`,
-      config
-    );
+    const response = await axios.get<Budget[]>(`${API_URL}/budgets`, config);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to fetch budgets:", error);
-    return null;
+    throw error?.response?.data.message || error;
   }
 }
 
@@ -61,16 +79,18 @@ export async function getBudgetById(id: string): Promise<Budget | null> {
       config
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to fetch budget:", error);
-    return null;
+    throw error?.response?.data.message || error;
   }
 }
 
-export async function updateBudget(id: string, budgetData: Partial<Budget>): Promise<Budget | null> {
+export async function updateBudget(
+  id: string,
+  budgetData: Partial<Budget>
+): Promise<Budget | null> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.put<Budget>(
@@ -79,29 +99,25 @@ export async function updateBudget(id: string, budgetData: Partial<Budget>): Pro
       config
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to update budget:", error);
-    return null;
+    throw error?.response?.data.message || error;
   }
 }
 
 export async function deleteBudget(id: string): Promise<boolean> {
   try {
     const config = await getAxiosConfig();
-    await axios.delete(
-      `${API_URL}/budgets/${id}`,
-      config
-    );
+    await axios.delete(`${API_URL}/budgets/${id}`, config);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to delete budget:", error);
-    return false;
+    throw error?.response?.data.message || error;
   }
 }
 
@@ -117,11 +133,71 @@ export async function updateBudgetStatus(
       config
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to update budget status:", error);
-    return null;
+    throw error?.response?.data.message || error;
+  }
+}
+
+export async function updateInternalBudget(
+  data: any,
+  budgetId: string
+): Promise<Budget | null> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch<Budget>(
+      `${API_URL}/budgets/${budgetId}`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to update internal budget:", error);
+    throw error?.response?.data.message || error;
+  }
+}
+
+export async function updateExternalBudget(
+  data: any,
+  budgetId: string
+): Promise<Budget | null> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch<Budget>(
+      `${API_URL}/budgets/${budgetId}`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to update external budget:", error);
+    throw error?.response?.data.message || error;
+  }
+}
+
+export async function submitBudget(budgetId: string): Promise<Budget | null> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Budget>(
+      `${API_URL}/budgets/${budgetId}/submit`,
+      {},
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to submit budget:", error);
+    throw error?.response?.data?.message || error;
   }
 }

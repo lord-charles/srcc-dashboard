@@ -1,18 +1,21 @@
 import DashboardProvider from "@/app/dashboard-provider";
 import { Header } from "@/components/header";
 import ProjectDetails from "@/components/projects/project-details";
+import { handleUnauthorized } from "@/services/dashboard.service";
 import { getProjectById } from "@/services/projects-service";
+import { redirect } from "next/navigation";
 import React from "react";
 
 
 
 
 async function Page({ params }) {
-  const projectId = params.project;
+  const projectId = await params.project;
 
   try {
     const project = await getProjectById(projectId);
 
+    
     if (!project) {
       return (
         <DashboardProvider>
@@ -34,6 +37,7 @@ async function Page({ params }) {
     );
   } catch (error) {
     console.error("Failed to fetch project details:", error);
+    await handleUnauthorized();
     return (
       <DashboardProvider>
         <Header />

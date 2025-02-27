@@ -33,8 +33,6 @@ export function LoginForm({
         redirect: false,
       });
 
-      console.log(result);
-
       if (result?.error) {
         toast({
           variant: "destructive",
@@ -43,10 +41,10 @@ export function LoginForm({
         });
         return;
       }
-
       router.push("/analytics");
       router.refresh();
     } catch (error) {
+      console.error(error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -75,7 +73,7 @@ export function LoginForm({
           <Input
             id="email"
             name="email"
-            type="text"
+            type="email"
             placeholder="Enter your email"
             required
             disabled={isLoading}

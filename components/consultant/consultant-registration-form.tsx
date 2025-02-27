@@ -175,6 +175,7 @@ export default function ConsultantRegistrationForm() {
     handleSubmit,
     setValue,
     getValues,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues,
@@ -338,6 +339,7 @@ export default function ConsultantRegistrationForm() {
       });
 
       setStep(1);
+      reset();
       setIsLoading(false);
     } catch (error: any) {
       setIsLoading(false);
@@ -1397,7 +1399,9 @@ export default function ConsultantRegistrationForm() {
                                       getValues("preferredWorkTypes");
                                     setValue(
                                       "preferredWorkTypes",
-                                      currentTypes.filter((_, i) => i !== index)
+                                      currentTypes?.filter(
+                                        (_, i) => i !== index
+                                      )
                                     );
                                   }}
                                 >
@@ -1696,14 +1700,14 @@ export default function ConsultantRegistrationForm() {
                       type="submit"
                       onClick={handleSubmit(onSubmit)}
                       disabled={isLoading}
-                      className="bg-[#31876d] hover:bg-[#31876d]/90 text-white"
+                      className="bg-[#31876d] hover:bg-[#31876d]/90 text-white w-32 ml-auto"
                     >
                       {isLoading ? (
                         <>
-                          Submitting <Spinner variant="ring" />
+                          <Spinner />
                         </>
                       ) : (
-                        "Submit Registration"
+                        "Submit"
                       )}
                     </Button>
                   )}

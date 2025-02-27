@@ -9,20 +9,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaginatedResponse } from "@/services/employees.service";
-
 import {
   Users,
   DollarSign,
   Briefcase,
-  UserCheck,
-  UserMinus,
   TrendingUp,
   Plus,
   Clock,
   CheckCircle,
 } from "lucide-react";
 import { Project } from "@/types/project";
-import EmployeeTable from "./projects-table/projects";
 import { useRouter } from "next/navigation";
 import ProjectTable from "./projects-table/projects";
 
@@ -300,7 +296,9 @@ export default function ProjectsModule({ initialData }: EmployeeModuleProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat, index) => (
           <Card key={index} className="relative">
-            <div className={`absolute top-0 left-0 w-full h-2 ${stat.gradient} rounded-t-md`} />
+            <div
+              className={`absolute top-0 left-0 w-full h-2 ${stat.gradient} rounded-t-md`}
+            />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className={`text-sm font-medium ${stat.color}`}>
                 {stat.title}
@@ -308,8 +306,12 @@ export default function ProjectsModule({ initialData }: EmployeeModuleProps) {
               <stat.icon className={`h-4 w-4 ${stat.trendColor}`} />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-              <p className={`text-xs flex items-center gap-1 ${stat.trendColor}`}>
+              <div className={`text-2xl font-bold ${stat.color}`}>
+                {stat.value}
+              </div>
+              <p
+                className={`text-xs flex items-center gap-1 ${stat.trendColor}`}
+              >
                 <TrendingUp className="h-3 w-3" />
                 <span>{stat.trend}</span>
               </p>

@@ -17,13 +17,9 @@ export async function handleUnauthorized() {
   redirect("/unauthorized");
 }
 
-
-const getAxiosConfig = async () => {
-
+export const getAxiosConfig = async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
-
-
 
   return {
     headers: {

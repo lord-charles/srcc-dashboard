@@ -23,37 +23,54 @@ export interface PaymentSchedule {
 }
 
 export interface Amendment {
-  amendmentNumber: string;
-  description: string;
-  date: string;
-  approvedBy: string;
+  date?: string;
+  description?: string;
+  changedFields?: string[];
+  approvedBy?: string;
   _id: string;
+}
+
+export interface ContractedUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface ProjectInfo {
+  _id: string;
+  name: string;
 }
 
 export interface Contract {
   _id: string;
   contractNumber: string;
-  title: string;
   description: string;
-  contractorId: string;
   contractValue: number;
   currency: string;
-  startDate: string; // ISO date string
-  endDate: string;   // ISO date string
-  status: 'active' | 'completed' | 'pending' | 'terminated'; 
-  procurementMethod: string;
-  procurementReferenceNumber: string;
-  terms: Term[];
-  deliverables: Deliverable[];
-  paymentSchedule: PaymentSchedule[];
-  requiresPerformanceSecurity: boolean;
-  performanceSecurityAmount: number;
+  startDate: string;
+  endDate: string;
+  status: "active" | "completed" | "draft" | "terminated";
+  projectId: ProjectInfo;
+  contractedUserId: ContractedUser;
   amendments: Amendment[];
   createdBy: string;
-  contractManagerId: string;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
-  projectId: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Legacy fields - keeping for backward compatibility
+  title?: string;
+  contractorId?: string;
+  procurementMethod?: string;
+  procurementReferenceNumber?: string;
+  terms?: Term[];
+  deliverables?: Deliverable[];
+  paymentSchedule?: PaymentSchedule[];
+  requiresPerformanceSecurity?: boolean;
+  performanceSecurityAmount?: number;
+  contractManagerId?: string;
 }
 
 export interface ContractStats {

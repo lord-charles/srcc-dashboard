@@ -14,13 +14,11 @@ import {
   DollarSignIcon,
   UserIcon,
   AlertTriangleIcon,
-  Plus,
 } from "lucide-react";
 import { DatePickerWithRange } from "../date-range-picker";
 import ContractTable from "./contracts/contracts";
 import { getAllContracts } from "@/services/contracts.service";
 import { Contract } from "@/types/contract";
-import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
 
 interface ContractStats {
@@ -34,14 +32,23 @@ interface ContractStats {
 const calculateContractStats = (contracts: Contract[]): ContractStats => {
   return {
     totalContracts: contracts.length,
-    activeContracts: contracts.filter(c => c.status === 'active').length,
-    totalValue: contracts.reduce((sum, contract) => sum + contract.contractValue, 0),
+    activeContracts: contracts.filter((c) => c.status === "active").length,
+    totalValue: contracts.reduce(
+      (sum, contract) => sum + contract.contractValue,
+      0
+    ),
     completedDeliverables: contracts.reduce(
-      (sum, contract) => sum + contract.deliverables.filter(d => d.completed).length,
+      (sum, contract) => {
+        if (!contract.deliverables) return sum;
+        return sum + (contract.deliverables.filter((d) => d.completed)?.length || 0);
+      },
       0
     ),
     pendingPayments: contracts.reduce(
-      (sum, contract) => sum + contract.paymentSchedule.filter(p => !p.paid).length,
+      (sum, contract) => {
+        if (!contract.paymentSchedule) return sum;
+        return sum + (contract.paymentSchedule.filter((p) => !p.paid)?.length || 0);
+      },
       0
     ),
   };
@@ -51,7 +58,7 @@ const ContractModule = ({ initialData }: { initialData: Contract[] }) => {
   const [contracts, setContracts] = useState<Contract[]>(initialData || []);
 
   const [loading, setLoading] = useState(false);
-const router = useRouter();
+  const router = useRouter();
   useEffect(() => {
     const fetchContracts = async () => {
       try {
@@ -93,7 +100,9 @@ const router = useRouter();
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalContracts}</div>
-              <p className="text-xs text-muted-foreground">Total managed contracts</p>
+              <p className="text-xs text-muted-foreground">
+                Total managed contracts
+              </p>
             </CardContent>
           </Card>
 
@@ -112,17 +121,15 @@ const router = useRouter();
 
           <Card className="bg-white/50 backdrop-blur-lg dark:bg-gray-800/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Value
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Value</CardTitle>
               <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {new Intl.NumberFormat('en-KE', { 
-                  style: 'currency', 
-                  currency: 'KES',
-                  maximumFractionDigits: 0
+                {new Intl.NumberFormat("en-KE", {
+                  style: "currency",
+                  currency: "KES",
+                  maximumFractionDigits: 0,
                 }).format(stats.totalValue)}
               </div>
               <p className="text-xs text-muted-foreground">Contract value</p>
@@ -137,7 +144,9 @@ const router = useRouter();
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.completedDeliverables}</div>
+              <div className="text-2xl font-bold">
+                {stats.completedDeliverables}
+              </div>
               <p className="text-xs text-muted-foreground">Total completed</p>
             </CardContent>
           </Card>
@@ -160,30 +169,23 @@ const router = useRouter();
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
           </div>
         ) : (
-                <div className="grid gap-4 pt-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>Contracts List</CardTitle>
-              <CardDescription>View and manage your contracts</CardDescription>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => {
-                router.push("/contract/new");
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Contract
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-          <ContractTable data={contracts} />
+          <div className="grid gap-4 pt-8">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle>Contracts List</CardTitle>
+                  <CardDescription>
+                    View and manage your contracts
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <ContractTable data={contracts} />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          </CardContent>
-        </Card>
-      </div>
         )}
       </div>
     </div>

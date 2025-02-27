@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,33 +8,33 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { addTeamMember } from "@/services/projects-service"
-import { CalendarIcon, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { DatePicker } from "@/components/ui/date-picker"
-import { Textarea } from "@/components/ui/textarea"
-import { Calendar } from "../ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { addTeamMember } from "@/services/projects-service";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "../ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface AddTeamMemberDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  projectId: string
-  projectName: string
-  user: {
-    _id: string
-    firstName: string
-    lastName: string
-    email: string
-  }
-  returnUrl?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  projectId: string;
+  projectName?: string;
+  user?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  returnUrl?: string;
 }
 
 export function AddTeamMemberDialog({
@@ -45,13 +45,15 @@ export function AddTeamMemberDialog({
   user,
   returnUrl,
 }: AddTeamMemberDialogProps) {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date())
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date(new Date().setFullYear(new Date().getFullYear() + 1)))
-  const [responsibilities, setResponsibilities] = useState("")
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+  );
+  const [responsibilities, setResponsibilities] = useState("");
 
   const handleAddMember = async () => {
     if (!startDate || !endDate) {
@@ -59,8 +61,8 @@ export function AddTeamMemberDialog({
         title: "Missing dates",
         description: "Please select both start and end dates",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     if (endDate < startDate) {
@@ -68,43 +70,46 @@ export function AddTeamMemberDialog({
         title: "Invalid dates",
         description: "End date must be after start date",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const responsibilitiesList = responsibilities
         .split("\n")
         .map((r) => r.trim())
-        .filter(Boolean)
+        .filter(Boolean);
 
       await addTeamMember(projectId, {
-        userId: user._id,
+        userId: user?._id,
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
-        responsibilities: responsibilitiesList.length > 0 ? responsibilitiesList : ["Team Member"],
-      })
+        responsibilities:
+          responsibilitiesList.length > 0
+            ? responsibilitiesList
+            : ["team_member"],
+      });
 
       toast({
         title: "Success",
-        description: `Added ${user.firstName} ${user.lastName} to ${projectName}`,
-      })
+        description: `Added ${user?.firstName} ${user?.lastName} to ${projectName}`,
+      });
 
-      onOpenChange(false)
+      onOpenChange(false);
       if (returnUrl) {
-        router.push(returnUrl)
+        router.push(returnUrl);
       }
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to add team member",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -112,13 +117,13 @@ export function AddTeamMemberDialog({
         <DialogHeader>
           <DialogTitle>Add Team Member</DialogTitle>
           <DialogDescription>
-            Add {user.firstName} {user.lastName} to project {projectName}
+            Add {user?.firstName} {user?.lastName} to project {projectName}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" value={user.email} disabled />
+            <Input id="email" value={user?.email} disabled />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="start-date">Start Date</Label>
@@ -132,7 +137,11 @@ export function AddTeamMemberDialog({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                  {startDate ? (
+                    format(startDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
@@ -193,5 +202,5 @@ export function AddTeamMemberDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

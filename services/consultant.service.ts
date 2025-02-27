@@ -76,3 +76,28 @@ export async function rejectConsultant(consultantId: string): Promise<boolean> {
     throw error.response?.data.message
   }
 }
+
+export async function registerOrganization(formData: FormData): Promise<any> {
+  try {
+    const config = await getAxiosConfig(true);
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/register`,
+      formData,
+      {
+        ...config,
+        headers: {
+          ...config.headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.log(error.response?.data);
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Organization registration error:", error.response?.data || error.message);
+    throw error.response?.data.message || error.message;
+  }
+}

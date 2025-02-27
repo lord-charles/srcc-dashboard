@@ -43,8 +43,8 @@ export function DataTableToolbar<TData>({
                 value: "completed",
               },
               {
-                label: "Pending",
-                value: "pending",
+                label: "Draft",
+                value: "draft",
               },
               {
                 label: "Terminated",

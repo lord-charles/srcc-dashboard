@@ -11,27 +11,11 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function ContractsPage() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user) {
-    redirect("/login");
-  }
-
-  try {
-    const initialData = await getAllContracts();
-console.log(initialData)
-    return (
-      <DashboardProvider>
-        <Header />
-        <ContractModule initialData={initialData} />
-      </DashboardProvider>
-    );
-  } catch (error) {
-    console.error("Failed to fetch advances:", error);
-    return (
-      <DashboardProvider>
-        <div>Error loading advances</div>
-      </DashboardProvider>
-    );
-  }
+  const initialData = await getAllContracts();
+  return (
+    <DashboardProvider>
+      <Header />
+      <ContractModule initialData={initialData} />
+    </DashboardProvider>
+  );
 }

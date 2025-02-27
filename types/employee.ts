@@ -1,9 +1,8 @@
+import { PaymentMethod } from "./advance";
 import {
   BankDetails,
   EmergencyContact,
-  EmploymentType,
   MpesaDetails,
-  PaymentMethod,
   UserRole,
   UserStatus,
 } from "./user";
@@ -25,6 +24,5 @@ export interface CreateEmployeeDto {
   baseSalary: number;
   employmentStartDate: Date;
   employmentEndDate?: Date;
-  employmentType: EmploymentType;
   emergencyContact?: EmergencyContact;
 }

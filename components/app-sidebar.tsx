@@ -2,16 +2,17 @@
 
 import * as React from "react";
 import {
-  GalleryVerticalEnd,
   LayoutDashboard,
-  Users,
-  DollarSign,
-  BarChart2,
-  Settings,
-  Wallet,
+  ClipboardList,
   FileText,
-  BriefcaseBusiness,
-  Receipt,
+  Briefcase,
+  Wallet,
+  BarChart2,
+  Users,
+  Settings as Cog,
+  CalendarCheck,
+  List,
+  Settings,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -41,59 +42,67 @@ const data = {
     {
       title: "Project Management",
       url: "#",
-      icon: "BriefcaseBusiness",
+      icon: "ClipboardList",
       items: [
         {
           title: "All Projects",
           url: "/projects",
         },
         {
-          title: "New Project",
-          url: "/project/new",
+          title: "Budget",
+          url: "/budget",
         },
       ],
     },
     {
       title: "Contracts Management",
       url: "#",
-      icon: "FileText",
+      icon: "Briefcase",
       items: [
         {
           title: "All Contracts",
           url: "/contracts",
         },
         {
-          title: "New Contract",
-          url: "/contract/new",
-        }
+          title: "My Contracts",
+          url: "/my-contracts",
+        },
       ],
     },
     {
-      title: "Budget Management",
+      title: "Claims Management",
       url: "#",
-      icon: "DollarSign",
+      icon: "Wallet",
       items: [
         {
-          title: "Budget",
-          url: "/budget",
+          title: "All Claims",
+          url: "/claims",
         },
-        
         {
-          title: "New Budget",
-          url: "/budget/new",
-        }
+          title: "My Claims",
+          url: "/my-claims",
+        },
       ],
     },
     {
-      title: "Imprest",
+      title: "Imprest Management",
       url: "#",
-      icon: "Receipt",
+      icon: "CalendarCheck",
+      items: [
+        {
+          title: "All Imprest",
+          url: "/imprest",
+        },
+        {
+          title: "My Imprest",
+          url: "/my-imprest",
+        },
+      ],
     },
     {
       title: "Reports",
       url: "#",
       icon: "BarChart2",
-     
     },
     {
       title: "Users",
@@ -126,20 +135,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="pb-0 bg-dashboard">
         <SidebarMenu>
           <SidebarMenuItem>
-           
-           <Image
-            src="/srcc-logo.webp"
-            width={500}
-            height={500}
-            alt="Logo"
-            className="object-stretch"
+            <Image
+              src="/srcc-logo.webp"
+              width={500}
+              height={500}
+              alt="Logo"
+              className="object-stretch"
             />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="mt-2">
         <SidebarGroup>
-          <SidebarMenu className="gap-2">
+          <SidebarMenu className="gap-2 space-y-1">
             {data.navMain.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
@@ -168,14 +176,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               return <LayoutDashboard {...iconProps} />;
                             case "Users":
                               return <Users {...iconProps} />;
-                            case "DollarSign":
-                              return <DollarSign {...iconProps} />;
-                            case "Receipt":
-                              return <Receipt {...iconProps} />;
+                            case "Briefcase":
+                              return <Briefcase {...iconProps} />;
+                            case "Wallet":
+                              return <Wallet {...iconProps} />;
+                            case "ClipboardList":
+                              return <ClipboardList {...iconProps} />;
+                            case "CalendarCheck":
+                              return <CalendarCheck {...iconProps} />;
+                            case "List":
+                              return <List {...iconProps} />;
                             case "FileText":
                               return <FileText {...iconProps} />;
-                            case "BriefcaseBusiness":
-                              return <BriefcaseBusiness {...iconProps} />;
+                            case "Briefcase":
+                              return <Briefcase {...iconProps} />;
                             case "BarChart2":
                               return <BarChart2 {...iconProps} />;
                             case "Settings":
@@ -190,7 +204,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </a>
                 </SidebarMenuButton>
                 {item.items?.length ? (
-                  <SidebarMenuSub className="ml-9  space-y-0 border-l border-muted pl-4">
+                  <SidebarMenuSub className="ml-9 space-y-1 border-l border-muted pl-4">
                     {item.items.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton

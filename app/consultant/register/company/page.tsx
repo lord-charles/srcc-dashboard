@@ -1,10 +1,5 @@
-import ConsultantRegistrationForm from "@/components/consultant/consultant-registration-form";
-import React from "react";
+import CompanyRegistrationForm from "@/components/consultant/company-registration-form";
 
-const page = () => {
-    return (
-        <ConsultantRegistrationForm />
-    );
-};
-
-export default page;
+export default function CompanyRegistrationPage() {
+  return <CompanyRegistrationForm />;
+}

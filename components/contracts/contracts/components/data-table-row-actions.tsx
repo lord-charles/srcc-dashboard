@@ -16,6 +16,18 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { ContractDetailsSheet } from "./contract-details-sheet";
 import { FileText, Edit, Trash } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { deleteContract } from "@/services/contracts.service";
+import { Spinner } from "@/components/ui/spinner";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -25,13 +37,14 @@ export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const contract = row.original as Contract;
   const { toast } = useToast();
   const router = useRouter();
 
   const handleStatusChange = async (newStatus: string) => {
     try {
-      // TODO: Implement contract status update API call
       toast({
         title: "Status Update",
         description: "This feature will be implemented soon.",
@@ -43,6 +56,29 @@ export function DataTableRowActions<TData>({
         description: "Failed to update contract status",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteContract = async () => {
+    try {
+      setIsDeleting(true);
+      await deleteContract(contract._id);
+
+      toast({
+        title: "Contract deleted",
+        description: "The contract has been successfully deleted.",
+      });
+
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete the contract. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -63,12 +99,19 @@ export function DataTableRowActions<TData>({
             <FileText className="mr-2 h-4 w-4" />
             View Details
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() =>
+              router.push(`/projects/${contract.projectId._id}?tab=contracts`)
+            }
+          >
             <Edit className="mr-2 h-4 w-4" />
             Edit Contract
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-red-600">
+          <DropdownMenuItem
+            onSelect={() => setIsDeleteDialogOpen(true)}
+            className="text-red-600 focus:text-red-600"
+          >
             <Trash className="mr-2 h-4 w-4" />
             Delete Contract
           </DropdownMenuItem>
@@ -81,6 +124,55 @@ export function DataTableRowActions<TData>({
         onOpenChange={setIsDetailsOpen}
         onStatusChange={handleStatusChange}
       />
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Contract</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this contract? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="border rounded-md p-4">
+              <h4 className="font-medium">{contract.contractNumber}</h4>
+              <p className="text-sm mt-1">{contract.description}</p>
+              <div className="mt-2 flex items-center">
+                <span className="text-sm font-medium mr-2">
+                  Contracted User:
+                </span>
+                <span className="text-sm">
+                  {contract.contractedUserId.firstName}{" "}
+                  {contract.contractedUserId.lastName}
+                </span>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteContract}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <div className="flex items-center space-x-2">
+                  <Spinner />
+                  <span>Deleting...</span>
+                </div>
+              ) : (
+                "Delete Contract"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

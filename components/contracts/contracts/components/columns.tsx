@@ -26,8 +26,8 @@ export const columns: ColumnDef<Contract>[] = [
       return (
         <div className="flex flex-col">
           <span className="font-medium">{row.getValue("contractNumber")}</span>
-          <span className="text-xs text-muted-foreground">
-            {row.original.procurementReferenceNumber}
+          <span className="text-xs text-muted-foreground line-clamp-1">
+            {row.original.projectId?.name || ""}
           </span>
         </div>
       );
@@ -39,15 +39,17 @@ export const columns: ColumnDef<Contract>[] = [
     accessorFn: (row) => {
       const contract = row;
       if (typeof contract === "object" && contract !== null) {
-        return `${contract?.description || ""} ${contract?.contractNumber || ""}`;
+        return `${contract?.description || ""} ${
+          contract?.contractNumber || ""
+        }`;
       }
       return "";
     },
     filterFn: customIncludesStringFilter,
-    enableHiding: true, // Allow this column to be hidden
-    enableSorting: false, // Prevent sorting if not needed
-    size: 0, // Set minimal size
-    cell: () => null, // This ensures nothing renders in the cell
+    enableHiding: true,
+    enableSorting: false,
+    size: 0,
+    cell: () => null,
   },
   {
     accessorKey: "description",
@@ -59,7 +61,8 @@ export const columns: ColumnDef<Contract>[] = [
         <div className="flex flex-col">
           <span className="font-medium">{row.getValue("description")}</span>
           <span className="text-xs text-muted-foreground line-clamp-1">
-            {row.original.description}
+            {row.original.contractedUserId?.firstName}{" "}
+            {row.original.contractedUserId?.lastName}
           </span>
         </div>
       );
@@ -91,7 +94,9 @@ export const columns: ColumnDef<Contract>[] = [
       const endDate = new Date(row.original.endDate);
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{format(startDate, "MMM d, yyyy")}</span>
+          <span className="font-medium">
+            {format(startDate, "MMM d, yyyy")}
+          </span>
           <span className="text-xs text-muted-foreground">
             to {format(endDate, "MMM d, yyyy")}
           </span>
@@ -127,28 +132,26 @@ export const columns: ColumnDef<Contract>[] = [
     },
   },
   {
-    accessorKey: "deliverables",
+    accessorKey: "amendments",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Progress" />
+      <DataTableColumnHeader column={column} title="Amendments" />
     ),
     cell: ({ row }) => {
-      const deliverables = row.original.deliverables;
-      const completed = deliverables.filter((d) => d.completed).length;
-      const total = deliverables.length;
-      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-      
+      const amendments = row.original.amendments || [];
+      const count = amendments.length;
+
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{percentage}%</span>
+          <span className="font-medium">{count}</span>
           <span className="text-xs text-muted-foreground">
-            {completed}/{total} deliverables
+            {count === 1 ? "amendment" : "amendments"}
           </span>
         </div>
       );
     },
   },
   {
-    id: "actions",
+    accessorKey: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ];
