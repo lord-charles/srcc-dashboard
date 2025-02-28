@@ -41,12 +41,12 @@ export async function createExternalBudget(budgetData: any) {
   }
 }
 
-export async function approveBudget(budgetId: string) {
+export async function approveBudget(budgetId: string, comments: string): Promise<Budget | null> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Budget>(
       `${API_URL}/budgets/${budgetId}/approve`,
-      {},
+      { comments },
       config
     );
     return response.data;
@@ -54,7 +54,47 @@ export async function approveBudget(budgetId: string) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error;
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function requestBudgetRevision(
+  budgetId: string,
+  data: { comments: string; changes: string[] }
+): Promise<Budget | null> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Budget>(
+      `${API_URL}/budgets/${budgetId}/request-revision`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function rejectBudget(
+  budgetId: string,
+  data: { reason: string; level: string }
+): Promise<Budget | null> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Budget>(
+      `${API_URL}/budgets/${budgetId}/reject`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
   }
 }
 

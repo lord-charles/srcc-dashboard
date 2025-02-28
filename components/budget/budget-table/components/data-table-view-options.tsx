@@ -22,24 +22,24 @@ export function DataTableViewOptions<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
 
-    useEffect(() => {
-      const columnsToHide = ["combinedName"];
-      columnsToHide.forEach((columnId) => {
-        const column = table.getColumn(columnId);
-        if (column && column.getIsVisible()) {
-          column.toggleVisibility(false); // Hide the column
-        }
-      });
-  
-      // Log the filtered data to the console
-    }, [table]);
+  useEffect(() => {
+    const columnsToHide = ["combinedName"];
+    columnsToHide.forEach((columnId) => {
+      const column = table.getColumn(columnId);
+      if (column && column.getIsVisible()) {
+        column.toggleVisibility(false); // Hide the column
+      }
+    });
+
+    // Log the filtered data to the console
+  }, [table]);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
           size="sm"
-          className="ml-auto hidden h-8 lg:flex"
+          className="mr-4 hidden h-8 lg:flex"
         >
           <MixerHorizontalIcon className="mr-2 h-4 w-4" />
           View

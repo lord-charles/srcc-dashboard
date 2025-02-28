@@ -60,6 +60,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "../ui/spinner";
 import { useRouter } from "next/navigation";
+import { NoContracts } from "./no-contracts";
 
 interface MyContractsProps {
   initialData?: any[];
@@ -128,7 +129,8 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
       console.error("Error verifying OTP:", error);
       toast({
         title: "Failed to verify OTP",
-        description: "Please try again",
+        description: `${error}` || "Please try again",
+        variant: "destructive",
       });
     } finally {
       setOtpVerifying(false);
@@ -186,8 +188,11 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
             </TooltipProvider>
           </div>
         </header>
+
         <main className="flex-1 overflow-x-hidden overflow-y-auto ">
           <div className=" px-4 sm:px-6 lg:px-8 py-8">
+            {filteredContracts.length === 0 && <NoContracts />}
+
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredContracts.map((contract) => (
                 <Card
@@ -215,9 +220,8 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center">
                         <DollarSign className="w-4 h-4 mr-2 " />
-                        <span>{`${contract.contractValue.toLocaleString()} ${
-                          contract.currency
-                        }`}</span>
+                        <span>{`${contract.contractValue.toLocaleString()} ${contract.currency
+                          }`}</span>
                       </div>
                       <div className="flex items-center">
                         <User className="w-4 h-4 mr-2 " />
@@ -281,9 +285,8 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
                                     <TableCell className="font-medium">
                                       Value
                                     </TableCell>
-                                    <TableCell>{`${contract.contractValue.toLocaleString()} ${
-                                      contract.currency
-                                    }`}</TableCell>
+                                    <TableCell>{`${contract.contractValue.toLocaleString()} ${contract.currency
+                                      }`}</TableCell>
                                   </TableRow>
                                   <TableRow>
                                     <TableCell className="font-medium">
@@ -444,6 +447,7 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
             </div>
           </div>
         </main>
+
       </div>
 
       {/* OTP Verification Dialog */}

@@ -1,10 +1,10 @@
 module.exports = {
   apps: [
     {
-      name: "innova-dashboard",
+      name: "SRCC",
       script: "node_modules/next/dist/bin/next",
       args: "start",
-      cwd: "/root/origen/origen-dashboard",
+      cwd: "/var/www/html/SRCC",
       instances: "1",
       autorestart: true,
       watch: false,

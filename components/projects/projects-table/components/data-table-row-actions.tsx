@@ -78,16 +78,6 @@ export function DataTableRowActions<TData>({
           <Link href={`/projects/${project._id}`}>
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </Link>
-          <Link href={`/budget/new?projectId=${project._id}`}>
-            <DropdownMenuItem>Add Budget</DropdownMenuItem>
-          </Link>
-          <Link href={`/contract/new?projectId=${project._id}`}>
-            <DropdownMenuItem>Add Contract</DropdownMenuItem>
-          </Link>
-          <Link href={`/projects/${project._id}/update`}>
-            <DropdownMenuItem>Edit project</DropdownMenuItem>
-          </Link>
-
           <DropdownMenuSeparator />
 
           <DialogTrigger asChild>

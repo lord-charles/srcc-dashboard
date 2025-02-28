@@ -130,8 +130,8 @@ const StepperItem = React.forwardRef<HTMLDivElement, StepperItemProps>(
       completed || step < activeStep
         ? "completed"
         : activeStep === step
-        ? "active"
-        : "inactive";
+          ? "active"
+          : "inactive";
 
     const isLoading = loading && step === activeStep;
 
@@ -220,7 +220,6 @@ const StepperIndicator = React.forwardRef<
           </span>
           <CheckIcon
             className="absolute scale-0 opacity-0 transition-all group-data-[state=completed]/step:scale-100 group-data-[state=completed]/step:opacity-100"
-            size={16}
             strokeWidth={2}
             aria-hidden="true"
           />

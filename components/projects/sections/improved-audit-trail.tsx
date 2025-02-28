@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -173,9 +173,8 @@ export function ComprehensiveAuditTrail({
           </TooltipProvider>
         </div>
         <ScrollArea
-          className={`${
-            isExpanded ? "h-[600px]" : "h-[300px]"
-          } w-full rounded-md border`}
+          className={`${isExpanded ? "h-[600px]" : "h-[300px]"
+            } w-full rounded-md border`}
         >
           <AnimatePresence>
             <motion.div

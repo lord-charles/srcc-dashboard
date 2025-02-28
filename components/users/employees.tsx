@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaginatedResponse } from "@/services/employees.service";
-
 import {
   Users,
   DollarSign,
@@ -18,18 +17,23 @@ import {
   UserMinus,
   TrendingUp,
   Plus,
+  Building2,
 } from "lucide-react";
 import { User } from "@/types/user";
+import { Organization } from "@/types/organization";
 import EmployeeTable from "./users-table/user";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AddToProjectHeader } from "./add-to-project-header";
 import { useState } from "react";
+import OrgTable from "./org-table/org";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface EmployeeModuleProps {
   initialData: PaginatedResponse<User>;
+  organizations: Organization[];
 }
 
-export default function EmployeeModule({ initialData }: EmployeeModuleProps) {
+export default function EmployeeModule({ initialData, organizations }: EmployeeModuleProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -65,13 +69,13 @@ export default function EmployeeModule({ initialData }: EmployeeModuleProps) {
       trendColor: "text-red-500",
     },
     {
-      title: "Departments",
-      value: "12",
-      icon: Briefcase,
+      title: "Organizations",
+      value: organizations.length.toString(),
+      icon: Building2,
       color: "text-purple-600",
     },
     {
-      title: "Average Salary",
+      title: "Average Rate",
       value: "KES 120,000",
       icon: DollarSign,
       color: "text-emerald-600",
@@ -79,8 +83,8 @@ export default function EmployeeModule({ initialData }: EmployeeModuleProps) {
       trendColor: "text-green-500",
     },
     {
-      title: "Total Payroll",
-      value: "KES 29.76M",
+      title: "Total Projects",
+      value: "29",
       icon: TrendingUp,
       color: "text-indigo-600",
       trend: "+2.1%",
@@ -139,28 +143,55 @@ export default function EmployeeModule({ initialData }: EmployeeModuleProps) {
               </CardDescription>
             </div>
             {!isAddingToProject && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  router.push("/consultant/register");
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Consultant
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    router.push("/consultant/register");
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Individual
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    router.push("/consultant/register-org");
+                  }}
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Add Organization
+                </Button>
+              </div>
             )}
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <EmployeeTable
-                employees={initialData.data}
-                onUserSelect={(user) => {
-                  if (isAddingToProject) {
-                    setSelectedUser(user);
-                  }
-                }}
-              />
-            </div>
+            <Tabs defaultValue="individuals" className="w-full">
+              <TabsList>
+                <TabsTrigger value="individuals" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Individuals
+                </TabsTrigger>
+                <TabsTrigger value="organizations" className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Organizations
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="individuals" className="mt-4">
+                <EmployeeTable
+                  employees={initialData.data}
+                  onUserSelect={(user) => {
+                    if (isAddingToProject) {
+                      setSelectedUser(user);
+                    }
+                  }}
+                />
+              </TabsContent>
+              <TabsContent value="organizations" className="mt-4">
+                <OrgTable organizations={organizations} />
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>

@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Budget } from "@/types/budget";
 import { formatCurrency } from "@/lib/utils";
+import { Budget } from "@/types/project";
 import { DateRange } from "react-day-picker";
 
 interface BudgetStatCardsProps {
@@ -21,21 +21,36 @@ export default function BudgetStatCards({
 }: BudgetStatCardsProps) {
   const filteredBudgets = budgets.filter((budget) => {
     if (!dateRange?.from || !dateRange?.to) return true;
-    const budgetStart = new Date(budget.budgetStartDate);
-    const budgetEnd = new Date(budget.budgetEndDate);
+
+    // Check dates from both internal and external categories
+    const allDates = [
+      ...budget.internalCategories.flatMap(cat =>
+        cat.items.flatMap(item => [item.startDate, item.endDate])
+      ),
+      ...budget.externalCategories.flatMap(cat =>
+        cat.items.flatMap(item => [item.startDate, item.endDate])
+      ),
+    ].filter(date => date) as string[];
+
+    if (allDates.length === 0) return true;
+
+    const dates = allDates.map(date => new Date(date));
+    const earliest = new Date(Math.min(...dates.map(d => d.getTime())));
+    const latest = new Date(Math.max(...dates.map(d => d.getTime())));
+
     return (
-      (budgetStart >= dateRange.from && budgetStart <= dateRange.to) ||
-      (budgetEnd >= dateRange.from && budgetEnd <= dateRange.to)
+      (earliest >= dateRange.from && earliest <= dateRange.to) ||
+      (latest >= dateRange.from && latest <= dateRange.to)
     );
   });
 
   const totalPlannedCost = filteredBudgets.reduce(
-    (sum, budget) => sum + (parseFloat(budget.totalPlannedCost?.toString() || "0") || 0),
+    (sum, budget) => sum + budget.totalInternalBudget + budget.totalExternalBudget,
     0
   );
 
   const totalActualCost = filteredBudgets.reduce(
-    (sum, budget) => sum + (parseFloat(budget.totalActualCost?.toString() || "0") || 0),
+    (sum, budget) => sum + budget.totalInternalSpent + budget.totalExternalSpent,
     0
   );
 
@@ -44,7 +59,7 @@ export default function BudgetStatCards({
     : 0;
 
   const activeBudgets = filteredBudgets.filter(
-    (budget) => budget.status === "active"
+    (budget) => budget.status === "approved"
   ).length;
 
   return (
@@ -55,7 +70,7 @@ export default function BudgetStatCards({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {totalPlannedCost}
+            {formatCurrency(totalPlannedCost, "KES")}
           </div>
           <p className="text-xs text-muted-foreground">
             Total budgeted amount for all projects
@@ -68,7 +83,7 @@ export default function BudgetStatCards({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {totalActualCost}
+            {formatCurrency(totalActualCost, "KES")}
           </div>
           <p className="text-xs text-muted-foreground">
             Total spent amount across all projects
@@ -90,12 +105,12 @@ export default function BudgetStatCards({
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Budgets</CardTitle>
+          <CardTitle className="text-sm font-medium">Approved Budgets</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{activeBudgets}</div>
           <p className="text-xs text-muted-foreground">
-            Number of currently active budgets
+            Number of approved budgets
           </p>
         </CardContent>
       </Card>

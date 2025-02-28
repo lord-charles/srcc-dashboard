@@ -13,24 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Separator } from "@/components/ui/separator";
-import {
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  ArrowRight,
-  Edit,
   Plus,
-  Check,
   Loader2,
   Trash,
   Pencil,
   Send,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertCircle,
+  Eye,
+  ClipboardCheck,
+  DollarSign,
 } from "lucide-react";
 import { Budget } from "@/types/project";
 import {
@@ -65,18 +59,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
-import BudgetApprovalComponent, { getStatusInfo } from "./budget-approval";
+import BudgetApprovalComponent from "./budget-approval";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Spinner } from "@/components/ui/spinner";
 
 const budgetItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -181,6 +175,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   const [isExternalDrawerOpen, setIsExternalDrawerOpen] = useState(false);
   const [isSubmittingInternal, setIsSubmittingInternal] = useState(false);
   const [isSubmittingExternal, setIsSubmittingExternal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -736,9 +731,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   };
 
   const getDrawerTitle = (type: "internal" | "external") => {
-    return `${isEditMode ? "Edit" : "Create"} ${
-      type === "internal" ? "Internal" : "External"
-    } Budget`;
+    return `${isEditMode ? "Edit" : "Create"} ${type === "internal" ? "Internal" : "External"
+      } Budget`;
   };
 
   return (
@@ -776,7 +770,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                 <p className="text-2xl font-bold">
                   {formatCurrency(
                     (budget.totalInternalBudget || 0) +
-                      (budget.totalExternalBudget || 0)
+                    (budget.totalExternalBudget || 0)
                   )}
                 </p>
               </div>
@@ -817,20 +811,19 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                             ? "success"
                             : budget?.status === "draft" ||
                               budget?.status === "revision_requested"
-                            ? "warning"
-                            : "secondary") as "default"
+                              ? "warning"
+                              : "secondary") as "default"
                         }
-                        className={`${
-                          getStatusInfo(budget?.status).color
-                        } px-3 py-1 text-sm font-medium rounded-full`}
+                        className={`${getStatusInfo(budget?.status).color
+                          } px-3 py-1 text-sm font-medium rounded-full`}
                       >
                         {hasInternalBudget
                           ? budget?.status?.replace("_", " ").toUpperCase()
                           : "NO BUDGET"}
                       </Badge>
                     )}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                    <Dialog>
+                      <DialogTrigger asChild>
                         <Button
                           disabled={
                             !hasInternalBudget ||
@@ -844,35 +837,43 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                           {(!hasInternalBudget ||
                             (budget?.status !== "draft" &&
                               budget?.status !== "revision_requested")) && (
-                            <span className="invisible group-hover:visible absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                              {!hasInternalBudget
-                                ? "Create a budget first"
-                                : "Can only submit draft or revision requested budgets"}
-                            </span>
-                          )}
+                              <span className="invisible group-hover:visible absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                                {!hasInternalBudget
+                                  ? "Create a budget first"
+                                  : "Can only submit draft or revision requested budgets"}
+                              </span>
+                            )}
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>
                             Submit Budget for Approval
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
+                          </DialogTitle>
+                          <DialogDescription>
                             Are you sure you want to submit this budget for
                             approval? This will notify the relevant approvers.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={async () => {
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">Cancel</Button>
+                          </DialogClose>
+                          <Button
+                            onClick={async (e) => {
+                              const target = e.target as HTMLButtonElement;
+                              target.disabled = true;
+                              setIsSubmitting(true);
                               try {
                                 await submitBudget(budget?._id);
                                 toast({
                                   title: "Success",
                                   description: "Budget submitted for approval",
                                 });
-                                router.refresh();
+                                window.location.reload();
+                                // Close the dialog
+                                const closeButton = document.querySelector('[data-dialog-close]') as HTMLButtonElement;
+                                if (closeButton) closeButton.click();
                               } catch (error: any) {
                                 toast({
                                   title: "Error",
@@ -880,14 +881,29 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                                     error.message || "Failed to submit budget",
                                   variant: "destructive",
                                 });
+                              } finally {
+                                target.disabled = false;
+                                setIsSubmitting(false);
                               }
                             }}
                           >
-                            Submit
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            <div className="flex items-center space-x-2">
+                              {isSubmitting ? (
+                                <div className="flex items-center space-x-2">
+                                  <Spinner className="h-4 w-4" />
+                                  <span>Submitting...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <Send className="h-4 w-4 mr-2" />
+                                  <span>Submit</span>
+                                </div>
+                              )}
+                            </div>
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                     <Drawer
                       open={isInternalDrawerOpen}
                       onOpenChange={setIsInternalDrawerOpen}
@@ -1277,6 +1293,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                       updatedBy={budget.updatedBy}
                       status={budget.status}
                       currentLevelDeadline={budget.currentLevelDeadline}
+                      budgetId={budget._id.toString()}
                     />
                   </div>
                 ) : (
@@ -1684,3 +1701,29 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
 };
 
 export default ModernBudgetDisplay;
+export const getStatusInfo = (status: string) => {
+  switch (status.toLowerCase()) {
+    case "approved":
+      return { color: "bg-green-500", icon: CheckCircle };
+    case "rejected":
+      return { color: "bg-red-500", icon: XCircle };
+    case "submitted_for_approval":
+      return { color: "bg-blue-500", icon: Clock };
+    case "updated":
+      return { color: "bg-yellow-500", icon: Clock };
+    case "pending_approval":
+      return { color: "bg-yellow-500", icon: Clock };
+    case "revision_requested":
+      return { color: "bg-orange-500", icon: AlertCircle };
+    case "draft":
+      return { color: "bg-gray-400", icon: Pencil };
+    case "pending_checker_approval":
+      return { color: "bg-purple-500", icon: Eye };
+    case "pending_manager_approval":
+      return { color: "bg-teal-500", icon: ClipboardCheck };
+    case "pending_finance_approval":
+      return { color: "bg-indigo-500", icon: DollarSign };
+    default:
+      return { color: "bg-gray-500", icon: XCircle };
+  }
+};

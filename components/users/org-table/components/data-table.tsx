@@ -27,11 +27,11 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination";
 import { DataTableToolbar } from "./data-table-toolbar";
-import { SystemLog } from "@/types/dashboard";
+import { User } from "@/types/user";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
-  data: SystemLog[];
+  data: User[];
 }
 
 export function DataTable<TData, TValue>({
@@ -48,7 +48,7 @@ export function DataTable<TData, TValue>({
 
   const table = useReactTable({
     data,
-    columns: columns as ColumnDef<SystemLog, any>[],
+    columns: columns as ColumnDef<User, any>[],
     state: {
       sorting,
       columnVisibility,

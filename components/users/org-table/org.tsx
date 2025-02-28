@@ -1,8 +1,7 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import {
-  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -25,30 +24,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { DataTablePagination } from "./data-table-pagination";
-import { DataTableToolbar } from "./data-table-toolbar";
-import { Contract } from "@/types/contract";
+import { DataTablePagination } from "./components/data-table-pagination";
+import { DataTableToolbar } from "./components/data-table-toolbar";
+import { columns } from "./components/columns";
+import { Organization } from "@/types/organization";
+import { useSearchParams } from "next/navigation";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+interface OrgTableProps {
+  organizations: Organization[];
+  onOrganizationSelect?: (organization: Organization) => void;
 }
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+export default function OrgTable({ organizations, onOrganizationSelect }: OrgTableProps) {
+  const [rowSelection, setRowSelection] = useState({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
+  const projectName = searchParams.get("projectName");
+
+  const isAddingToProject = !!projectId && !!projectName;
 
   const table = useReactTable({
-    data,
-    columns: columns as ColumnDef<TData, unknown>[],
+    data: organizations,
+    columns,
     state: {
       sorting,
       columnVisibility,
@@ -66,11 +66,6 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
-    initialState: {
-      pagination: {
-        pageSize: 5,
-      },
-    },
   });
 
   return (
@@ -81,18 +76,16 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} colSpan={header.colSpan}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -102,6 +95,12 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={isAddingToProject ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" : ""}
+                  onClick={() => {
+                    if (isAddingToProject && onOrganizationSelect) {
+                      onOrganizationSelect(row.original);
+                    }
+                  }}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -119,7 +118,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  No organizations found.
                 </TableCell>
               </TableRow>
             )}

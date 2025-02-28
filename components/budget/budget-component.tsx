@@ -4,31 +4,19 @@ import { Header } from "../header";
 import DashboardProvider from "@/app/dashboard-provider";
 import { useState } from "react";
 import { startOfMonth, endOfMonth, addDays } from "date-fns";
-import { format } from "date-fns";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import BudgetStatCards from "./budget-stat-cards";
 import BudgetTable from "./budget-table/budget";
-import { Budget } from "@/types/budget";
-import { DatePickerWithRange } from "@/components/date-range-picker";
+import { Budget as BudgetType } from "@/types/project";
 import { DateRange } from "react-day-picker";
 
 interface BudgetPageProps {
-  budgets?: Budget[];
+  budgets: BudgetType[];
 }
 
-export default function BudgetPage({ budgets = [] }: BudgetPageProps) {
+export default function BudgetPage({ budgets }: BudgetPageProps) {
   const [isLoading, setIsLoading] = useState(false);
-  console.log(budgets);
-
-  const [date, setDate] = useState<DateRange | undefined>({
+  const [date, setDate] = useState<DateRange>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
   });
@@ -41,9 +29,7 @@ export default function BudgetPage({ budgets = [] }: BudgetPageProps) {
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
             Budget Overview
           </h1>
-          <div className="flex items-center space-x-4 py-4">
-            <DatePickerWithRange date={date} setDate={setDate} />
-          </div>
+
         </div>
         <BudgetStatCards budgets={budgets} dateRange={date} />
         <div className="relative mt-8">

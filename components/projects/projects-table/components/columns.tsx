@@ -44,9 +44,8 @@ export const columns: ColumnDef<Project>[] = [
     id: "combinedSearch",
     header: "Search",
     accessorFn: (row) =>
-      `${row.name || ""} ${row.description || ""} ${row.client || ""} ${
-        row.projectManager || ""
-      }`,
+      `${row.name || ""} ${row.description || ""} ${row.client || ""} ${row.projectManagerId.firstName || ""
+      } ${row.projectManagerId.lastName || ""}`,
     filterFn: customIncludesStringFilter,
     enableHiding: true,
     enableSorting: false,
@@ -98,10 +97,10 @@ export const columns: ColumnDef<Project>[] = [
             status === "active"
               ? "bg-green-100 text-green-800"
               : status === "on-hold"
-              ? "bg-yellow-100 text-yellow-800"
-              : status === "completed"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-red-100 text-red-800"
+                ? "bg-yellow-100 text-yellow-800"
+                : status === "completed"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-red-100 text-red-800"
           }
         >
           {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -168,8 +167,8 @@ export const columns: ColumnDef<Project>[] = [
     cell: ({ row }) => {
       const start = new Date(row.original.contractStartDate);
       const end = new Date(row.original.contractEndDate);
-      const months = (end.getFullYear() - start.getFullYear()) * 12 + 
-                    (end.getMonth() - start.getMonth());
+      const months = (end.getFullYear() - start.getFullYear()) * 12 +
+        (end.getMonth() - start.getMonth());
       return (
         <div className="flex flex-col">
           <span>{months} months</span>

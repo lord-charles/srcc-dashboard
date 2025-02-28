@@ -1,16 +1,32 @@
 export const statuses = [
   {
-    value: "pending",
-    label: "Pending",
+    value: "revision_requested",
+    label: "Revision Requested",
   },
   {
-    value: "completed",
-    label: "Completed",
+    value: 'draft',
+    label: 'Draft'
   },
   {
-    value: "failed",
-    label: "Failed",
+    value: 'pending_checker_approval',
+    label: 'Pending Checker Approval'
   },
+  {
+    value: 'pending_manager_approval',
+    label: 'Pending Manager Approval'
+  },
+  {
+    value: 'pending_finance_approval',
+    label: 'Pending Finance Approval'
+  },
+  {
+    value: 'approved',
+    label: 'Approved'
+  },
+  {
+    value: 'rejected',
+    label: 'Rejected'
+  }
 ];
 
 export const transactionTypes = [

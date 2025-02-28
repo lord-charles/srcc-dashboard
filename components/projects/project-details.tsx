@@ -17,8 +17,6 @@ import {
 } from "lucide-react";
 import type { Project } from "@/types/project";
 import { useRouter, useSearchParams } from "next/navigation";
-
-// Import section components
 import { TeamSection } from "./sections/team-section";
 import { FinancialSection } from "./sections/financial-section";
 import { RiskSection } from "./sections/risk-section";

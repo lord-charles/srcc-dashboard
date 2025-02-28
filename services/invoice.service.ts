@@ -16,7 +16,7 @@ export async function createInvoice(invoiceData: any) {
       config
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }

@@ -90,9 +90,9 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Additional Documents</h4>
             <div className="grid gap-2">
-              {documents.map((doc) => (
+              {documents.map((doc, index) => (
                 <div
-                  key={doc._id}
+                  key={index}
                   className="flex items-center justify-between rounded-lg border p-3"
                 >
                   <div className="flex items-center space-x-2">

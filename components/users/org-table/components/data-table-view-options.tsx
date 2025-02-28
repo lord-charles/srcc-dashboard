@@ -12,6 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { useEffect } from "react";
 
 interface DataTableViewOptionsProps<TData> {
   table: Table<TData>;
@@ -20,6 +21,17 @@ interface DataTableViewOptionsProps<TData> {
 export function DataTableViewOptions<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
+  useEffect(() => {
+    const columnsToHide = ["combinedName"];
+    columnsToHide.forEach((columnId) => {
+      const column = table.getColumn(columnId);
+      if (column && column.getIsVisible()) {
+        column.toggleVisibility(false); // Hide the column
+      }
+    });
+
+    // Log the filtered data to the console
+  }, [table]);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

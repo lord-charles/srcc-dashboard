@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
-import { Contract } from "@/types/contract";
 import { Download } from "lucide-react";
+import { statuses } from "../data/data";
+import { Budget } from "@/types/project";
+
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -15,14 +17,14 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({
   table,
-}: DataTableToolbarProps<Contract>) {
+}: DataTableToolbarProps<Budget>) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
-          placeholder="Search contracts..."
+          placeholder="Search Budgets..."
           value={(table.getColumn("combinedName")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("combinedName")?.setFilterValue(event.target.value)
@@ -33,24 +35,7 @@ export function DataTableToolbar<TData>({
           <DataTableFacetedFilter
             column={table.getColumn("status")}
             title="Status"
-            options={[
-              {
-                label: "Active",
-                value: "active",
-              },
-              {
-                label: "Completed",
-                value: "completed",
-              },
-              {
-                label: "Pending",
-                value: "pending",
-              },
-              {
-                label: "Terminated",
-                value: "terminated",
-              },
-            ]}
+            options={statuses}
           />
         )}
         {isFiltered && (

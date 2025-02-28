@@ -5,6 +5,7 @@ import { User, Skill } from "@/types/user";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { Badge } from "@/components/ui/badge";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 
 const customIncludesStringFilter = (
   row: Row<User>,
@@ -89,35 +90,111 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const skills = row.original.skills || [];
       const education = row.original.education?.[0];
-      const topSkills = skills.slice(0, 3); // Show only top 3 skills
+
+      // Sort skills by years of experience and proficiency level
+      const sortedSkills = [...skills].sort((a, b) => {
+        const proficiencyWeight: Record<string, number> = {
+          expert: 4,
+          advanced: 3,
+          intermediate: 2,
+          beginner: 1,
+          default: 0
+        };
+
+        // Convert years to number, default to 0 if invalid
+        const getYears = (years: string | number | undefined): number => {
+          if (typeof years === 'number') return years;
+          if (typeof years === 'string') return parseInt(years) || 0;
+          return 0;
+        };
+
+        const weightA = (proficiencyWeight[a.proficiencyLevel || 'default'] || 0) * getYears(a.yearsOfExperience);
+        const weightB = (proficiencyWeight[b.proficiencyLevel || 'default'] || 0) * getYears(b.yearsOfExperience);
+        return weightB - weightA;
+      });
 
       return (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-1">
-            {topSkills.map((skill: Skill, index: number) => (
-              <Badge 
-                key={index} 
-                variant="outline" 
-                className={`text-xs whitespace-nowrap ${getProficiencyColor(skill.proficiencyLevel)}`}
-              >
-                {skill.name}
-                <span className="ml-1 opacity-75">
-                  ({skill.yearsOfExperience}y)
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <div className="flex flex-col gap-2 cursor-help max-w-[280px]">
+              <div className="flex flex-wrap gap-1">
+                {sortedSkills.slice(0, 3).map((skill: Skill, index: number) => (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className={`text-xs whitespace-nowrap ${getProficiencyColor(skill.proficiencyLevel)}`}
+                  >
+                    {skill.name.length > 15 ? `${skill.name.substring(0, 15)}...` : skill.name}
+                    <span className="ml-1 opacity-75">
+                      ({skill.yearsOfExperience}y)
+                    </span>
+                  </Badge>
+                ))}
+                {skills.length > 3 && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    +{skills.length - 3}
+                  </Badge>
+                )}
+              </div>
+              {education && (
+                <span className="text-xs text-muted-foreground truncate">
+                  {education.qualification} • {education.institution}
                 </span>
-              </Badge>
-            ))}
-            {skills.length > 3 && (
-              <Badge variant="secondary" className="text-[10px]">
-                +{skills.length - 3} more
-              </Badge>
-            )}
-          </div>
-          {education && (
-            <span className="text-xs text-muted-foreground">
-              {education.qualification} • {education.institution} ({education.yearOfCompletion})
-            </span>
-          )}
-        </div>
+              )}
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent className="w-80">
+            <div className="flex flex-col gap-4">
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  Skills
+                  <Badge variant="outline" className="text-[10px]">
+                    {skills.length}
+                  </Badge>
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(
+                    skills.reduce((acc, skill) => {
+                      const level = skill.proficiencyLevel;
+                      if (!acc[level]) acc[level] = [];
+                      acc[level].push(skill);
+                      return acc;
+                    }, {} as Record<string, Skill[]>)
+                  ).map(([level, levelSkills]) => (
+                    <div key={level} className="space-y-1.5">
+                      <h5 className="text-xs font-medium capitalize">{level}</h5>
+                      <div className="flex flex-wrap gap-1">
+                        {levelSkills.map((skill, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className={`${getProficiencyColor(level)}`}
+                          >
+                            {skill.name}
+                            <span className="ml-1 opacity-75">
+                              ({skill.yearsOfExperience}y)
+                            </span>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {education && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-2">Education</h4>
+                  <div className="text-sm">
+                    <p className="font-medium">{education.qualification}</p>
+                    <p className="text-muted-foreground">
+                      {education.institution} • {education.yearOfCompletion}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       );
     },
   },
@@ -196,11 +273,11 @@ export const columns: ColumnDef<User>[] = [
       return (
         <Badge
           variant={
-            status === "active"
+            (status === "active"
               ? "success"
               : status === "pending"
                 ? "warning"
-                : "destructive"
+                : "destructive") as "default" | "secondary" | "destructive" | "outline"
           }
           className="capitalize"
         >
