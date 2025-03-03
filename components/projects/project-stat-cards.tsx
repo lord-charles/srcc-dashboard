@@ -41,21 +41,21 @@ const calculateProgress = (start: string, end: string) => {
 const calculateTotalMilestoneBudget = (
   milestones: Array<{ budget: number }>
 ) => {
-  return milestones.reduce((total, milestone) => total + milestone.budget, 0);
+  return milestones.reduce((total, milestone) => total + milestone?.budget, 0);
 };
 
 export function ProjectStatCards({ projectData }: { projectData: Project }) {
   const progress = calculateProgress(
-    projectData.contractStartDate,
-    projectData.contractEndDate
+    projectData?.contractStartDate,
+    projectData?.contractEndDate
   );
   const totalMilestoneBudget = calculateTotalMilestoneBudget(
-    projectData.milestones
+    projectData?.milestones
   );
   const budgetUtilization =
-    (projectData.amountSpent / projectData.totalBudget) * 100;
+    (projectData.amountSpent / projectData?.totalBudget) * 100;
   const projectValueProgress =
-    (projectData.amountSpent / projectData.totalProjectValue) * 100;
+    (projectData.amountSpent / projectData?.totalProjectValue) * 100;
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -67,17 +67,17 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
           <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{projectData.name}</div>
+          <div className="text-2xl font-bold">{projectData?.name}</div>
           <p className="text-xs text-muted-foreground mt-2">
-            Client: {projectData.client}
+            Client: {projectData?.client}
           </p>
           <div className="mt-2">
             <Badge
               variant={
-                projectData.status === "active" ? "default" : "secondary"
+                projectData?.status === "active" ? "default" : "secondary"
               }
             >
-              {projectData.status}
+              {projectData?.status}
             </Badge>
           </div>
         </CardContent>
@@ -94,8 +94,8 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
           <div className="text-2xl font-bold">{progress}%</div>
           <Progress value={progress} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-2">
-            {formatDate(projectData.contractStartDate)} -{" "}
-            {formatDate(projectData.contractEndDate)}
+            {formatDate(projectData?.contractStartDate)} -{" "}
+            {formatDate(projectData?.contractEndDate)}
           </p>
         </CardContent>
       </Card>
@@ -107,15 +107,15 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {formatCurrency(projectData.amountSpent, projectData.currency)}
+            {formatCurrency(projectData?.amountSpent, projectData?.currency)}
           </div>
           <Progress value={budgetUtilization} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-2">
             of{" "}
             {formatCurrency(
-              (projectData.budgetId.totalInternalBudget || 0) +
-                (projectData.budgetId.totalExternalBudget || 0),
-              projectData.currency
+              (projectData?.budgetId?.totalInternalBudget || 0) +
+                (projectData?.budgetId?.totalExternalBudget || 0),
+              projectData?.currency
             )}{" "}
             total budget
           </p>
@@ -139,13 +139,13 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             Milestone Budget:{" "}
-            {formatCurrency(totalMilestoneBudget, projectData.currency)}
+            {formatCurrency(totalMilestoneBudget, projectData?.currency)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Invoices: {projectData.invoices.length} (
+            Invoices: {projectData?.invoices?.length} (
             {
-              projectData.invoices.filter(
-                (i) => i.status === "pending_approval"
+              projectData?.invoices?.filter(
+                (i) => i?.status === "pending_approval"
               ).length
             }{" "}
             pending)
@@ -179,7 +179,7 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
         </CardHeader>
         <CardContent>
           <p className="text-sm font-medium">
-            Procurement: {projectData.procurementMethod}
+            Procurement: {projectData?.procurementMethod}
           </p>
           <p className="text-xs text-muted-foreground mt-2">Key Documents:</p>
           <ul className="text-xs text-muted-foreground mt-1 list-disc list-inside">

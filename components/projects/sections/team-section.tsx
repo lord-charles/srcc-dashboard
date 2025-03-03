@@ -50,7 +50,7 @@ import {
 } from "@/components/contracts/create-contract-dialog";
 import { EditContractDialog } from "@/components/contracts/edit-contract-dialog";
 
-interface TeamSectionProps {
+export interface TeamSectionProps {
   teamMembers: TeamMember[];
   projectId: string;
   projectData: Project;

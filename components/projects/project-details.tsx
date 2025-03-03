@@ -255,6 +255,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           budget={projectData.budgetId}
           currency={projectData.currency}
           projectId={projectData._id}
+          teamMembers={projectData.teamMembers}
         />
       </TabsContent>
 

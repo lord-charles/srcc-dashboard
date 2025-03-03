@@ -7,17 +7,10 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Plus,
-  Loader2,
-  Trash,
   Pencil,
-  Send,
   CheckCircle,
   XCircle,
   Clock,
@@ -27,50 +20,19 @@ import {
   DollarSign,
 } from "lucide-react";
 import { Budget } from "@/types/project";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-
 import * as z from "zod";
 import {
   createInternalBudget,
   createExternalBudget,
   updateInternalBudget,
   updateExternalBudget,
-  submitBudget,
 } from "@/services/budget.service";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+import { InternalBudget } from "./internal-budget";
+import { ExternalBudget } from "./external-budget";
 import { useRouter } from "next/navigation";
-import BudgetApprovalComponent from "./budget-approval";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Spinner } from "@/components/ui/spinner";
+import { TeamSectionProps } from "./team-section";
 
 const budgetItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -136,6 +98,7 @@ interface ModernBudgetDisplayProps {
   budget: Budget;
   currency: string;
   projectId: string;
+  teamMembers: TeamSectionProps[];
 }
 
 const initialItemState = {
@@ -169,6 +132,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   budget,
   currency,
   projectId,
+  teamMembers,
 }) => {
   const [activeTab, setActiveTab] = useState<BudgetTab>("internal");
   const [isInternalDrawerOpen, setIsInternalDrawerOpen] = useState(false);
@@ -271,11 +235,11 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   }, [isExternalDrawerOpen]);
 
   const calculateTotalAmount = (categories: BudgetCategory[]) => {
-    return categories.reduce(
+    return categories?.reduce(
       (acc, category) =>
         acc +
-        category.items.reduce(
-          (itemAcc, item) => itemAcc + (Number(item.estimatedAmount) || 0),
+        category.items?.reduce(
+          (itemAcc, item) => itemAcc + (Number(item?.estimatedAmount) || 0),
           0
         ),
       0
@@ -300,22 +264,22 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
       console.log("Validating form state:", formState);
 
       // Validate required fields
-      for (const category of formState.categories) {
+      for (const category of formState?.categories) {
         console.log("Validating category:", category);
 
-        if (!category.name?.trim()) {
+        if (!category?.name?.trim()) {
           throw new Error(`Category name is required`);
         }
-        if (!category.description?.trim()) {
+        if (!category?.description?.trim()) {
           throw new Error(`Category description is required`);
         }
 
-        for (const [index, item] of category.items.entries()) {
+        for (const [index, item] of category?.items?.entries() || []) {
           console.log(`Validating item ${index}:`, item);
 
-          if (!item.name?.trim()) {
+          if (!item?.name?.trim()) {
             throw new Error(
-              `Item name is required in category "${category.name}"`
+              `Item name is required in category "${category?.name}"`
             );
           }
           if (!item.description?.trim()) {
@@ -516,55 +480,6 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-KE", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const renderBudgetItems = (categories: BudgetCategory[] = []) => {
-    return (
-      <div className="space-y-4">
-        {categories.map((category, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <CardTitle>{category.name}</CardTitle>
-              <CardDescription>{category.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {category.items.map((item, itemIndex) => (
-                  <div
-                    key={itemIndex}
-                    className="flex justify-between items-center p-2 rounded-lg bg-muted"
-                  >
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.description}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">
-                        {formatCurrency(item.estimatedAmount)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {item.frequency}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  };
-
   const handleRemoveCategory = (
     index: number,
     type: "internal" | "external"
@@ -731,8 +646,17 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   };
 
   const getDrawerTitle = (type: "internal" | "external") => {
-    return `${isEditMode ? "Edit" : "Create"} ${type === "internal" ? "Internal" : "External"
-      } Budget`;
+    return `${isEditMode ? "Edit" : "Create"} ${
+      type === "internal" ? "Internal" : "External"
+    } Budget`;
+  };
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
   return (
@@ -770,7 +694,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                 <p className="text-2xl font-bold">
                   {formatCurrency(
                     (budget.totalInternalBudget || 0) +
-                    (budget.totalExternalBudget || 0)
+                      (budget.totalExternalBudget || 0)
                   )}
                 </p>
               </div>
@@ -800,898 +724,59 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
             </TabsList>
 
             <TabsContent value="internal">
-              <div className="items-center mb-4">
-                <div className="flex items-center justify-between p-2">
-                  <h2 className="text-xl font-semibold">Internal Budget</h2>
-                  <div className="flex items-center gap-4">
-                    {budget.status && (
-                      <Badge
-                        variant={
-                          (budget?.status === "approved"
-                            ? "success"
-                            : budget?.status === "draft" ||
-                              budget?.status === "revision_requested"
-                              ? "warning"
-                              : "secondary") as "default"
-                        }
-                        className={`${getStatusInfo(budget?.status).color
-                          } px-3 py-1 text-sm font-medium rounded-full`}
-                      >
-                        {hasInternalBudget
-                          ? budget?.status?.replace("_", " ").toUpperCase()
-                          : "NO BUDGET"}
-                      </Badge>
-                    )}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          disabled={
-                            !hasInternalBudget ||
-                            (budget?.status !== "draft" &&
-                              budget?.status !== "revision_requested")
-                          }
-                          className="relative group"
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Submit for Approval
-                          {(!hasInternalBudget ||
-                            (budget?.status !== "draft" &&
-                              budget?.status !== "revision_requested")) && (
-                              <span className="invisible group-hover:visible absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                                {!hasInternalBudget
-                                  ? "Create a budget first"
-                                  : "Can only submit draft or revision requested budgets"}
-                              </span>
-                            )}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>
-                            Submit Budget for Approval
-                          </DialogTitle>
-                          <DialogDescription>
-                            Are you sure you want to submit this budget for
-                            approval? This will notify the relevant approvers.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                          </DialogClose>
-                          <Button
-                            onClick={async (e) => {
-                              const target = e.target as HTMLButtonElement;
-                              target.disabled = true;
-                              setIsSubmitting(true);
-                              try {
-                                await submitBudget(budget?._id);
-                                toast({
-                                  title: "Success",
-                                  description: "Budget submitted for approval",
-                                });
-                                window.location.reload();
-                                // Close the dialog
-                                const closeButton = document.querySelector('[data-dialog-close]') as HTMLButtonElement;
-                                if (closeButton) closeButton.click();
-                              } catch (error: any) {
-                                toast({
-                                  title: "Error",
-                                  description:
-                                    error.message || "Failed to submit budget",
-                                  variant: "destructive",
-                                });
-                              } finally {
-                                target.disabled = false;
-                                setIsSubmitting(false);
-                              }
-                            }}
-                          >
-                            <div className="flex items-center space-x-2">
-                              {isSubmitting ? (
-                                <div className="flex items-center space-x-2">
-                                  <Spinner className="h-4 w-4" />
-                                  <span>Submitting...</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center space-x-2">
-                                  <Send className="h-4 w-4 mr-2" />
-                                  <span>Submit</span>
-                                </div>
-                              )}
-                            </div>
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                    <Drawer
-                      open={isInternalDrawerOpen}
-                      onOpenChange={setIsInternalDrawerOpen}
-                    >
-                      <DrawerTrigger asChild>
-                        <Button onClick={() => handleDrawerOpen("internal")}>
-                          {hasInternalBudget ? (
-                            <Pencil className="h-4 w-4 mr-2" />
-                          ) : (
-                            <Plus className="h-4 w-4 mr-2" />
-                          )}
-                          {hasInternalBudget
-                            ? "Edit Internal Budget"
-                            : "Add Internal Budget"}
-                        </Button>
-                      </DrawerTrigger>
-                      <DrawerContent className="h-[90vh] flex flex-col">
-                        <DrawerHeader>
-                          <DrawerTitle>
-                            {getDrawerTitle("internal")}
-                          </DrawerTitle>
-                          <DrawerDescription>
-                            Add internal budget categories and items. All
-                            amounts should be in {currency}.
-                          </DrawerDescription>
-                        </DrawerHeader>
-                        <div className="flex-1 overflow-hidden">
-                          <ScrollArea className="h-full">
-                            <div className="p-4 space-y-6">
-                              {internalFormState.categories.map(
-                                (category, categoryIndex) => (
-                                  <Card key={categoryIndex} className="p-4">
-                                    <div className="space-y-4">
-                                      <div className="flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold">
-                                          Category {categoryIndex + 1}
-                                        </h3>
-                                        {categoryIndex > 0 && (
-                                          <Button
-                                            variant="destructive"
-                                            size="sm"
-                                            onClick={() =>
-                                              handleRemoveCategory(
-                                                categoryIndex,
-                                                "internal"
-                                              )
-                                            }
-                                          >
-                                            <Trash className="h-4 w-4" />
-                                          </Button>
-                                        )}
-                                      </div>
-
-                                      <div className="grid gap-4">
-                                        <div className="grid gap-2">
-                                          <Label
-                                            htmlFor={`internal-category-name-${categoryIndex}`}
-                                          >
-                                            Category Name *
-                                          </Label>
-                                          <Input
-                                            id={`internal-category-name-${categoryIndex}`}
-                                            placeholder="e.g., Human Resources"
-                                            value={category.name}
-                                            onChange={(e) =>
-                                              handleCategoryChange(
-                                                categoryIndex,
-                                                "name",
-                                                e.target.value,
-                                                "internal"
-                                              )
-                                            }
-                                          />
-                                        </div>
-
-                                        <div className="grid gap-2">
-                                          <Label
-                                            htmlFor={`internal-category-desc-${categoryIndex}`}
-                                          >
-                                            Category Description *
-                                          </Label>
-                                          <Textarea
-                                            id={`internal-category-desc-${categoryIndex}`}
-                                            placeholder="e.g., All HR related expenses"
-                                            value={category.description}
-                                            onChange={(e) =>
-                                              handleCategoryChange(
-                                                categoryIndex,
-                                                "description",
-                                                e.target.value,
-                                                "internal"
-                                              )
-                                            }
-                                          />
-                                        </div>
-
-                                        <div className="space-y-4">
-                                          {category.items.map(
-                                            (item, itemIndex) => (
-                                              <Card
-                                                key={itemIndex}
-                                                className="p-4"
-                                              >
-                                                <div className="space-y-4">
-                                                  <div className="flex items-center justify-between">
-                                                    <h4 className="text-md font-medium">
-                                                      Item {itemIndex + 1}
-                                                    </h4>
-                                                    {itemIndex > 0 && (
-                                                      <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                          handleRemoveItem(
-                                                            categoryIndex,
-                                                            itemIndex,
-                                                            "internal"
-                                                          )
-                                                        }
-                                                      >
-                                                        <Trash className="h-4 w-4" />
-                                                      </Button>
-                                                    )}
-                                                  </div>
-
-                                                  <div className="grid gap-4">
-                                                    <div className="grid gap-2">
-                                                      <Label
-                                                        htmlFor={`internal-item-name-${categoryIndex}-${itemIndex}`}
-                                                      >
-                                                        Item Name *
-                                                      </Label>
-                                                      <Input
-                                                        id={`internal-item-name-${categoryIndex}-${itemIndex}`}
-                                                        placeholder="e.g., Software Development Team"
-                                                        value={item.name}
-                                                        onChange={(e) =>
-                                                          handleItemChange(
-                                                            categoryIndex,
-                                                            itemIndex,
-                                                            "name",
-                                                            e.target.value,
-                                                            "internal"
-                                                          )
-                                                        }
-                                                      />
-                                                    </div>
-
-                                                    <div className="grid gap-2">
-                                                      <Label
-                                                        htmlFor={`internal-item-desc-${categoryIndex}-${itemIndex}`}
-                                                      >
-                                                        Item Description *
-                                                      </Label>
-                                                      <Textarea
-                                                        id={`internal-item-desc-${categoryIndex}-${itemIndex}`}
-                                                        placeholder="e.g., Monthly salary allocation"
-                                                        value={item.description}
-                                                        onChange={(e) =>
-                                                          handleItemChange(
-                                                            categoryIndex,
-                                                            itemIndex,
-                                                            "description",
-                                                            e.target.value,
-                                                            "internal"
-                                                          )
-                                                        }
-                                                      />
-                                                    </div>
-
-                                                    <div className="grid gap-2">
-                                                      <Label
-                                                        htmlFor={`internal-item-amount-${categoryIndex}-${itemIndex}`}
-                                                      >
-                                                        Estimated Amount (
-                                                        {currency}) *
-                                                      </Label>
-                                                      <Input
-                                                        id={`internal-item-amount-${categoryIndex}-${itemIndex}`}
-                                                        type="number"
-                                                        placeholder="e.g., 500000"
-                                                        value={
-                                                          item.estimatedAmount
-                                                        }
-                                                        onChange={(e) =>
-                                                          handleItemChange(
-                                                            categoryIndex,
-                                                            itemIndex,
-                                                            "estimatedAmount",
-                                                            Number(
-                                                              e.target.value
-                                                            ),
-                                                            "internal"
-                                                          )
-                                                        }
-                                                      />
-                                                    </div>
-
-                                                    <div className="grid gap-2">
-                                                      <Label
-                                                        htmlFor={`internal-item-frequency-${categoryIndex}-${itemIndex}`}
-                                                      >
-                                                        Frequency *
-                                                      </Label>
-                                                      <Select
-                                                        value={item.frequency}
-                                                        onValueChange={(
-                                                          value
-                                                        ) =>
-                                                          handleItemChange(
-                                                            categoryIndex,
-                                                            itemIndex,
-                                                            "frequency",
-                                                            value,
-                                                            "internal"
-                                                          )
-                                                        }
-                                                      >
-                                                        <SelectTrigger>
-                                                          <SelectValue placeholder="Select frequency" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                          <SelectItem value="monthly">
-                                                            Monthly
-                                                          </SelectItem>
-                                                          <SelectItem value="quarterly">
-                                                            Quarterly
-                                                          </SelectItem>
-                                                          <SelectItem value="annually">
-                                                            Annually
-                                                          </SelectItem>
-                                                          <SelectItem value="one-time">
-                                                            One-time
-                                                          </SelectItem>
-                                                        </SelectContent>
-                                                      </Select>
-                                                    </div>
-
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                      <div className="grid gap-2">
-                                                        <Label
-                                                          htmlFor={`internal-item-start-${categoryIndex}-${itemIndex}`}
-                                                        >
-                                                          Start Date *
-                                                        </Label>
-                                                        <Input
-                                                          id={`internal-item-start-${categoryIndex}-${itemIndex}`}
-                                                          type="date"
-                                                          value={item.startDate}
-                                                          className="z-50"
-                                                          onChange={(e) =>
-                                                            handleItemChange(
-                                                              categoryIndex,
-                                                              itemIndex,
-                                                              "startDate",
-                                                              e.target.value,
-                                                              "internal"
-                                                            )
-                                                          }
-                                                        />
-                                                      </div>
-                                                      <div className="grid gap-2">
-                                                        <Label
-                                                          htmlFor={`internal-item-end-${categoryIndex}-${itemIndex}`}
-                                                        >
-                                                          End Date *
-                                                        </Label>
-                                                        <Input
-                                                          id={`internal-item-end-${categoryIndex}-${itemIndex}`}
-                                                          type="date"
-                                                          value={item.endDate}
-                                                          className="z-50"
-                                                          onChange={(e) =>
-                                                            handleItemChange(
-                                                              categoryIndex,
-                                                              itemIndex,
-                                                              "endDate",
-                                                              e.target.value,
-                                                              "internal"
-                                                            )
-                                                          }
-                                                        />
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </Card>
-                                            )
-                                          )}
-                                        </div>
-
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          size="sm"
-                                          className="w-full"
-                                          onClick={() =>
-                                            handleAddItem(
-                                              categoryIndex,
-                                              "internal"
-                                            )
-                                          }
-                                        >
-                                          <Plus className="h-4 w-4 mr-2" />
-                                          Add Item
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </Card>
-                                )
-                              )}
-
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => handleAddCategory("internal")}
-                              >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Category
-                              </Button>
-
-                              <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                  <Label>Total Budget</Label>
-                                  <p className="text-lg font-semibold">
-                                    {currency}{" "}
-                                    {internalFormState.totalBudget.toLocaleString()}
-                                  </p>
-                                </div>
-
-                                <div className="grid gap-2">
-                                  <Label htmlFor="internal-notes">Notes</Label>
-                                  <Textarea
-                                    id="internal-notes"
-                                    placeholder="Add any additional notes about this budget"
-                                    value={internalFormState.notes}
-                                    onChange={(e) =>
-                                      setInternalFormState((prev) => ({
-                                        ...prev,
-                                        notes: e.target.value,
-                                      }))
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </ScrollArea>
-                        </div>
-                        <DrawerFooter className="border-t">
-                          <Button
-                            onClick={
-                              isEditMode
-                                ? handleUpdateInternalBudget
-                                : handleCreateInternalBudget
-                            }
-                            className="w-full"
-                            disabled={isSubmittingInternal}
-                          >
-                            {isSubmittingInternal ? (
-                              <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                {isEditMode ? "Updating..." : "Creating..."}
-                              </>
-                            ) : isEditMode ? (
-                              "Update Budget"
-                            ) : (
-                              "Create Budget"
-                            )}
-                          </Button>
-                          <DrawerClose asChild>
-                            <Button variant="outline" className="w-full">
-                              Cancel
-                            </Button>
-                          </DrawerClose>
-                        </DrawerFooter>
-                      </DrawerContent>
-                    </Drawer>
-                  </div>
-                </div>
-                {hasInternalBudget ? (
-                  <div className="space-y-4">
-                    {renderBudgetItems(budget.internalCategories)}
-                    <BudgetApprovalComponent
-                      auditTrail={budget.auditTrail}
-                      createdBy={budget.createdBy}
-                      updatedBy={budget.updatedBy}
-                      status={budget.status}
-                      currentLevelDeadline={budget.currentLevelDeadline}
-                      budgetId={budget._id.toString()}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                    <div className="text-center space-y-2">
-                      <h3 className="text-lg font-semibold">
-                        No Internal Budget
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Create an internal budget to track your project expenses
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <InternalBudget
+                hasInternalBudget={hasInternalBudget}
+                status={budget?.status}
+                budgetId={budget?._id.toString()}
+                budget={budget}
+                setIsSubmitting={setIsSubmitting}
+                isSubmitting={isSubmitting}
+                handleCreateInternalBudget={handleCreateInternalBudget}
+                handleUpdateInternalBudget={handleUpdateInternalBudget}
+                isInternalDrawerOpen={isInternalDrawerOpen}
+                setIsInternalDrawerOpen={setIsInternalDrawerOpen}
+                handleDrawerOpen={handleDrawerOpen}
+                getDrawerTitle={getDrawerTitle}
+                internalFormState={internalFormState}
+                currency={currency}
+                handleRemoveCategory={handleRemoveCategory}
+                handleCategoryChange={handleCategoryChange}
+                handleRemoveItem={handleRemoveItem}
+                setInternalFormState={setInternalFormState}
+                handleAddCategory={handleAddCategory}
+                isEditMode={isEditMode}
+                isSubmittingInternal={isSubmittingInternal}
+                handleAddItem={handleAddItem}
+                handleItemChange={handleItemChange}
+                handleDrawerClose={() => setIsInternalDrawerOpen(false)}
+                handleDeleteCategory={handleRemoveCategory}
+                handleDeleteItem={handleRemoveItem}
+                teamMembers={teamMembers}
+              />
             </TabsContent>
 
             <TabsContent value="external">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">External Budget</h2>
-                <Drawer
-                  open={isExternalDrawerOpen}
-                  onOpenChange={setIsExternalDrawerOpen}
-                >
-                  <DrawerTrigger asChild>
-                    <Button onClick={() => handleDrawerOpen("external")}>
-                      {hasExternalBudget ? (
-                        <Pencil className="h-4 w-4 mr-2" />
-                      ) : (
-                        <Plus className="h-4 w-4 mr-2" />
-                      )}
-                      {hasExternalBudget
-                        ? "Edit External Budget"
-                        : "Add External Budget"}
-                    </Button>
-                  </DrawerTrigger>
-                  <DrawerContent className="h-[90vh] flex flex-col">
-                    <DrawerHeader>
-                      <DrawerTitle>{getDrawerTitle("external")}</DrawerTitle>
-                      <DrawerDescription>
-                        Add external budget categories and items. All amounts
-                        should be in {currency}.
-                      </DrawerDescription>
-                    </DrawerHeader>
-                    <div className="flex-1 overflow-hidden">
-                      <ScrollArea className="h-full">
-                        <div className="p-4 space-y-6">
-                          {externalFormState.categories.map(
-                            (category, categoryIndex) => (
-                              <Card key={categoryIndex} className="p-4">
-                                <div className="space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <h3 className="text-lg font-semibold">
-                                      Category {categoryIndex + 1}
-                                    </h3>
-                                    {categoryIndex > 0 && (
-                                      <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() =>
-                                          handleRemoveCategory(
-                                            categoryIndex,
-                                            "external"
-                                          )
-                                        }
-                                      >
-                                        <Trash className="h-4 w-4" />
-                                      </Button>
-                                    )}
-                                  </div>
-
-                                  <div className="grid gap-4">
-                                    <div className="grid gap-2">
-                                      <Label
-                                        htmlFor={`external-category-name-${categoryIndex}`}
-                                      >
-                                        Category Name *
-                                      </Label>
-                                      <Input
-                                        id={`external-category-name-${categoryIndex}`}
-                                        placeholder="e.g., Human Resources"
-                                        value={category.name}
-                                        onChange={(e) =>
-                                          handleCategoryChange(
-                                            categoryIndex,
-                                            "name",
-                                            e.target.value,
-                                            "external"
-                                          )
-                                        }
-                                      />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                      <Label
-                                        htmlFor={`external-category-desc-${categoryIndex}`}
-                                      >
-                                        Category Description *
-                                      </Label>
-                                      <Textarea
-                                        id={`external-category-desc-${categoryIndex}`}
-                                        placeholder="e.g., All HR related expenses"
-                                        value={category.description}
-                                        onChange={(e) =>
-                                          handleCategoryChange(
-                                            categoryIndex,
-                                            "description",
-                                            e.target.value,
-                                            "external"
-                                          )
-                                        }
-                                      />
-                                    </div>
-
-                                    <div className="space-y-4">
-                                      {category.items.map((item, itemIndex) => (
-                                        <Card key={itemIndex} className="p-4">
-                                          <div className="space-y-4">
-                                            <div className="flex items-center justify-between">
-                                              <h4 className="text-md font-medium">
-                                                Item {itemIndex + 1}
-                                              </h4>
-                                              {itemIndex > 0 && (
-                                                <Button
-                                                  variant="destructive"
-                                                  size="sm"
-                                                  onClick={() =>
-                                                    handleRemoveItem(
-                                                      categoryIndex,
-                                                      itemIndex,
-                                                      "external"
-                                                    )
-                                                  }
-                                                >
-                                                  <Trash className="h-4 w-4" />
-                                                </Button>
-                                              )}
-                                            </div>
-
-                                            <div className="grid gap-4">
-                                              <div className="grid gap-2">
-                                                <Label
-                                                  htmlFor={`external-item-name-${categoryIndex}-${itemIndex}`}
-                                                >
-                                                  Item Name *
-                                                </Label>
-                                                <Input
-                                                  id={`external-item-name-${categoryIndex}-${itemIndex}`}
-                                                  placeholder="e.g., Software Development Team"
-                                                  value={item.name}
-                                                  onChange={(e) =>
-                                                    handleItemChange(
-                                                      categoryIndex,
-                                                      itemIndex,
-                                                      "name",
-                                                      e.target.value,
-                                                      "external"
-                                                    )
-                                                  }
-                                                />
-                                              </div>
-
-                                              <div className="grid gap-2">
-                                                <Label
-                                                  htmlFor={`external-item-desc-${categoryIndex}-${itemIndex}`}
-                                                >
-                                                  Item Description *
-                                                </Label>
-                                                <Textarea
-                                                  id={`external-item-desc-${categoryIndex}-${itemIndex}`}
-                                                  placeholder="e.g., Monthly salary allocation"
-                                                  value={item.description}
-                                                  onChange={(e) =>
-                                                    handleItemChange(
-                                                      categoryIndex,
-                                                      itemIndex,
-                                                      "description",
-                                                      e.target.value,
-                                                      "external"
-                                                    )
-                                                  }
-                                                />
-                                              </div>
-
-                                              <div className="grid gap-2">
-                                                <Label
-                                                  htmlFor={`external-item-amount-${categoryIndex}-${itemIndex}`}
-                                                >
-                                                  Estimated Amount ({currency})
-                                                  *
-                                                </Label>
-                                                <Input
-                                                  id={`external-item-amount-${categoryIndex}-${itemIndex}`}
-                                                  type="number"
-                                                  placeholder="e.g., 500000"
-                                                  value={item.estimatedAmount}
-                                                  onChange={(e) =>
-                                                    handleItemChange(
-                                                      categoryIndex,
-                                                      itemIndex,
-                                                      "estimatedAmount",
-                                                      Number(e.target.value),
-                                                      "external"
-                                                    )
-                                                  }
-                                                />
-                                              </div>
-
-                                              <div className="grid gap-2">
-                                                <Label
-                                                  htmlFor={`external-item-frequency-${categoryIndex}-${itemIndex}`}
-                                                >
-                                                  Frequency *
-                                                </Label>
-                                                <Select
-                                                  value={item.frequency}
-                                                  onValueChange={(value) =>
-                                                    handleItemChange(
-                                                      categoryIndex,
-                                                      itemIndex,
-                                                      "frequency",
-                                                      value,
-                                                      "external"
-                                                    )
-                                                  }
-                                                >
-                                                  <SelectTrigger>
-                                                    <SelectValue placeholder="Select frequency" />
-                                                  </SelectTrigger>
-                                                  <SelectContent>
-                                                    <SelectItem value="monthly">
-                                                      Monthly
-                                                    </SelectItem>
-                                                    <SelectItem value="quarterly">
-                                                      Quarterly
-                                                    </SelectItem>
-                                                    <SelectItem value="annually">
-                                                      Annually
-                                                    </SelectItem>
-                                                    <SelectItem value="one-time">
-                                                      One-time
-                                                    </SelectItem>
-                                                  </SelectContent>
-                                                </Select>
-                                              </div>
-
-                                              <div className="grid grid-cols-2 gap-4">
-                                                <div className="grid gap-2">
-                                                  <Label
-                                                    htmlFor={`external-item-start-${categoryIndex}-${itemIndex}`}
-                                                  >
-                                                    Start Date *
-                                                  </Label>
-                                                  <Input
-                                                    id={`external-item-start-${categoryIndex}-${itemIndex}`}
-                                                    type="date"
-                                                    value={item.startDate}
-                                                    onChange={(e) =>
-                                                      handleItemChange(
-                                                        categoryIndex,
-                                                        itemIndex,
-                                                        "startDate",
-                                                        e.target.value,
-                                                        "external"
-                                                      )
-                                                    }
-                                                  />
-                                                </div>
-                                                <div className="grid gap-2">
-                                                  <Label
-                                                    htmlFor={`external-item-end-${categoryIndex}-${itemIndex}`}
-                                                  >
-                                                    End Date *
-                                                  </Label>
-                                                  <Input
-                                                    id={`external-item-end-${categoryIndex}-${itemIndex}`}
-                                                    type="date"
-                                                    value={item.endDate}
-                                                    onChange={(e) =>
-                                                      handleItemChange(
-                                                        categoryIndex,
-                                                        itemIndex,
-                                                        "endDate",
-                                                        e.target.value,
-                                                        "external"
-                                                      )
-                                                    }
-                                                  />
-                                                </div>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </Card>
-                                      ))}
-                                    </div>
-
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      className="w-full"
-                                      onClick={() =>
-                                        handleAddItem(categoryIndex, "external")
-                                      }
-                                    >
-                                      <Plus className="h-4 w-4 mr-2" />
-                                      Add Item
-                                    </Button>
-                                  </div>
-                                </div>
-                              </Card>
-                            )
-                          )}
-
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => handleAddCategory("external")}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Category
-                          </Button>
-
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <Label>Total Budget</Label>
-                              <p className="text-lg font-semibold">
-                                {currency}{" "}
-                                {externalFormState.totalBudget.toLocaleString()}
-                              </p>
-                            </div>
-
-                            <div className="grid gap-2">
-                              <Label htmlFor="external-notes">Notes</Label>
-                              <Textarea
-                                id="external-notes"
-                                placeholder="Add any additional notes about this budget"
-                                value={externalFormState.notes}
-                                onChange={(e) =>
-                                  setExternalFormState((prev) => ({
-                                    ...prev,
-                                    notes: e.target.value,
-                                  }))
-                                }
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </ScrollArea>
-                    </div>
-                    <DrawerFooter className="border-t">
-                      <Button
-                        onClick={
-                          isEditMode
-                            ? handleUpdateExternalBudget
-                            : handleCreateExternalBudget
-                        }
-                        className="w-full"
-                        disabled={isSubmittingExternal}
-                      >
-                        {isSubmittingExternal ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {isEditMode ? "Updating..." : "Creating..."}
-                          </>
-                        ) : isEditMode ? (
-                          "Update Budget"
-                        ) : (
-                          "Create Budget"
-                        )}
-                      </Button>
-                      <DrawerClose asChild>
-                        <Button variant="outline" className="w-full">
-                          Cancel
-                        </Button>
-                      </DrawerClose>
-                    </DrawerFooter>
-                  </DrawerContent>
-                </Drawer>
-              </div>
-              {hasExternalBudget ? (
-                <div className="space-y-4">
-                  {renderBudgetItems(budget.externalCategories)}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                  <div className="text-center space-y-2">
-                    <h3 className="text-lg font-semibold">
-                      No External Budget
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      Create an external budget to track vendor and service
-                      expenses
-                    </p>
-                  </div>
-                </div>
-              )}
+              <ExternalBudget
+                hasExternalBudget={hasExternalBudget}
+                budget={budget}
+                handleCreateExternalBudget={handleCreateExternalBudget}
+                handleUpdateExternalBudget={handleUpdateExternalBudget}
+                isExternalDrawerOpen={isExternalDrawerOpen}
+                setIsExternalDrawerOpen={setIsExternalDrawerOpen}
+                handleDrawerOpen={handleDrawerOpen}
+                getDrawerTitle={getDrawerTitle}
+                externalFormState={externalFormState}
+                currency={currency}
+                handleRemoveCategory={handleRemoveCategory}
+                handleCategoryChange={handleCategoryChange}
+                handleRemoveItem={handleRemoveItem}
+                handleItemChange={handleItemChange}
+                handleAddItem={handleAddItem}
+                setExternalFormState={setExternalFormState}
+                handleAddCategory={handleAddCategory}
+                isEditMode={isEditMode}
+                isSubmittingExternal={isSubmittingExternal}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
