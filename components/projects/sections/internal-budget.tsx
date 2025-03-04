@@ -56,12 +56,12 @@ import {
 import { Budget, BudgetCategory } from "@/types/project";
 import { BudgetCodeSelector } from "./budget-code-dialog";
 import { TeamSectionProps } from "./team-section";
+import { formatDateForInput } from "@/lib/date-utils";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { useInternalBudgetStore, createInitialFormState } from "@/store/internal-budget-store";
 
 interface InternalBudgetProps {
   hasInternalBudget: boolean;
@@ -179,90 +179,7 @@ export const InternalBudget = ({
     );
   };
 
-  const {
-    formState: storedFormState,
-    setFormState: setStoredFormState,
-    initializeFromBudget,
-    updateCategory,
-    updateItem,
-    addCategory,
-    removeCategory,
-    addItem,
-    removeItem,
-  } = useInternalBudgetStore();
 
-  useEffect(() => {
-    if (budget && !storedFormState?.categories?.length) {
-      initializeFromBudget(budget);
-    }
-  }, [budget, initializeFromBudget, storedFormState?.categories?.length]);
-
-  useEffect(() => {
-    if (storedFormState?.categories) {
-      setInternalFormState(storedFormState);
-    }
-  }, [storedFormState, setInternalFormState]);
-
-  const enhancedHandleDrawerOpen = (type: string) => {
-    setIsInternalDrawerOpen(true);
-    if (!hasInternalBudget && !storedFormState?.categories?.length) {
-      const initialState = createInitialFormState();
-      setStoredFormState(initialState);
-      setInternalFormState(initialState);
-    }
-    handleDrawerOpen(type);
-  };
-
-  const enhancedHandleCategoryChange = (
-    categoryIndex: number,
-    field: string,
-    value: any,
-    type: string
-  ) => {
-    updateCategory(categoryIndex, field, value);
-    handleCategoryChange(categoryIndex, field, value, type);
-    setInternalFormState(useInternalBudgetStore.getState().formState);
-  };
-
-  const enhancedHandleRemoveCategory = (categoryIndex: number, type: string) => {
-    removeCategory(categoryIndex);
-    handleRemoveCategory(categoryIndex, type);
-    setInternalFormState(useInternalBudgetStore.getState().formState);
-  };
-
-  const enhancedHandleItemChange = (
-    categoryIndex: number,
-    itemIndex: number,
-    field: string,
-    value: any,
-    type: string
-  ) => {
-    updateItem(categoryIndex, itemIndex, field, value);
-    handleItemChange(categoryIndex, itemIndex, field, value, type);
-    setInternalFormState(useInternalBudgetStore.getState().formState);
-  };
-
-  const enhancedHandleRemoveItem = (
-    categoryIndex: number,
-    itemIndex: number,
-    type: string
-  ) => {
-    removeItem(categoryIndex, itemIndex);
-    handleRemoveItem(categoryIndex, itemIndex, type);
-    setInternalFormState(useInternalBudgetStore.getState().formState);
-  };
-
-  const enhancedHandleAddItem = (categoryIndex: number, type: string) => {
-    addItem(categoryIndex);
-    handleAddItem(categoryIndex, type);
-    setInternalFormState(useInternalBudgetStore.getState().formState);
-  };
-
-  const enhancedHandleAddCategory = (type: string) => {
-    addCategory();
-    handleAddCategory(type);
-    setInternalFormState(useInternalBudgetStore.getState().formState);
-  };
 
   return (
     <div className="items-center mb-4">
@@ -378,9 +295,6 @@ export const InternalBudget = ({
               <Button
                 onClick={() => {
                   setIsInternalDrawerOpen(true);
-                  if (!hasInternalBudget) {
-                    setStoredFormState(createInitialFormState());
-                  }
                   handleDrawerOpen("internal");
                 }}
               >
@@ -429,7 +343,7 @@ export const InternalBudget = ({
                                           variant="destructive"
                                           size="sm"
                                           onClick={() =>
-                                            enhancedHandleRemoveCategory(
+                                            handleRemoveCategory(
                                               categoryIndex,
                                               "internal"
                                             )
@@ -454,13 +368,13 @@ export const InternalBudget = ({
                                               code: string,
                                               name: string
                                             ) => {
-                                              enhancedHandleCategoryChange(
+                                              handleCategoryChange(
                                                 categoryIndex,
                                                 "name",
                                                 code,
                                                 "internal"
                                               );
-                                              enhancedHandleCategoryChange(
+                                              handleCategoryChange(
                                                 categoryIndex,
                                                 "description",
                                                 name,
@@ -481,7 +395,7 @@ export const InternalBudget = ({
                                             placeholder="e.g., All HR related expenses"
                                             value={category.description}
                                             onChange={(e) =>
-                                              enhancedHandleCategoryChange(
+                                              handleCategoryChange( 
                                                 categoryIndex,
                                                 "description",
                                                 e.target.value,
@@ -520,7 +434,7 @@ export const InternalBudget = ({
                                                           variant="destructive"
                                                           size="sm"
                                                           onClick={() =>
-                                                            enhancedHandleRemoveItem(
+                                                            handleRemoveItem(
                                                               categoryIndex,
                                                               itemIndex,
                                                               "internal"
@@ -554,7 +468,7 @@ export const InternalBudget = ({
                                                               onValueChange={(
                                                                 value
                                                               ) =>
-                                                                enhancedHandleItemChange(
+                                                                handleItemChange(
                                                                   categoryIndex,
                                                                   itemIndex,
                                                                   "name",
@@ -641,7 +555,7 @@ export const InternalBudget = ({
                                                             placeholder="e.g., Software Development Team"
                                                             value={item.name}
                                                             onChange={(e) =>
-                                                              enhancedHandleItemChange(
+                                                              handleItemChange(
                                                                 categoryIndex,
                                                                 itemIndex,
                                                                 "name",
@@ -666,7 +580,7 @@ export const InternalBudget = ({
                                                             item.description
                                                           }
                                                           onChange={(e) =>
-                                                            enhancedHandleItemChange(
+                                                            handleItemChange(
                                                               categoryIndex,
                                                               itemIndex,
                                                               "description",
@@ -688,11 +602,9 @@ export const InternalBudget = ({
                                                           id={`internal-item-amount-${categoryIndex}-${itemIndex}`}
                                                           type="number"
                                                           placeholder="e.g., 500000"
-                                                          value={
-                                                            item.estimatedAmount
-                                                          }
+                                                          value={item.estimatedAmount}
                                                           onChange={(e) =>
-                                                            enhancedHandleItemChange(
+                                                            handleItemChange(
                                                               categoryIndex,
                                                               itemIndex,
                                                               "estimatedAmount",
@@ -716,7 +628,7 @@ export const InternalBudget = ({
                                                           onValueChange={(
                                                             value
                                                           ) =>
-                                                            enhancedHandleItemChange(
+                                                            handleItemChange(
                                                               categoryIndex,
                                                               itemIndex,
                                                               "frequency",
@@ -755,12 +667,10 @@ export const InternalBudget = ({
                                                           <Input
                                                             id={`internal-item-start-${categoryIndex}-${itemIndex}`}
                                                             type="date"
-                                                            value={
-                                                              item.startDate
-                                                            }
+                                                          value={formatDateForInput(item.startDate)}
                                                             className="z-50"
                                                             onChange={(e) =>
-                                                              enhancedHandleItemChange(
+                                                              handleItemChange(
                                                                 categoryIndex,
                                                                 itemIndex,
                                                                 "startDate",
@@ -779,10 +689,10 @@ export const InternalBudget = ({
                                                           <Input
                                                             id={`internal-item-end-${categoryIndex}-${itemIndex}`}
                                                             type="date"
-                                                            value={item.endDate}
+                                                            value={formatDateForInput(item.endDate)}
                                                             className="z-50"
                                                             onChange={(e) =>
-                                                              enhancedHandleItemChange(
+                                            handleItemChange(
                                                                 categoryIndex,
                                                                 itemIndex,
                                                                 "endDate",
@@ -806,7 +716,7 @@ export const InternalBudget = ({
                                           size="sm"
                                           className="w-full"
                                           onClick={() =>
-                                            enhancedHandleAddItem(
+                                            handleAddItem(
                                               categoryIndex,
                                               "internal"
                                             )
@@ -824,7 +734,7 @@ export const InternalBudget = ({
                           )}
 
                         <Button
-                          onClick={() => enhancedHandleAddCategory("internal")}
+                          onClick={() => handleAddCategory("internal")}
                           className="w-full"
                         >
                           <Plus className="h-4 w-4 mr-2" />

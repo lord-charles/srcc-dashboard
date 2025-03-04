@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -74,7 +73,15 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     null
   );
   const [isUpdatingContract, setIsUpdatingContract] = useState(false);
-
+const isUserInInternalBudget = (email?: string): boolean => {
+    if (!email) return false;
+    const salaryCategory = projectData.budgetId.internalCategories?.find(
+      (cat: any) => cat.name === '2237'
+    );
+    return salaryCategory?.items?.some(
+      (item: any) => item.name.includes(email)
+    ) ?? false;
+  };
   const getMemberContract = (memberId: string) => {
     if (
       !projectData?.teamMemberContracts ||
@@ -126,7 +133,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     }
   };
 
-  const handleOpenContractDialog = (memberId: string) => {
+  const handleOpenContractDialog = (memberId: string, email?: string) => {
     setContractMemberId(memberId);
     setShowContractDialog(true);
   };
@@ -460,6 +467,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
               (member) => member.userId?._id === contractMemberId
             )?.userId?.lastName || ""
         }
+        teamMemberEmail={teamMembers.find((member) => member.userId?._id === contractMemberId)?.userId?.email || ""}
+        internalCategories={projectData?.budgetId?.internalCategories || []}
         isSubmitting={isCreatingContract}
       />
       {selectedContract && (

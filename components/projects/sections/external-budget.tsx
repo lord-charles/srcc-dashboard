@@ -55,7 +55,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Budget, BudgetCategory, BudgetItem } from "@/types/project";
-import { useExternalBudgetStore } from "@/store/external-budget-store";
 
 interface ExternalBudgetProps {
   hasExternalBudget: boolean;
@@ -108,80 +107,7 @@ export const ExternalBudget = ({
 }: ExternalBudgetProps) => {
   const { toast } = useToast();
 
-  const {
-    formState,
-    setFormState,
-    isDrawerOpen,
-    setIsDrawerOpen,
-    initializeFromBudget,
-    updateCategory,
-    updateItem,
-    addCategory,
-    removeCategory,
-    addItem,
-    removeItem,
-  } = useExternalBudgetStore();
 
-  // Initialize from budget when it changes
-  useEffect(() => {
-    if (budget) {
-      initializeFromBudget(budget);
-    }
-  }, [budget, initializeFromBudget]);
-
-  // Sync parent component with store
-  useEffect(() => {
-    setExternalFormState(formState);
-  }, [formState, setExternalFormState]);
-
-  // Sync drawer state with store
-  useEffect(() => {
-    setIsExternalDrawerOpen(isDrawerOpen);
-  }, [isDrawerOpen, setIsExternalDrawerOpen]);
-
-  const enhancedHandleDrawerOpen = (type: string) => {
-    handleDrawerOpen(type);
-    setIsDrawerOpen(true);
-  };
-
-  const enhancedHandleCategoryChange = (
-    categoryIndex: number,
-    field: string,
-    value: any,
-    type: string
-  ) => {
-    updateCategory(categoryIndex, field, value);
-  };
-
-  const enhancedHandleRemoveCategory = (categoryIndex: number, type: string) => {
-    removeCategory(categoryIndex);
-  };
-
-  const enhancedHandleItemChange = (
-    categoryIndex: number,
-    itemIndex: number,
-    field: string,
-    value: any,
-    type: string
-  ) => {
-    updateItem(categoryIndex, itemIndex, field, value);
-  };
-
-  const enhancedHandleRemoveItem = (
-    categoryIndex: number,
-    itemIndex: number,
-    type: string
-  ) => {
-    removeItem(categoryIndex, itemIndex);
-  };
-
-  const enhancedHandleAddItem = (categoryIndex: number, type: string) => {
-    addItem(categoryIndex);
-  };
-
-  const enhancedHandleAddCategory = (type: string) => {
-    addCategory();
-  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {
@@ -241,7 +167,7 @@ export const ExternalBudget = ({
           onOpenChange={setIsExternalDrawerOpen}
         >
           <DrawerTrigger asChild>
-            <Button onClick={() => enhancedHandleDrawerOpen("external")}>
+            <Button onClick={() => handleDrawerOpen("external")}>
               {hasExternalBudget ? (
                 <Pencil className="h-4 w-4 mr-2" />
               ) : (
@@ -263,7 +189,7 @@ export const ExternalBudget = ({
             <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-4 space-y-6">
-                  {formState.categories.map(
+                  {externalFormState.categories.map(
                     (category: any, categoryIndex: any) => (
                       <Card key={categoryIndex} className="p-4">
                         <div className="space-y-4">
@@ -276,7 +202,7 @@ export const ExternalBudget = ({
                                 variant="destructive"
                                 size="sm"
                                 onClick={() =>
-                                  enhancedHandleRemoveCategory(
+                                  handleRemoveCategory(
                                     categoryIndex,
                                     "external"
                                   )
@@ -299,7 +225,7 @@ export const ExternalBudget = ({
                                 placeholder="e.g., Human Resources"
                                 value={category.name}
                                 onChange={(e) =>
-                                  enhancedHandleCategoryChange(
+                                  handleCategoryChange(
                                     categoryIndex,
                                     "name",
                                     e.target.value,
@@ -320,7 +246,7 @@ export const ExternalBudget = ({
                                 placeholder="e.g., All HR related expenses"
                                 value={category.description}
                                 onChange={(e) =>
-                                  enhancedHandleCategoryChange(
+                                  handleCategoryChange(
                                     categoryIndex,
                                     "description",
                                     e.target.value,
@@ -344,7 +270,7 @@ export const ExternalBudget = ({
                                             variant="destructive"
                                             size="sm"
                                             onClick={() =>
-                                              enhancedHandleRemoveItem(
+                                              handleRemoveItem(
                                                 categoryIndex,
                                                 itemIndex,
                                                 "external"
@@ -368,7 +294,7 @@ export const ExternalBudget = ({
                                             placeholder="e.g., Software Development Team"
                                             value={item.name}
                                             onChange={(e) =>
-                                              enhancedHandleItemChange(
+                                              handleItemChange(
                                                 categoryIndex,
                                                 itemIndex,
                                                 "name",
@@ -390,7 +316,7 @@ export const ExternalBudget = ({
                                             placeholder="e.g., Monthly salary allocation"
                                             value={item.description}
                                             onChange={(e) =>
-                                              enhancedHandleItemChange(
+                                              handleItemChange(
                                                 categoryIndex,
                                                 itemIndex,
                                                 "description",
@@ -413,7 +339,7 @@ export const ExternalBudget = ({
                                             placeholder="e.g., 500000"
                                             value={item.estimatedAmount}
                                             onChange={(e) =>
-                                              enhancedHandleItemChange(
+                                              handleItemChange(
                                                 categoryIndex,
                                                 itemIndex,
                                                 "estimatedAmount",
@@ -433,7 +359,7 @@ export const ExternalBudget = ({
                                           <Select
                                             value={item.frequency}
                                             onValueChange={(value) =>
-                                              enhancedHandleItemChange(
+                                              handleItemChange(
                                                 categoryIndex,
                                                 itemIndex,
                                                 "frequency",
@@ -474,7 +400,7 @@ export const ExternalBudget = ({
                                               type="date"
                                               value={item.startDate}
                                               onChange={(e) =>
-                                                enhancedHandleItemChange(
+                                                handleItemChange(
                                                   categoryIndex,
                                                   itemIndex,
                                                   "startDate",
@@ -495,7 +421,7 @@ export const ExternalBudget = ({
                                               type="date"
                                               value={item.endDate}
                                               onChange={(e) =>
-                                                enhancedHandleItemChange(
+                                                handleItemChange(
                                                   categoryIndex,
                                                   itemIndex,
                                                   "endDate",
@@ -519,7 +445,7 @@ export const ExternalBudget = ({
                               size="sm"
                               className="w-full"
                               onClick={() =>
-                                enhancedHandleAddItem(categoryIndex, "external")
+                                handleAddItem(categoryIndex, "external")
                               }
                             >
                               <Plus className="h-4 w-4 mr-2" />
@@ -535,7 +461,7 @@ export const ExternalBudget = ({
                     type="button"
                     variant="outline"
                     className="w-full"
-                    onClick={() => enhancedHandleAddCategory("external")}
+                    onClick={() => handleAddCategory("external")}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Category
@@ -546,7 +472,7 @@ export const ExternalBudget = ({
                       <Label>Total Budget</Label>
                       <p className="text-lg font-semibold">
                         {currency}{" "}
-                        {formState.totalBudget.toLocaleString()}
+                        {externalFormState.totalBudget.toLocaleString()}
                       </p>
                     </div>
 
@@ -555,9 +481,9 @@ export const ExternalBudget = ({
                       <Textarea
                         id="external-notes"
                         placeholder="Add any additional notes about this budget"
-                        value={formState.notes}
+                        value={externalFormState.notes}
                         onChange={(e) =>
-                          setFormState((prev: any) => ({
+                          setExternalFormState((prev: any) => ({
                             ...prev,
                             notes: e.target.value,
                           }))

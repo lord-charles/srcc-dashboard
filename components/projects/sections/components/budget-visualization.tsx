@@ -220,15 +220,14 @@ export default function BudgetVisualization({
     return null;
   };
 
-  const chartConfig = {
-    layout: "vertical",
-    stack: false,
-    padding: {
-      top: 16,
-      right: 16,
-      bottom: 16,
-      left: 16,
-    },
+  const chartConfig: ChartConfig = {
+    value: {
+      label: "Value",
+      theme: {
+        light: "#0891b2",
+        dark: "#0891b2"
+      }
+    }
   };
 
   return (
@@ -433,7 +432,7 @@ export default function BudgetVisualization({
                       cursor={false}
                       content={<ChartTooltipContent hideLabel />}
                     />
-                    <Bar dataKey="value" fill="var(--color-desktop)" radius={8} />
+                    <Bar dataKey="value" fill={COLORS[0]} radius={8} />
                   </BarChart>
                 </ChartContainer>
               </CardContent>
@@ -529,12 +528,12 @@ export default function BudgetVisualization({
                       <linearGradient id="fillAmount" x1="0" y1="0" x2="0" y2="1">
                         <stop
                           offset="5%"
-                          stopColor="var(--color-desktop)"
+                          stopColor={COLORS[0]}
                           stopOpacity={0.8}
                         />
                         <stop
                           offset="95%"
-                          stopColor="var(--color-desktop)"
+                          stopColor={COLORS[0]}
                           stopOpacity={0.1}
                         />
                       </linearGradient>

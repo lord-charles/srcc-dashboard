@@ -160,9 +160,12 @@ export function EditContractDialog({
                         type="number"
                         placeholder="0"
                         {...field}
-                        disabled={!isDraft}
-                      />
-                    </FormControl>
+                        disabled
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Fixed as per budget allocation
+                      </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -172,26 +175,15 @@ export function EditContractDialog({
                 name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={!isDraft}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                        <SelectItem value="KES">KES</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                  <FormLabel>Currency</FormLabel>
+                  <FormControl>
+                    <Input type="text" value="KES" disabled />
+                  </FormControl>
+                  <FormDescription>
+                    Fixed as per budget allocation
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
                 )}
               />
             </div>
@@ -210,9 +202,12 @@ export function EditContractDialog({
                           !field.value && "text-muted-foreground"
                         )}
                         {...field}
-                        disabled={!isDraft}
-                      />
-                    </FormControl>
+                        disabled
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Fixed as per budget allocation
+                      </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -231,9 +226,12 @@ export function EditContractDialog({
                           !field.value && "text-muted-foreground"
                         )}
                         {...field}
-                        disabled={!isDraft}
-                      />
-                    </FormControl>
+                        disabled
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Fixed as per budget allocation
+                      </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

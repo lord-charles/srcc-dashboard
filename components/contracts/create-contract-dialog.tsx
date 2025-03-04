@@ -1,9 +1,6 @@
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +31,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Spinner } from "../ui/spinner";
+import { useEffect } from "react";
+import { formatDateForInput } from "@/lib/date-utils";
 
 const formSchema = z.object({
   description: z.string().min(5, {
@@ -64,6 +63,8 @@ interface CreateContractDialogProps {
   onSubmit: (values: ContractFormValues) => Promise<void>;
   projectName: string;
   teamMemberName: string;
+  teamMemberEmail: string;
+  internalCategories: any[];
   isSubmitting: boolean;
 }
 
@@ -73,23 +74,53 @@ export function CreateContractDialog({
   onSubmit,
   projectName,
   teamMemberName,
+  teamMemberEmail,
+  internalCategories,
   isSubmitting,
 }: CreateContractDialogProps) {
-  console.log(teamMemberName);
+
+
+
+  // Find user in internal budget (code 2237)
+  const salaryCategory = internalCategories?.find(cat => cat.name === '2237');
+  const userBudgetItem = salaryCategory?.items?.find(
+    (item: any) => item.name.includes(teamMemberEmail)
+  );
+
+
+
+  // Extract budget details if user is found
+  const budgetStartDate = userBudgetItem?.startDate || new Date().toISOString().split('T')[0];
+  const budgetEndDate = userBudgetItem?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
+
+  // Create form with initial values
+  const defaultValues = {
+    description: `Team Member Contract for ${projectName}`,
+    contractValue: userBudgetItem?.estimatedAmount || 0,
+    currency: "KES",
+    startDate: budgetStartDate,
+    endDate: budgetEndDate,
+    status: "draft",
+  };
 
   const form = useForm<ContractFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      description: `Team Member Contract for ${projectName}`,
-      contractValue: 0,
-      currency: "USD",
-      startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-        .toISOString()
-        .split("T")[0],
-      status: "draft",
-    },
+    defaultValues,
   });
+
+  // Update form values when team member or budget changes
+  useEffect(() => {
+    const newValues = {
+      description: `Team Member Contract for ${projectName}`,
+      contractValue: userBudgetItem?.estimatedAmount || 0,
+      currency: "KES",
+      startDate: formatDateForInput(budgetStartDate),
+      endDate: formatDateForInput(budgetEndDate),
+      status: form.getValues("status") // Preserve current status
+    };
+    
+    form.reset(newValues);
+  }, [teamMemberEmail, projectName, userBudgetItem, budgetStartDate, budgetEndDate]);
 
   const handleSubmit = async (values: ContractFormValues) => {
     await onSubmit(values);
@@ -99,10 +130,16 @@ export function CreateContractDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Contract</DialogTitle>
+          <DialogTitle>{userBudgetItem ? 'Create New Contract' : 'Cannot Create Contract'}</DialogTitle>
           <DialogDescription>
-            Create a contract for team member {teamMemberName} on project{" "}
-            {projectName}.
+            {userBudgetItem ? 
+              `Create a contract for team member ${teamMemberName} on project ${projectName}.`
+             : 
+              <span className="text-destructive">
+                Cannot create contract - {teamMemberName} is not allocated in the internal budget (code 2237).
+                Please add them to the budget first.
+              </span>
+            }
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -135,8 +172,11 @@ export function CreateContractDialog({
                   <FormItem>
                     <FormLabel>Contract Value</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} />
+                      <Input type="number" placeholder="0" {...field} disabled/>
                     </FormControl>
+                    <FormDescription>
+                      Fixed as per budget allocation
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -147,22 +187,12 @@ export function CreateContractDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                        <SelectItem value="KES">KES</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input type="text" value="KES" disabled />
+                    </FormControl>
+                    <FormDescription>
+                      Fixed as per budget allocation
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -183,8 +213,12 @@ export function CreateContractDialog({
                           !field.value && "text-muted-foreground"
                         )}
                         {...field}
+                        disabled
                       />
                     </FormControl>
+                    <FormDescription>
+                      Fixed as per budget allocation
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -203,12 +237,17 @@ export function CreateContractDialog({
                           !field.value && "text-muted-foreground"
                         )}
                         {...field}
+                        disabled
                       />
                     </FormControl>
+                    <FormDescription>
+                      Fixed as per budget allocation
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
             </div>
             <FormField
               control={form.control}
@@ -248,7 +287,11 @@ export function CreateContractDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || !userBudgetItem}
+                className={!userBudgetItem ? 'cursor-not-allowed opacity-50' : ''}>
+
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
                     <Spinner />
