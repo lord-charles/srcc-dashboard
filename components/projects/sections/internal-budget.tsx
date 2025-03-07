@@ -53,7 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Budget, BudgetCategory } from "@/types/project";
+import { Budget, BudgetCategory, TeamMember } from "@/types/project";
 import { BudgetCodeSelector } from "./budget-code-dialog";
 import { TeamSectionProps } from "./team-section";
 import { formatDateForInput } from "@/lib/date-utils";
@@ -90,7 +90,7 @@ interface InternalBudgetProps {
   handleAddCategory: any;
   isEditMode: boolean;
   isSubmittingInternal: boolean;
-  teamMembers: TeamSectionProps[];
+  teamMembers: TeamMember[];
 }
 
 export const InternalBudget = ({

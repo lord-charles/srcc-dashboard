@@ -19,7 +19,7 @@ import {
   ClipboardCheck,
   DollarSign,
 } from "lucide-react";
-import { Budget } from "@/types/project";
+import { Budget, TeamMember } from "@/types/project";
 import * as z from "zod";
 import {
   createInternalBudget,
@@ -98,7 +98,7 @@ interface ModernBudgetDisplayProps {
   budget: Budget;
   currency: string;
   projectId: string;
-  teamMembers: TeamSectionProps[];
+  teamMembers: TeamMember[];
 }
 
 const initialItemState = {

@@ -15,7 +15,6 @@ import { Contract } from "@/types/contract";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { FileText, Edit, Trash } from "lucide-react";
-import { ContractDetailsDrawer } from "./contract-details-drawer";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +27,9 @@ import {
 } from "@/components/ui/dialog";
 import { deleteContract } from "@/services/contracts.service";
 import { Spinner } from "@/components/ui/spinner";
+// import { Claim } from "@/types/claim";
+import { ContractDetailsDrawer } from "./claim-details-drawer";
+
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -39,48 +41,13 @@ export function DataTableRowActions<TData>({
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const contract = row.original as Contract;
+  const claim = row.original as Contract;
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleStatusChange = async (newStatus: string) => {
-    try {
-      toast({
-        title: "Status Update",
-        description: "This feature will be implemented soon.",
-      });
-      router.refresh();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update contract status",
-        variant: "destructive",
-      });
-    }
-  };
+  console.log(claim)
 
-  const handleDeleteContract = async () => {
-    try {
-      setIsDeleting(true);
-      await deleteContract(contract._id);
 
-      toast({
-        title: "Contract deleted",
-        description: "The contract has been successfully deleted.",
-      });
-
-      window.location.reload();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete the contract. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
-    }
-  };
 
   return (
     <>
@@ -101,11 +68,11 @@ export function DataTableRowActions<TData>({
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={() =>
-              router.push(`/projects/${contract.projectId._id}?tab=contracts`)
+              router.push(`/projects/${claim.projectId._id}?tab=claims`)
             }
           >
             <Edit className="mr-2 h-4 w-4" />
-            Edit Contract
+            Edit claim
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -113,13 +80,13 @@ export function DataTableRowActions<TData>({
             className="text-red-600 focus:text-red-600"
           >
             <Trash className="mr-2 h-4 w-4" />
-            Delete Contract
+            Delete claim
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       <ContractDetailsDrawer
-        contract={contract}
+        contract={claim}
         trigger={
           <Button
             variant="ghost"
@@ -132,7 +99,7 @@ export function DataTableRowActions<TData>({
         onOpenChange={setIsDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
       />
-
+{/* 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -144,15 +111,15 @@ export function DataTableRowActions<TData>({
           </DialogHeader>
           <div className="space-y-4">
             <div className="border rounded-md p-4">
-              <h4 className="font-medium">{contract.contractNumber}</h4>
-              <p className="text-sm mt-1">{contract.description}</p>
+              <h4 className="font-medium">{contract?.contractNumber}</h4>
+              <p className="text-sm mt-1">{contract?.description}</p>
               <div className="mt-2 flex items-center">
                 <span className="text-sm font-medium mr-2">
                   Contracted User:
                 </span>
                 <span className="text-sm">
-                  {contract.contractedUserId.firstName}{" "}
-                  {contract.contractedUserId.lastName}
+                  {contract?.contractedUserId?.firstName}{" "}
+                  {contract?.contractedUserId?.lastName}
                 </span>
               </div>
             </div>
@@ -180,7 +147,7 @@ export function DataTableRowActions<TData>({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </>
   );
 }

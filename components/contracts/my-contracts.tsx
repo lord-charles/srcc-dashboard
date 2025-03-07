@@ -61,6 +61,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "../ui/spinner";
 import { useRouter } from "next/navigation";
 import { NoContracts } from "./no-contracts";
+import { MyContractDetailsDrawer } from "./contracts/components/my-contract-details-drawer";
+
 
 interface MyContractsProps {
   initialData?: any[];
@@ -75,6 +77,9 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+
+console.log(initialData)
+
 
   const handleGenerateOtp = async (contractId: string) => {
     if (otpGenerating) return;
@@ -141,7 +146,7 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
     switch (status.toLowerCase()) {
       case "active":
         return "bg-green-500";
-      case "draft":
+      case "pending_acceptance":
         return "bg-yellow-500";
       default:
         return "bg-gray-500";
@@ -240,8 +245,9 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between pt-4 border-t">
-                    <Drawer>
-                      <DrawerTrigger asChild>
+                    <MyContractDetailsDrawer
+                      contract={contract}
+                      trigger={
                         <Button
                           variant="outline"
                           size="sm"
@@ -249,195 +255,15 @@ const MyContracts = ({ initialData = [] }: MyContractsProps) => {
                         >
                           View Details
                         </Button>
-                      </DrawerTrigger>
-                      <DrawerContent>
-                        <DrawerHeader className="border-b pb-4">
-                          <DrawerTitle className="text-2xl font-bold">
-                            {contract.contractNumber}
-                          </DrawerTitle>
-                          <DrawerDescription>
-                            {contract.description}
-                          </DrawerDescription>
-                        </DrawerHeader>
-                        <ScrollArea className="flex-1 px-6">
-                          <Tabs defaultValue="details" className="w-full mt-4">
-                            <TabsList className="grid w-full grid-cols-3 mb-4">
-                              <TabsTrigger value="details">Details</TabsTrigger>
-                              <TabsTrigger value="contractor">
-                                Contractor
-                              </TabsTrigger>
-                              <TabsTrigger value="amendments">
-                                Amendments
-                              </TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="details">
-                              <Table>
-                                <TableBody>
-                                  <TableRow>
-                                    <TableCell className="font-medium">
-                                      Project
-                                    </TableCell>
-                                    <TableCell>
-                                      {contract.projectId.name}
-                                    </TableCell>
-                                  </TableRow>
-                                  <TableRow>
-                                    <TableCell className="font-medium">
-                                      Value
-                                    </TableCell>
-                                    <TableCell>{`${contract.contractValue.toLocaleString()} ${contract.currency
-                                      }`}</TableCell>
-                                  </TableRow>
-                                  <TableRow>
-                                    <TableCell className="font-medium">
-                                      Start Date
-                                    </TableCell>
-                                    <TableCell>
-                                      {format(
-                                        new Date(contract.startDate),
-                                        "MMM d, yyyy"
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                  <TableRow>
-                                    <TableCell className="font-medium">
-                                      End Date
-                                    </TableCell>
-                                    <TableCell>
-                                      {format(
-                                        new Date(contract.endDate),
-                                        "MMM d, yyyy"
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                  <TableRow>
-                                    <TableCell className="font-medium">
-                                      Status
-                                    </TableCell>
-                                    <TableCell>
-                                      <Badge
-                                        className={`${statusColor(
-                                          contract.status
-                                        )} text-white`}
-                                      >
-                                        {contract.status}
-                                      </Badge>
-                                    </TableCell>
-                                  </TableRow>
-                                  <TableRow>
-                                    <TableCell className="font-medium">
-                                      Created At
-                                    </TableCell>
-                                    <TableCell>
-                                      {format(
-                                        new Date(contract.createdAt),
-                                        "MMM d, yyyy HH:mm"
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                  <TableRow>
-                                    <TableCell className="font-medium">
-                                      Last Updated
-                                    </TableCell>
-                                    <TableCell>
-                                      {format(
-                                        new Date(contract.updatedAt),
-                                        "MMM d, yyyy HH:mm"
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                </TableBody>
-                              </Table>
-
-                              {contract.status.toLowerCase() === "draft" && (
-                                <div className="mt-6">
-                                  <Button
-                                    className="w-full"
-                                    onClick={() =>
-                                      handleGenerateOtp(contract._id)
-                                    }
-                                    disabled={otpGenerating}
-                                  >
-                                    {otpGenerating
-                                      ? "Generating OTP..."
-                                      : "Accept Contract"}
-                                  </Button>
-                                  <p className="text-sm text-muted-foreground mt-2">
-                                    <AlertCircle className="inline-block w-4 h-4 mr-1" />
-                                    Accepting the contract will make it active
-                                    and legally binding.
-                                  </p>
-                                </div>
-                              )}
-                            </TabsContent>
-                            <TabsContent value="contractor">
-                              <div className="space-y-4">
-                                <div className="flex items-center space-x-4">
-                                  <div className="w-16 h-16 rounded-full  flex items-center justify-center text-2xl font-semibold">
-                                    {contract.contractedUserId.firstName[0]}
-                                    {contract.contractedUserId.lastName[0]}
-                                  </div>
-                                  <div>
-                                    <h3 className="text-xl font-semibold">{`${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`}</h3>
-                                    <p className="text-sm ">Contractor</p>
-                                  </div>
-                                </div>
-                                <Separator />
-                                <div className="space-y-2">
-                                  <div className="flex items-center">
-                                    <Mail className="w-5 h-5 mr-2 " />
-                                    <span>
-                                      {contract.contractedUserId.email}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Phone className="w-5 h-5 mr-2 " />
-                                    <span>
-                                      {contract.contractedUserId.phoneNumber}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </TabsContent>
-                            <TabsContent value="amendments">
-                              <div className="space-y-4">
-                                {contract.amendments.map(
-                                  (amendment: Amendment, index: number) => (
-                                    <div key={index} className="p-4 rounded-lg">
-                                      <p className="text-sm  mb-1">
-                                        {format(
-                                          new Date(
-                                            amendment.date || contract.createdAt
-                                          ),
-                                          "MMM d, yyyy HH:mm"
-                                        )}
-                                      </p>
-                                      <p className="font-medium mb-1">
-                                        {amendment.description ||
-                                          "Initial contract creation"}
-                                      </p>
-                                      {amendment.changedFields &&
-                                        amendment.changedFields.length > 0 && (
-                                          <p className="text-sm">
-                                            <strong>Changed:</strong>{" "}
-                                            {amendment.changedFields.join(", ")}
-                                          </p>
-                                        )}
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                            </TabsContent>
-                          </Tabs>
-                        </ScrollArea>
-                        <DrawerFooter className="border-t">
-                          <DrawerClose asChild>
-                            <Button variant="outline">Close</Button>
-                          </DrawerClose>
-                        </DrawerFooter>
-                      </DrawerContent>
-                    </Drawer>
-
+                      }
+                      open={selectedContract?._id === contract._id}
+                      onOpenChange={(open) => {
+                        if (!open) setSelectedContract(null);
+                      }}
+                      onClose={() => setSelectedContract(null)}
+                      onGenerateOtp={handleGenerateOtp}
+                      otpGenerating={otpGenerating}
+                    />
                     <Button variant="ghost" size="sm">
                       <Download className="mr-2 h-4 w-4" />
                     </Button>

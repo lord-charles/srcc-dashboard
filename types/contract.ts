@@ -1,3 +1,5 @@
+import { ProjectMilestone } from "./project";
+
 export interface Term {
   clause: string;
   description: string;
@@ -17,9 +19,43 @@ export interface PaymentSchedule {
   milestone: string;
   amount: number;
   dueDate: string;
-  paid: boolean;
+  paid: boolean; 
   paymentDate: string;
   _id: string;
+}
+
+export type ContractStatus =
+  | 'draft'
+  | 'pending_finance_approval'
+  | 'pending_md_approval'
+  | 'pending_signature'
+  | 'active'
+  | 'suspended'
+  | 'terminated'
+  | 'completed'
+  | 'rejected';
+
+export interface ApprovalEntry {
+  approverId: string;
+  approvedAt: string;
+  comments?: string;
+}
+
+export interface RejectionDetails {
+  rejectedBy: string;
+  rejectedAt: string;
+  reason: string;
+  level: string;
+}
+
+export interface FinalApproval {
+  approvedBy: string;
+  approvedAt: string;
+}
+
+export interface ApprovalFlow {
+  financeApprovals?: ApprovalEntry[];
+  mdApprovals?: ApprovalEntry[];
 }
 
 export interface Amendment {
@@ -27,7 +63,7 @@ export interface Amendment {
   description?: string;
   changedFields?: string[];
   approvedBy?: string;
-  _id: string;
+  _id?: string;
 }
 
 export interface ContractedUser {
@@ -35,12 +71,13 @@ export interface ContractedUser {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: string;
+  phoneNumber?: string;
 }
 
-export interface ProjectInfo {
+interface ProjectInfo {
   _id: string;
   name: string;
+  milestones: ProjectMilestone[];
 }
 
 export interface Contract {
@@ -49,28 +86,20 @@ export interface Contract {
   description: string;
   contractValue: number;
   currency: string;
+  status: ContractStatus;
+  createdBy: string;
+  updatedBy: string;
   startDate: string;
   endDate: string;
-  status: "active" | "completed" | "draft" | "terminated";
   projectId: ProjectInfo;
   contractedUserId: ContractedUser;
-  amendments: Amendment[];
-  createdBy: string;
-  updatedBy?: string;
+  amendments?: Amendment[];
+  approvalFlow?: ApprovalFlow;
+  currentLevelDeadline?: string;
+  finalApproval?: FinalApproval;
+  rejectionDetails?: RejectionDetails;
   createdAt: string;
   updatedAt: string;
-
-  // Legacy fields - keeping for backward compatibility
-  title?: string;
-  contractorId?: string;
-  procurementMethod?: string;
-  procurementReferenceNumber?: string;
-  terms?: Term[];
-  deliverables?: Deliverable[];
-  paymentSchedule?: PaymentSchedule[];
-  requiresPerformanceSecurity?: boolean;
-  performanceSecurityAmount?: number;
-  contractManagerId?: string;
 }
 
 export interface ContractStats {

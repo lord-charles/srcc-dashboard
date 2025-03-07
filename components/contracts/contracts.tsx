@@ -37,20 +37,8 @@ const calculateContractStats = (contracts: Contract[]): ContractStats => {
       (sum, contract) => sum + contract.contractValue,
       0
     ),
-    completedDeliverables: contracts.reduce(
-      (sum, contract) => {
-        if (!contract.deliverables) return sum;
-        return sum + (contract.deliverables.filter((d) => d.completed)?.length || 0);
-      },
-      0
-    ),
-    pendingPayments: contracts.reduce(
-      (sum, contract) => {
-        if (!contract.paymentSchedule) return sum;
-        return sum + (contract.paymentSchedule.filter((p) => !p.paid)?.length || 0);
-      },
-      0
-    ),
+    completedDeliverables: 0,
+    pendingPayments: 0
   };
 };
 

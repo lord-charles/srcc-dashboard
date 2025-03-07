@@ -94,6 +94,10 @@ export function LoginForm({
           {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
           Sign In
         </Button>
+
+        <Button type='button' onClick={() => router.push("/consultant")}>
+          Register
+        </Button>
       </div>
     </form>
   );

@@ -54,19 +54,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Budget, BudgetCategory, BudgetItem } from "@/types/project";
+import { Budget, BudgetCategory, BudgetItem, TeamMember } from "@/types/project";
 
 interface ExternalBudgetProps {
   hasExternalBudget: boolean;
   budget: Budget;
-  setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
-  isSubmitting: boolean;
   handleCreateExternalBudget: () => void;
   handleUpdateExternalBudget: () => void;
   isExternalDrawerOpen: boolean;
   setIsExternalDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  handleDrawerOpen: any;
-  getDrawerTitle: any;
+  handleDrawerOpen: (type: "internal" | "external") => void;
+  getDrawerTitle: any
   externalFormState: any;
   currency: string;
   handleRemoveCategory: any;
@@ -74,18 +72,15 @@ interface ExternalBudgetProps {
   handleRemoveItem: any;
   handleItemChange: any;
   handleAddItem: any;
-  setExternalFormState: any;
-  handleAddCategory: any;
+  setExternalFormState: any
+  handleAddCategory: (type: "internal" | "external") => void;
   isEditMode: boolean;
   isSubmittingExternal: boolean;
-  teamMembers: any;
 }
 
 export const ExternalBudget = ({
   hasExternalBudget,
   budget,
-  setIsSubmitting,
-  isSubmitting,
   handleCreateExternalBudget,
   handleUpdateExternalBudget,
   isExternalDrawerOpen,
@@ -103,11 +98,8 @@ export const ExternalBudget = ({
   handleAddCategory,
   isEditMode,
   isSubmittingExternal,
-  teamMembers,
 }: ExternalBudgetProps) => {
   const { toast } = useToast();
-
-
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {

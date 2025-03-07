@@ -206,3 +206,118 @@ export async function verifyContractOtp(contractId: string, otp: string) {
     throw error?.response?.data.message || "Failed to verify contract OTP";
   }
 }
+
+export async function approveContract(contractId: string, comments: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}/approve`,
+      { comments },
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(`Failed to approve contract ${contractId}:`, error);
+    throw error?.response?.data.message || "Failed to approve contract";
+  }
+}
+
+export async function rejectContract(contractId: string, reason: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}/reject`,
+      { reason },
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(`Failed to reject contract ${contractId}:`, error);
+    throw error?.response?.data.message || "Failed to reject contract";
+  }
+}
+
+export async function createClaim(data: {
+  projectId: string;
+  contractId: string;
+  amount: number;
+  currency: string;
+  milestones: Array<{
+    milestoneId: string;
+    title: string;
+    percentageClaimed: number;
+  }>;
+}) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/claims`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to create claim:", error);
+    throw error?.response?.data.message || "Failed to create claim";
+  }
+}
+
+export async function getContractClaims(contractId: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/claims/contract/${contractId}`,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to fetch contract claims:", error);
+    throw error?.response?.data.message || "Failed to fetch contract claims";
+  }
+}
+
+export async function getAllClaims() {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/claims/claims`,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to fetch claims:", error);
+    throw error?.response?.data.message || "Failed to fetch claims";
+  }
+}
+
+export async function fetchClaimsByContract(contractId: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/claims?contractId=${contractId}`,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to fetch claims by contract:", error);
+    throw error?.response?.data.message || "Failed to fetch claims by contract";
+  }
+}
