@@ -5,78 +5,167 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { BarChart3, Bell, LineChart, PieChart } from "lucide-react"
 import Link from "next/link"
+import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
+import { authOptions } from "@/lib/auth"
+import { Session } from "next-auth"
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast";
 
+interface CustomSession extends Session {
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    roles: string[];
+    employeeId: string;
+    department: string;
+    position: string;
+    token: string;
+  }
+}
 
-export default async function DashboardPage() {
-  // const [
-  //   dashboardStats,
-  //   overViewCharts,
-  //   detailedStats,
-  //   monthlyTrends,
-  //   recentAdvancesStats,
-  //   recentAdvances,
-  //   systemLogs,
-  // ] = await Promise.all([
-  //   getDashboardStats(),
-  //   getOverviewCharts(),
-  //   getDetailedStats(),
-  //   getMonthlyTrends(),
-  //   getRecentAdvanceStats(),
-  //   getRecentAdvances(),
-  //   getSystemLogs(),
-  // ]);
+interface NotifyFormData {
+  email: string;
+}
+
+// Client component for notification form
+function NotifyForm() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get("email") as string;
+
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast({
+          title: "Invalid email",
+          description: "Please enter a valid email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Store notification request
+      await fetch("/api/analytics/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      toast({
+        title: "Success!",
+        description: "You'll be notified when the analytics dashboard launches.",
+      });
+
+      // Reset form
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error("Error submitting notification request:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit notification request. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <DashboardProvider>
-      <Header />
-
-
-    <div className="flex min-h-[80vh] w-full items-center justify-center p-4 md:p-8">
-      <Card className="w-full">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <BarChart3 className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle className="text-2xl sm:text-3xl font-bold">Analytics Dashboard Coming Soon</CardTitle>
-          <CardDescription className="text-base mt-2">
-            We&lsquo;re building a powerful analytics platform to help you track and visualize your data.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col items-center p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-              <LineChart className="h-8 w-8 mb-2 text-primary" />
-              <h3 className="font-medium">Performance Metrics</h3>
-            </div>
-            <div className="flex flex-col items-center p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-              <PieChart className="h-8 w-8 mb-2 text-primary" />
-              <h3 className="font-medium">Data Visualization</h3>
-            </div>
-            <div className="flex flex-col items-center p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-              <Bell className="h-8 w-8 mb-2 text-primary" />
-              <h3 className="font-medium">Custom Alerts</h3>
-            </div>
-          </div>
-
-          <div className="rounded-lg border bg-card p-6">
-            <h3 className="text-lg font-medium mb-4">Get notified when we launch</h3>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Input type="email" placeholder="Enter your email" className="flex-1" />
-              <Button>Notify Me</Button>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">Expected launch: Q2 2025</p>
-          <Link href="/">
-            <Button variant="outline">Return to Dashboard</Button>
-          </Link>
-        </CardFooter>
-      </Card>
-    </div>
-
-
-
-    </DashboardProvider>
+    <form onSubmit={handleSubmit} className="rounded-lg border bg-card p-6">
+      <h3 className="text-lg font-medium mb-4">Get notified when we launch</h3>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Input 
+          type="email" 
+          name="email"
+          placeholder="Enter your email" 
+          className="flex-1"
+          required
+          pattern="[^\\s@]+@[^\\s@]+\\.[^\\s@]+"
+          disabled={isLoading}
+        />
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Submitting..." : "Notify Me"}
+        </Button>
+      </div>
+    </form>
   );
+}
+
+export default async function DashboardPage() {
+  try {
+    // Check for active session
+    const session = await getServerSession(authOptions) as CustomSession | null
+    
+    if (!session?.user) {
+      console.error("No active session found, redirecting to login");
+      redirect("/login");
+    }
+
+    // Check if user has employee-only role
+    const roles = session.user.roles;
+    if (!Array.isArray(roles)) {
+      console.error("Invalid roles format in session");
+      redirect("/login");
+    }
+
+    const isEmployeeOnly = roles.length === 1 && roles.includes("employee");
+    if (isEmployeeOnly) {
+      console.error(`Access denied for employee-only user: ${session.user.employeeId}`);
+      redirect("/unauthorized");
+    }
+
+    return (
+      <DashboardProvider>
+        <Header />
+        <div className="flex min-h-[80vh] w-full items-center justify-center p-4 md:p-8">
+          <Card className="w-full">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <BarChart3 className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl sm:text-3xl font-bold">Analytics Dashboard Coming Soon</CardTitle>
+              <CardDescription className="text-base mt-2">
+                We&lsquo;re building a powerful analytics platform to help you track and visualize your data.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex flex-col items-center p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+                  <LineChart className="h-8 w-8 mb-2 text-primary" />
+                  <h3 className="font-medium">Performance Metrics</h3>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+                  <PieChart className="h-8 w-8 mb-2 text-primary" />
+                  <h3 className="font-medium">Data Visualization</h3>
+                </div>
+                <div className="flex flex-col items-center p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+                  <Bell className="h-8 w-8 mb-2 text-primary" />
+                  <h3 className="font-medium">Custom Alerts</h3>
+                </div>
+              </div>
+
+              <NotifyForm />
+            </CardContent>
+            <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">Expected launch: Q2 2025</p>
+              <Link href="/">
+                <Button variant="outline">Return to Dashboard</Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        </div>
+      </DashboardProvider>
+    );
+  } catch (error) {
+    console.error("Error in DashboardPage:", error);
+    redirect("/login");
+  }
 }
