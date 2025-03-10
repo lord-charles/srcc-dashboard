@@ -37,6 +37,8 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/((?!api/auth|_next/static|_next/image|favicon.ico|login|consultant).*)",
+    // Match all paths except explicitly excluded ones
+    "/((?!api/auth|_next/static|_next/image|_next/data|favicon.ico|login|consultant).*)"
   ],
 };
+

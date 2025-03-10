@@ -71,11 +71,38 @@ export const columns: ColumnDef<User>[] = [
             <span className="font-medium capitalize">{fullName}</span>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>{row.original.employeeId}</span>
-              {row.original.roles?.map((role, index) => (
-                <Badge key={index} variant="secondary" className="text-[10px]">
-                  {role}
-                </Badge>
-              ))}
+              {row.original.roles && row.original.roles.length > 0 && (
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="secondary" className="text-[10px]">
+                        {row.original.roles[0]}
+                      </Badge>
+                      {row.original.roles.length > 1 && (
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          +{row.original.roles.length - 1}
+                        </Badge>
+                      )}
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-auto p-2">
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-sm font-medium">User Roles</p>
+                      <div className="flex flex-wrap gap-1">
+                        {row.original.roles.map((role, index) => (
+                          <Badge 
+                            key={index} 
+                            variant={index === 0 ? "secondary" : "outline"}
+                            className="text-xs capitalize"
+                          >
+                            {role}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              )}
             </div>
           </div>
         </div>

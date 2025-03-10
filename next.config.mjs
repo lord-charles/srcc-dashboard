@@ -10,7 +10,7 @@ const nextConfig = {
     ];
   },
   images: {
-    domains: ['i0.wp.com'], // Add the external image domain
+    domains: ['i0.wp.com'], 
   },
 };
 

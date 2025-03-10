@@ -147,7 +147,7 @@ export default function EmployeeModule({ initialData, organizations }: EmployeeM
                 <Button
                   size="sm"
                   onClick={() => {
-                    router.push("/consultant/register");
+                    router.push("/consultant/register/individual");
                   }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -157,7 +157,7 @@ export default function EmployeeModule({ initialData, organizations }: EmployeeM
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    router.push("/consultant/register-org");
+                    router.push("/consultant/register/company");
                   }}
                 >
                   <Building2 className="h-4 w-4 mr-2" />
