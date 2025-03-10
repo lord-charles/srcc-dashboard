@@ -565,7 +565,7 @@ export function ClaimDetailsDrawer({
                         </Card>
                       </TabsContent>
 
-                      {/* Approval Tab */}
+                      {/* Approval Tab C */}
                       {isApprovalPending && (
                         <TabsContent value="approval" className="mt-0 space-y-6">
                           <Card className="overflow-hidden border shadow-sm">
