@@ -511,23 +511,23 @@ export const InternalBudget = ({
                                                                         key={
                                                                           member._id
                                                                         }
-                                                                        value={`${member.userId.firstName} ${member.userId.lastName} (${member.userId.email})`}
+                                                                        value={`${member?.userId?.firstName} ${member?.userId?.lastName} (${member?.userId?.email})`}
                                                                       >
                                                                         {
                                                                           member
-                                                                            .userId
-                                                                            .firstName
+                                                                            ?.userId
+                                                                            ?.firstName
                                                                         }{" "}
                                                                         {
                                                                           member
-                                                                            .userId
-                                                                            .lastName
+                                                                            ?.userId
+                                                                            ?.lastName
                                                                         }{" "}
                                                                         (
                                                                         {
                                                                           member
-                                                                            .userId
-                                                                            .email
+                                                                            ?.userId
+                                                                            ?.email
                                                                         }
                                                                         )
                                                                       </SelectItem>

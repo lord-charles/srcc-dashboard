@@ -13,7 +13,7 @@ import { DatePickerWithRange } from "../date-range-picker";
 import { getAllClaims } from "@/services/contracts.service";
 import { Claim } from "@/types/claim";
 import { useRouter } from "next/navigation";
-import ClaimTable from "./contracts/claim";
+import ClaimTable from "./claims-table/claim";
 import ClaimStatCards from "./components/claim-stat-cards";
 
 const ClaimsModule = ({ initialData }: { initialData: Claim[] }) => {

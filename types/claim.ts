@@ -1,5 +1,3 @@
-
-
 export type ClaimStatus =
   | "draft"
   | "pending_checker_approval"
@@ -17,6 +15,23 @@ export interface ClaimMilestone {
   previouslyClaimed: number;
   currentClaim: number;
   remainingClaimable: number;
+}
+
+export interface ApprovalDetails {
+  approvedBy: string;
+  approvedAt: string;
+  comments: string;
+}
+
+export interface AuditTrailEntry {
+  _id: string;
+  action: string;
+  performedBy: string;
+  performedAt: string;
+  details: {
+    level: string;
+    comments: string;
+  };
 }
 
 export interface Claim {
@@ -53,8 +68,14 @@ export interface Claim {
     lastName: string;
   };
   documents: string[];
-  auditTrail: any[];
+  auditTrail: AuditTrailEntry[];
   createdAt: string;
   updatedAt: string;
   __v: number;
+  approval?: {
+    checkerApproval?: ApprovalDetails;
+    managerApproval?: ApprovalDetails;
+    financeApproval?: ApprovalDetails;
+  };
+  currentLevelDeadline?: string;
 }

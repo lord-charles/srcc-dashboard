@@ -554,9 +554,9 @@ export function BudgetCodeSelector({
                       </TableCell>
                     </TableRow>
                   ) : (
-                    currentBudgetCodes.map((code) => (
+                    currentBudgetCodes.map((code, index) => (
                       <TableRow
-                        key={code.code}
+                        key={index}
                         className={cn(
                           "group cursor-pointer transition-colors",
                           selectedCode === code.code && "bg-primary/5"
