@@ -9,8 +9,6 @@ import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import { Session } from "next-auth"
-import { useState } from "react"
-import { useToast } from "@/hooks/use-toast";
 
 interface CustomSession extends Session {
   user: {
@@ -30,74 +28,9 @@ interface NotifyFormData {
   email: string;
 }
 
-// Client component for notification form
-function NotifyForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
 
-    try {
-      const formData = new FormData(e.currentTarget);
-      const email = formData.get("email") as string;
 
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        toast({
-          title: "Invalid email",
-          description: "Please enter a valid email address",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Store notification request
-      await fetch("/api/analytics/notify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      toast({
-        title: "Success!",
-        description: "You'll be notified when the analytics dashboard launches.",
-      });
-
-      // Reset form
-      e.currentTarget.reset();
-    } catch (error) {
-      console.error("Error submitting notification request:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit notification request. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-medium mb-4">Get notified when we launch</h3>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Input 
-          type="email" 
-          name="email"
-          placeholder="Enter your email" 
-          className="flex-1"
-          required
-          pattern="[^\\s@]+@[^\\s@]+\\.[^\\s@]+"
-          disabled={isLoading}
-        />
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Submitting..." : "Notify Me"}
-        </Button>
-      </div>
-    </form>
-  );
-}
 
 export default async function DashboardPage() {
   try {
@@ -152,7 +85,6 @@ export default async function DashboardPage() {
                 </div>
               </div>
 
-              <NotifyForm />
             </CardContent>
             <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-sm text-muted-foreground">Expected launch: Q2 2025</p>
