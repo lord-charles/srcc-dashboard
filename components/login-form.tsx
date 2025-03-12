@@ -95,7 +95,7 @@ export function LoginForm({
           Sign In
         </Button>
 
-        <Button type='button' onClick={() => router.push("/consultant")}>
+        <Button type='button' variant="outline" onClick={() => router.push("/consultant")}>
           Register
         </Button>
       </div>
