@@ -42,7 +42,7 @@ export function DataTableRowActions<TData>({
     });
   };
 
-  const hasReceipts = imprest.status === "accounted" && imprest.receipts && imprest.receipts.length > 0;
+  const hasReceipts = imprest.status === "accounted" && imprest.accounting?.receipts && imprest.accounting.receipts.length > 0;
   const canMarkOverdue = imprest.status === "disbursed" && new Date(imprest.dueDate) < new Date();
 
   return (

@@ -31,7 +31,6 @@ import {
   MessageSquare,
   CheckCircle,
   Bell,
-  Layers,
   AlertTriangle,
 } from "lucide-react"
 
@@ -44,8 +43,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -65,16 +62,14 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "../ui/avatar"
-import { Label } from "@/components/ui/label"
-import { getMyImprest } from "@/services/claims.service"
 import { useToast } from "@/hooks/use-toast"
-import { NewImprestModal } from "./new-imprest-dialog"
-import { createImprest } from "@/services/claims.service"
-
-
+import { NewImprestDrawer } from "./new-imprest-drawer"
+import { createImprest, getMyImprest } from "@/services/imprest.service"
+import { FormValues } from "./new-imprest-drawer"
+import { ImprestAccountabilitySection } from "./imprest-accountability-section"
 
 // Type definitions
-type ApprovalInfo = {
+export type ApprovalInfo = {
   approvedBy: {
     _id: string
     firstName: string
@@ -84,8 +79,18 @@ type ApprovalInfo = {
   approvedAt: string
   comments: string
 }
+ interface ImprestRejection {
+  rejectedBy: {
+    _id: string
+    firstName: string
+    lastName: string
+    email: string
+  };
+  rejectedAt: string;
+  reason: string;
+}
 
-type RequestedBy = {
+export type RequestedBy = {
   _id: string
   firstName: string
   lastName: string
@@ -93,7 +98,7 @@ type RequestedBy = {
   department: string
 }
 
-type Imprest = {
+export type Imprest = {
   _id: string
   employeeName: string
   department: string
@@ -108,6 +113,7 @@ type Imprest = {
   requestedBy: RequestedBy
   createdAt: string
   updatedAt: string
+  rejection?: ImprestRejection
   __v: number
   hodApproval?: ApprovalInfo
   accountantApproval?: ApprovalInfo
@@ -120,6 +126,12 @@ const StatusBadge = ({ status }: { status: string }) => {
       bgColor: "bg-emerald-50 dark:bg-emerald-950/50",
       label: "Approved",
       icon: <Check className="h-3.5 w-3.5" />,
+    },
+    disbursed: {
+      color: "text-blue-700 dark:text-blue-400",
+      bgColor: "bg-blue-50 dark:bg-blue-950/50",
+      label: "Disbursed",
+      icon: <CreditCard className="h-3.5 w-3.5" />,
     },
     pending_hod: {
       color: "text-amber-700 dark:text-amber-400",
@@ -185,6 +197,7 @@ const formatDate = (dateString: string) => {
 const calculateApprovalProgress = (imprest: Imprest) => {
   if (imprest.status === "rejected") return 100
   if (imprest.status === "approved") return 100
+  if (imprest.status === "disbursed") return 100
 
   let progress = 0
   if (imprest.hodApproval) progress += 50
@@ -414,6 +427,7 @@ export default function ImprestDashboard() {
   const [pendingPage, setPendingPage] = useState(1);
   const [approvedPage, setApprovedPage] = useState(1);
   const [rejectedPage, setRejectedPage] = useState(1);
+  const [disbursedPage, setDisbursedPage] = useState(1);
   const [imprestData, setImprestData] = useState<Imprest[]>([])
 
   const { toast } = useToast()
@@ -440,7 +454,7 @@ export default function ImprestDashboard() {
 
   const [isNewImprestModalOpen, setIsNewImprestModalOpen] = useState(false)
 
-  const handleCreateImprest = async (data: any) => {
+  const handleCreateImprest = async (data: FormValues) => {
     try {
       await createImprest(data);
 
@@ -459,6 +473,18 @@ export default function ImprestDashboard() {
       });
       throw error;
     }
+  }
+
+  // Get unique payment types for filtering
+  const uniquePaymentTypes = Array.from(new Set(imprestData.map((item) => item.paymentType)))
+
+  // Status filter handler
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]))
+  }
+  
+  const handlePaymentTypeFilter = (type: string) => {
+    setPaymentTypeFilter((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]))
   }
 
   // Filter function with enhanced filtering options
@@ -497,9 +523,10 @@ export default function ImprestDashboard() {
     // Tab filter
     const matchesTab =
       activeTab === "all" ||
-      (activeTab === "pending" && imprest.status === "pending_hod" || imprest.status === "pending_accountant") ||
+      (activeTab === "pending" && (imprest.status === "pending_hod" || imprest.status === "pending_accountant")) ||
       (activeTab === "approved" && imprest.status === "approved") ||
-      (activeTab === "rejected" && imprest.status === "rejected")
+      (activeTab === "rejected" && imprest.status === "rejected") ||
+      (activeTab === "disbursed" && imprest.status === "disbursed")
 
     return matchesSearch && matchesStatus && matchesPaymentType && matchesDate && matchesTab
   })
@@ -529,7 +556,7 @@ export default function ImprestDashboard() {
     if (valueA > valueB) return direction === "asc" ? 1 : -1
     return 0
   })
-
+console.log(sortedData)
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
@@ -546,8 +573,6 @@ export default function ImprestDashboard() {
 
     setSortConfig({ key, direction })
   }
-
-
   const resetFilters = () => {
     setSearchTerm("")
     setStatusFilter([])
@@ -574,6 +599,7 @@ export default function ImprestDashboard() {
   const totalAmount = imprestData.reduce((sum, item) => sum + item.amount, 0)
   const pendingCount = imprestData.filter((item) => item.status === "pending_hod" || item.status === "pending_accountant").length
   const approvedCount = imprestData.filter((item) => item.status === "approved").length
+  const disbursedCount = imprestData.filter((item) => item.status === "disbursed").length
   const rejectedCount = imprestData.filter((item) => item.status === "rejected").length
 
   // Export data function
@@ -593,13 +619,15 @@ export default function ImprestDashboard() {
   }
 
   // Add these computed values
-  const pendingItems = sortedData
+  const pendingItems = sortedData.filter(item => item.status === "pending_hod" || item.status === "pending_accountant");
   const approvedItems = sortedData.filter(item => item.status === "approved");
   const rejectedItems = sortedData.filter(item => item.status === "rejected");
+  const disbursedItems = sortedData.filter(item => item.status === "disbursed");
 
   const pendingTotalPages = Math.ceil(pendingItems.length / itemsPerPage);
   const approvedTotalPages = Math.ceil(approvedItems.length / itemsPerPage);
   const rejectedTotalPages = Math.ceil(rejectedItems.length / itemsPerPage);
+  const disbursedTotalPages = Math.ceil(disbursedItems.length / itemsPerPage);
 
   const pendingIndexOfLastItem = pendingPage * itemsPerPage;
   const pendingIndexOfFirstItem = pendingIndexOfLastItem - itemsPerPage;
@@ -610,7 +638,8 @@ export default function ImprestDashboard() {
   const rejectedIndexOfLastItem = rejectedPage * itemsPerPage;
   const rejectedIndexOfFirstItem = rejectedIndexOfLastItem - itemsPerPage;
 
-
+  const disbursedIndexOfLastItem = disbursedPage * itemsPerPage;
+  const disbursedIndexOfFirstItem = disbursedIndexOfLastItem - itemsPerPage;
 
   const handleExportSingle = (imprest: Imprest) => {
     toast({
@@ -633,6 +662,7 @@ export default function ImprestDashboard() {
     });
   };
 
+  
 
   return (
     <div className="p-3 space-y-8">
@@ -681,16 +711,16 @@ export default function ImprestDashboard() {
         </Card>
 
         <Card className="border-border/50 shadow-sm overflow-hidden">
-          <div className=" bg-gradient-to-br from-rose-500/5 to-transparent rounded-lg" />
+          <div className=" bg-gradient-to-br from-blue-500/5 to-transparent rounded-lg" />
           <CardHeader className="pb-2 relative">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Info className="h-4 w-4 text-rose-500" />
-              Rejected Requests
+              <CreditCard className="h-4 w-4 text-blue-500" />
+              Disbursed Requests
             </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-2xl font-bold text-rose-500">{rejectedCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Requires attention</p>
+            <div className="text-2xl font-bold text-blue-500">{disbursedCount}</div>
+            <p className="text-xs text-muted-foreground mt-1">Successfully disbursed</p>
           </CardContent>
         </Card>
       </div>
@@ -718,7 +748,6 @@ export default function ImprestDashboard() {
             </Button>
           </div>
         </div>
-
 
         <CardContent className="p-0">
           <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -749,17 +778,175 @@ export default function ImprestDashboard() {
                   className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none h-12 px-4 font-medium"
                 >
                   Approved
+                  {approvedCount > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                    >
+                      {approvedCount}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="disbursed"
+                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none h-12 px-4 font-medium"
+                >
+                  Disbursed
+                  {disbursedCount > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                    >
+                      {disbursedCount}
+                    </Badge>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger
                   value="rejected"
                   className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none h-12 px-4 font-medium"
                 >
                   Rejected
+                  {rejectedCount > 0 && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-2 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                    >
+                      {rejectedCount}
+                    </Badge>
+                  )}
                 </TabsTrigger>
               </TabsList>
             </div>
             {/* All Requests Tab */}
             <TabsContent value="all" className="m-0">
+
+            <div className="flex flex-col md:flex-row gap-4 py-4 px-2 border-b">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by reason, ID, or explanation..."
+                    className="pl-8 border-border/50 focus-visible:ring-primary/20 focus-visible:ring-offset-0"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-10 border-border/50 hover:bg-muted/50">
+                        <Filter className="mr-2 h-4 w-4 text-primary" />
+                        Filter
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end"  className="w-56 border-border/50 shadow-lg scale-90">
+                      <DropdownMenuLabel className="flex items-center gap-2 text-primary">
+                        <Filter className="h-4 w-4" />
+                        Filter Options
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuCheckboxItem
+                        checked={statusFilter.includes("accounted")}
+                        onCheckedChange={() => handleStatusFilter("accounted")}
+                        className="focus:bg-emerald-50 dark:focus:bg-emerald-950/30"
+                      >
+                        <span className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                          Accounted
+                        </span>
+                      </DropdownMenuCheckboxItem>
+                   
+
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Filter by Payment Type</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {uniquePaymentTypes.map((type) => (
+                        <DropdownMenuCheckboxItem
+                          key={type}
+                          checked={paymentTypeFilter.includes(type)}
+                          onCheckedChange={() => handlePaymentTypeFilter(type)}
+                        >
+                          {type}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>Filter by Date</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuCheckboxItem
+                        checked={dateFilter === "all"}
+                        onCheckedChange={() => setDateFilter("all")}
+                      >
+                        All Time
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={dateFilter === "last7days"}
+                        onCheckedChange={() => setDateFilter("last7days")}
+                      >
+                        Last 7 Days
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={dateFilter === "last30days"}
+                        onCheckedChange={() => setDateFilter("last30days")}
+                      >
+                        Last 30 Days
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={dateFilter === "last90days"}
+                        onCheckedChange={() => setDateFilter("last90days")}
+                      >
+                        Last 90 Days
+                      </DropdownMenuCheckboxItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-10 border-border/50 hover:bg-muted/50">
+                        <SlidersHorizontal className="mr-2 h-4 w-4 text-primary" />
+                        Options
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="border-border/50 shadow-lg">
+                      <DropdownMenuItem onClick={handleExport} className="focus:bg-primary/5">
+                        <Download className="mr-2 h-4 w-4 text-primary" />
+                        Export Data
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={resetFilters} className="focus:bg-primary/5">
+                        <RefreshCw className="mr-2 h-4 w-4 text-primary" />
+                        Reset Filters
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="flex items-center gap-2 text-primary">
+                        <SlidersHorizontal className="h-4 w-4" />
+                        Display Options
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuCheckboxItem checked={itemsPerPage === 5} onCheckedChange={() => setItemsPerPage(5)}>
+                        5 items per page
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={itemsPerPage === 10}
+                        onCheckedChange={() => setItemsPerPage(10)}
+                      >
+                        10 items per page
+                      </DropdownMenuCheckboxItem>
+                      <DropdownMenuCheckboxItem
+                        checked={itemsPerPage === 20}
+                        onCheckedChange={() => setItemsPerPage(20)}
+                      >
+                        20 items per page
+                      </DropdownMenuCheckboxItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+
+
               {isLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="flex flex-col items-center gap-2">
@@ -891,7 +1078,7 @@ export default function ImprestDashboard() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary rounded-full"
+                                      className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary rounded-full"
                                       onClick={() => handleViewDetails(imprest)}
                                     >
                                       <Eye className="h-4 w-4" />
@@ -902,7 +1089,7 @@ export default function ImprestDashboard() {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
+                                          className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
                                         >
                                           <MoreHorizontal className="h-4 w-4" />
                                           <span className="sr-only">More Options</span>
@@ -920,7 +1107,7 @@ export default function ImprestDashboard() {
                                         {imprest.status === "rejected" && (
                                           <DropdownMenuItem>
                                             <RefreshCw className="mr-2 h-4 w-4" />
-                                            Resubmit Request
+                                            Resubmit
                                           </DropdownMenuItem>
                                         )}
                                         {imprest.status === "pending_hod" || imprest.status === "pending_accountant" && (
@@ -936,6 +1123,11 @@ export default function ImprestDashboard() {
                               </TableRow>
 
                               {expandedRows[imprest._id] && (
+                                imprest.status === "disbursed" ? (
+                                  <ImprestAccountabilitySection
+                                  imprest={imprest}
+                                  onDuplicate={handleDuplicate}
+                                  />) : (
                                 <TableRow>
                                   <TableCell colSpan={7} className="p-0 border-t-0">
                                     <div className="bg-muted/20 p-4 border-t border-border/30">
@@ -950,7 +1142,7 @@ export default function ImprestDashboard() {
                                         <div className="bg-background rounded-lg p-4 shadow-sm border border-border/50">
                                           <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
                                             <Clock className="h-4 w-4 text-primary" />
-                                            Approval Status
+                                            Approval Timeline
                                           </h4>
                                           <ApprovalTimeline imprest={imprest} />
                                         </div>
@@ -968,8 +1160,8 @@ export default function ImprestDashboard() {
                                       </div>
                                     </div>
                                   </TableCell>
-                                </TableRow>
-                              )}
+                                </TableRow>))}
+                            
                             </React.Fragment>
                           ))}
                         </TableBody>
@@ -1209,7 +1401,7 @@ export default function ImprestDashboard() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-amber-100/50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-400 rounded-full"
+                                      className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-amber-100/50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-400 rounded-full"
                                       onClick={() => handleViewDetails(imprest)}
                                     >
                                       <Eye className="h-4 w-4" />
@@ -1220,7 +1412,7 @@ export default function ImprestDashboard() {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
+                                          className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
                                         >
                                           <MoreHorizontal className="h-4 w-4" />
                                           <span className="sr-only">More Options</span>
@@ -1521,7 +1713,7 @@ export default function ImprestDashboard() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-emerald-100/50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-full"
+                                      className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-emerald-100/50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 rounded-full"
                                       onClick={() => handleViewDetails(imprest)}
                                     >
                                       <Eye className="h-4 w-4" />
@@ -1532,7 +1724,7 @@ export default function ImprestDashboard() {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
+                                          className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
                                         >
                                           <MoreHorizontal className="h-4 w-4" />
                                           <span className="sr-only">More Options</span>
@@ -1703,6 +1895,199 @@ export default function ImprestDashboard() {
               )}
             </TabsContent>
 
+            {/* Disbursed Requests Tab */}
+            <TabsContent value="disbursed" className="m-0">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Loading disbursed imprest data...</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {disbursedItems.length > 0 ? (
+                    <div className="rounded-md">
+
+<div className="p-4 bg-blue-400 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/50">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-full text-blue-700 dark:text-blue-400">
+                            <CreditCard className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-blue-800 dark:text-blue-400">Disbursed Requests</h3>
+                            <p className="text-sm text-blue-700/80 dark:text-blue-300/80 mt-0.5">
+                              These requests have been disbursed and you can collect the cash.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/30 hover:bg-muted/30">
+                            <TableHead className="w-[40px]"></TableHead>
+                            <TableHead className="w-[180px]">
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSort("paymentReason")}
+                                className="flex items-center gap-1 font-medium hover:bg-transparent"
+                              >
+                                Payment Reason
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === "paymentReason" ? "text-primary" : "opacity-40"}`} />
+                              </Button>
+                            </TableHead>
+                            <TableHead>
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSort("amount")}
+                                className="flex items-center gap-1 font-medium hover:bg-transparent"
+                              >
+                                Amount
+                                <ArrowUpDown className={`h-3 w-3 ${sortConfig.key === "amount" ? "text-primary" : "opacity-40"}`} />
+                              </Button>
+                            </TableHead>
+                            <TableHead className="hidden md:table-cell">Request Date</TableHead>
+                            <TableHead className="hidden lg:table-cell">Due Date</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {disbursedItems.map((imprest) => (
+                            <React.Fragment key={imprest._id}>
+                              <TableRow className="group hover:bg-muted/20 transition-colors">
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-full hover:bg-primary/10"
+                                    onClick={() => toggleRowExpansion(imprest._id)}
+                                  >
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${expandedRows[imprest._id] ? "rotate-180" : ""}`} />
+                                  </Button>
+                                </TableCell>
+                                <TableCell className="font-medium">
+                                  <div>
+                                    <div className="font-medium truncate max-w-[180px]">{imprest.paymentReason}</div>
+                                    <div className="text-xs text-muted-foreground">{imprest.paymentType}</div>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center">
+                                    <CreditCard className="mr-1 h-4 w-4 text-primary" />
+                                    <span className="font-medium">
+                                      {formatCurrency(imprest.amount, imprest.currency)}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="hidden md:table-cell">{formatDate(imprest.requestDate)}</TableCell>
+                                <TableCell className="hidden lg:table-cell">{formatDate(imprest.dueDate)}</TableCell>
+                                <TableCell><StatusBadge status={imprest.status} /></TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex justify-end gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary rounded-full"
+                                      onClick={() => handleViewDetails(imprest)}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                      <span className="sr-only">View Details</span>
+                                    </Button>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
+                                        >
+                                          <MoreHorizontal className="h-4 w-4" />
+                                          <span className="sr-only">More Options</span>
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuItem onClick={() => handleViewDetails(imprest)}>
+                                          <Eye className="mr-2 h-4 w-4" />
+                                          View Details
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleExportSingle(imprest)}>
+                                          <Download className="mr-2 h-4 w-4" />
+                                          Export as PDF
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+
+                              {expandedRows[imprest._id] && (
+                               <ImprestAccountabilitySection
+                               imprest={imprest}
+                               onDuplicate={handleDuplicate}
+                               />
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </TableBody>
+                      </Table>
+
+                      <div className="flex items-center justify-between px-6 py-4 border-t">
+                        <div className="text-sm text-muted-foreground">
+                          Showing <span className="font-medium">{disbursedIndexOfFirstItem + 1}</span> to{" "}
+                          <span className="font-medium">
+                            {Math.min(disbursedIndexOfLastItem, disbursedItems.length)}
+                          </span> of{" "}
+                          <span className="font-medium">{disbursedItems.length}</span> results
+                        </div>
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setDisbursedPage((prev) => Math.max(prev - 1, 1))}
+                                isActive={disbursedPage === 1}
+                                aria-disabled={disbursedPage === 1}
+                                className={disbursedPage === 1 ? "pointer-events-none opacity-50" : ""}
+                              />
+                            </PaginationItem>
+                            {Array.from({ length: Math.min(disbursedTotalPages, 5) }, (_, i) => {
+                              const pageNumber = i + 1;
+                              return (
+                                <PaginationItem key={pageNumber}>
+                                  <PaginationLink
+                                    onClick={() => setDisbursedPage(pageNumber)}
+                                    isActive={disbursedPage === pageNumber}
+                                  >
+                                    {pageNumber}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            })}
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setDisbursedPage((prev) => Math.min(prev + 1, disbursedTotalPages))}
+                                isActive={disbursedPage === disbursedTotalPages}
+                                aria-disabled={disbursedPage === disbursedTotalPages}
+                                className={disbursedPage === disbursedTotalPages ? "pointer-events-none opacity-50" : ""}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 gap-2">
+                      <div className="p-4 rounded-full bg-primary/5">
+                        <CreditCard className="h-8 w-8 text-primary" />
+                      </div>
+                      <h3 className="font-medium">No Disbursed Requests</h3>
+                      <p className="text-sm text-muted-foreground">You don&apos;t have any disbursed imprest requests yet.</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
+
             {/* Rejected Requests Tab */}
             <TabsContent value="rejected" className="m-0">
               {isLoading ? (
@@ -1815,22 +2200,17 @@ export default function ImprestDashboard() {
                                   </div>
                                 </TableCell>
                                 <TableCell className="hidden lg:table-cell">
-                                  {imprest.accountantApproval && (
+                                  {imprest.rejection && (
                                     <div className="flex items-center">
                                       <X className="mr-1 h-4 w-4 text-rose-500" />
-                                      <span>{formatDate(imprest.accountantApproval.approvedAt)}</span>
+                                      <span>{formatDate(imprest.rejection.rejectedAt)}</span>
                                     </div>
                                   )}
-                                  {!imprest.accountantApproval && imprest.hodApproval && (
-                                    <div className="flex items-center">
-                                      <X className="mr-1 h-4 w-4 text-rose-500" />
-                                      <span>{formatDate(imprest.hodApproval.approvedAt)}</span>
-                                    </div>
-                                  )}
+                                
                                 </TableCell>
                                 <TableCell>
                                   <div className="max-w-[200px] truncate text-sm text-rose-700 dark:text-rose-400">
-                                    {imprest.accountantApproval?.comments || imprest.hodApproval?.comments || "No reason provided"}
+                                    {imprest.rejection?.reason || "No reason provided"}
                                   </div>
                                 </TableCell>
                                 <TableCell className="text-right">
@@ -1838,7 +2218,7 @@ export default function ImprestDashboard() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-100/50 dark:hover:bg-rose-900/20 hover:text-rose-700 dark:hover:text-rose-400 rounded-full"
+                                      className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-rose-100/50 dark:hover:bg-rose-900/20 hover:text-rose-700 dark:hover:text-rose-400 rounded-full"
                                       onClick={() => handleViewDetails(imprest)}
                                     >
                                       <Eye className="h-4 w-4" />
@@ -1849,7 +2229,7 @@ export default function ImprestDashboard() {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
+                                          className="h-8 w-8 opacity-20 group-hover:opacity-100 transition-opacity hover:bg-muted rounded-full"
                                         >
                                           <MoreHorizontal className="h-4 w-4" />
                                           <span className="sr-only">More Options</span>
@@ -1885,6 +2265,17 @@ export default function ImprestDashboard() {
                                             Explanation
                                           </h4>
                                           <p className="text-sm text-muted-foreground">{imprest.explanation}</p>
+                                          {imprest.rejection && (
+                                            <div className="text-sm mt-4">
+                                              <div className="flex flex-col space-y-1">
+                                           
+                                              <div className="font-medium text-xs text-muted-foreground">Rejected At:</div>
+                                              <p className="mt-1 bg-rose-50/50 dark:bg-rose-950/30 p-2 rounded-md border border-rose-200/50 dark:border-rose-800/30 text-rose-700 dark:text-rose-400">
+                                                {formatDate(imprest.rejection.rejectedAt)}
+                                              </p>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                         <div className="bg-background rounded-lg p-4 shadow-sm border border-border/50">
                                           <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
@@ -1906,6 +2297,23 @@ export default function ImprestDashboard() {
                                                 <p className="mt-1 bg-rose-50/50 dark:bg-rose-950/30 p-2 rounded-md border border-rose-200/50 dark:border-rose-800/30 text-rose-700 dark:text-rose-400">
                                                   {imprest.accountantApproval.comments || "No specific feedback provided"}
                                                 </p>
+                                              </div>
+                                            )}
+                                            {imprest.rejection && (
+                                              <div className="text-sm space-y-2">
+                                              <div className="flex flex-col space-y-1">
+
+                                                <div className="font-medium text-xs text-muted-foreground">Rejection Reason:</div>
+                                                <p className="mt-1 bg-rose-50/50 dark:bg-rose-950/30 p-2 rounded-md border border-rose-200/50 dark:border-rose-800/30 text-rose-700 dark:text-rose-400">
+                                                  {imprest.rejection.reason}
+                                                </p>
+                                              </div>
+                                              <div className="flex flex-col space-y-1">
+                                              <div className="font-medium text-xs text-muted-foreground">Rejected By:</div>
+                                              <p className="mt-1 bg-rose-50/50 dark:bg-rose-950/30 p-2 rounded-md border border-rose-200/50 dark:border-rose-800/30 text-rose-700 dark:text-rose-400">
+                                                {imprest.rejection.rejectedBy.firstName} {imprest.rejection.rejectedBy.lastName} ({imprest.rejection.rejectedBy.email})
+                                              </p>
+                                              </div>
                                               </div>
                                             )}
                                           </div>
@@ -2027,15 +2435,10 @@ export default function ImprestDashboard() {
 
         </CardContent>
       </Card>
-      <NewImprestModal
-        open={isNewImprestModalOpen}
-        onOpenChange={setIsNewImprestModalOpen}
-        onSubmit={handleCreateImprest}
-      />
+      <NewImprestDrawer open={isNewImprestModalOpen} onOpenChange={setIsNewImprestModalOpen} onSubmit={handleCreateImprest} />
 
       {/* Detail View Dialog */}
       {selectedImprest && <ImprestDetailView imprest={selectedImprest} onClose={handleCloseDetails} />}
     </div>
   )
 }
-

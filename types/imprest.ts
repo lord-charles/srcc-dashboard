@@ -1,60 +1,44 @@
 import { User } from "./user";
 
 export interface ImprestApproval {
-  _id: string;
-  approvedBy: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  };
-  approvedAt: string
+  approvedBy: User;
+  approvedAt: string;
   comments?: string;
 }
 
 export interface ImprestRejection {
-  _id: string;
-  rejectedBy: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  };
-  rejectedAt: string
+  rejectedBy: User;
+  rejectedAt: string;
   reason: string;
 }
 
 export interface ImprestDisbursement {
-  _id: string;
-  disbursedBy: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    role: string;
-  };
-  disbursedAt: string
-  paymentReference: string;
+  disbursedBy: User;
+  disbursedAt: string;
+  amount: number;
+  comments?: string;
 }
 
 export interface ImprestReceipt {
-  _id: string;
   description: string;
   amount: number;
-  currency: string;
   receiptUrl: string;
-  uploadedAt: string
+  uploadedAt: string;
 }
 
 export interface ImprestAccounting {
   verifiedBy: User;
-  verifiedAt: string
+  verifiedAt: string;
   receipts: ImprestReceipt[];
   totalAmount: number;
   balance: number;
   comments?: string;
+}
+
+export interface ImprestAttachment {
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
 }
 
 export type ImprestStatus = 
@@ -66,31 +50,31 @@ export type ImprestStatus =
   | "accounted"
   | "overdue";
 
+export type ImprestPaymentType = 
+  | "Contingency Cash"
+  | "Travel Cash"
+  | "Purchase Cash"
+  | "Others";
+
 export interface Imprest {
   _id: string;
-  requestedBy: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    department: string;
-    payrollNumber: string;
-  };
-  amount: number;
-  currency: string;
-  paymentType: string;
+  employeeName: string;
+  department: string;
+  requestDate: string;
+  dueDate: string;
   paymentReason: string;
-  requestDate: string
-  dueDate: string
+  currency: string;
+  amount: number;
+  paymentType: ImprestPaymentType;
+  explanation: string;
   status: ImprestStatus;
-  approvals?: ImprestApproval[];
-  rejections?: ImprestRejection[];
-  disbursement?: ImprestDisbursement;
-  receipts?: ImprestReceipt[];
-  accounting?: ImprestAccounting;
-  accountedAt?: string
-  createdAt: string
-  updatedAt: string
+  requestedBy: User;
   hodApproval?: ImprestApproval;
   accountantApproval?: ImprestApproval;
+  rejection?: ImprestRejection;
+  disbursement?: ImprestDisbursement;
+  accounting?: ImprestAccounting;
+  attachments?: ImprestAttachment[];
+  createdAt: string;
+  updatedAt: string;
 }

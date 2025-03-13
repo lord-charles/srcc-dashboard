@@ -50,10 +50,10 @@ export const columns: ColumnDef<Imprest>[] = [
       return (
         <div className="flex flex-col">
           <span className="font-medium">
-            {employee.firstName} {employee.lastName}
+            {employee?.firstName} {employee?.lastName}
           </span>
           <span className="text-xs text-muted-foreground">
-            {employee.department} • {employee.payrollNumber}
+            {employee?.email || "No Email"} • {employee?.phoneNumber || "No Phone"}
           </span>
         </div>
       );

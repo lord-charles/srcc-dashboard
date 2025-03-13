@@ -41,44 +41,5 @@ export async function rejectClaim(claimId: string, reason: string): Promise<Clai
   }
 }
 
-export async function getMyImprest() {
-  try {
-    const config = await getAxiosConfig();
-    const response = await axios.get(
-      `${API_URL}/imprest/my-imprest`,
-      config
-    );
-    return response.data;
-  } catch (error: any) {
-    if (error instanceof AxiosError && error.response?.status === 401) {
-      await handleUnauthorized();
-    }
-    throw error?.response?.data?.message || error;
-  }
-}
 
-interface CreateImprestData {
-  paymentReason: string;
-  currency: string;
-  amount: number;
-  paymentType: string;
-  explanation: string;
-}
-
-export async function createImprest(data: CreateImprestData): Promise<Imprest> {
-  try {
-    const config = await getAxiosConfig();
-    const response = await axios.post<Imprest>(
-      `${API_URL}/imprest`,
-      data,
-      config
-    );
-    return response.data;
-  } catch (error: any) {
-    if (error instanceof AxiosError && error.response?.status === 401) {
-      await handleUnauthorized();
-    }
-    throw error?.response?.data?.message || error;
-  }
-}
 
