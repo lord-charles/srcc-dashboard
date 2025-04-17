@@ -34,6 +34,25 @@ export interface AuditTrailEntry {
   };
 }
 
+interface ApprovalStep {
+  stepNumber: number;
+  role: string;
+  department: string;
+  description: string;
+  nextStatus: string;
+  _id: string;
+}
+
+interface ApprovalFlow {
+  _id: string;
+  department: string;
+  description: string;
+  isActive: boolean;
+  steps: ApprovalStep[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Claim {
   _id: string;
   projectId: {
@@ -77,5 +96,6 @@ export interface Claim {
     managerApproval?: ApprovalDetails;
     financeApproval?: ApprovalDetails;
   };
+  approvalFlow: ApprovalFlow;
   currentLevelDeadline?: string;
 }

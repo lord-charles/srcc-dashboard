@@ -26,8 +26,10 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Spinner } from "@/components/ui/spinner";
+
+
 
 interface ClaimDetailsDrawerProps {
   claim: Claim;
@@ -121,7 +123,7 @@ export function ClaimDetailsDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const { toast } = useToast();
-
+console.log(claim)
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
   const onOpenChange = isControlled ? controlledOnOpenChange : setUncontrolledOpen;
@@ -137,7 +139,7 @@ export function ClaimDetailsDrawer({
   };
 
   const isApprovalPending = claim.status.startsWith("pending_");
-  const currentLevel = isApprovalPending ? claim.status.split("_")[1] : null;
+  const currentStep = claim.approvalFlow?.steps.find(step => step.nextStatus === claim.status);
   const isDeadlinePassed = claim.currentLevelDeadline && new Date(claim.currentLevelDeadline) < new Date();
 
   const handleAction = async (type: "approve" | "reject") => {
@@ -588,16 +590,10 @@ export function ClaimDetailsDrawer({
                                 <div className="bg-muted/30 p-4 rounded-lg">
                                   <h3 className="text-base font-medium mb-3 flex items-center">
                                     <Shield className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400" />
-                                    {currentLevel === "finance" ? "Finance Approval Required" : 
-                                     currentLevel === "checker" ? "Checker Approval Required" :
-                                     "Manager Approval Required"}
+                                    {currentStep ? `${currentStep.department} ${currentStep.role.split('_').join(' ').toUpperCase()} Approval Required` : 'Approval Required'}
                                   </h3>
                                   <p className="text-sm text-muted-foreground mb-4">
-                                    {currentLevel === "finance" ? 
-                                      "As a finance approver, please review the claim details and financial information before making your decision." : 
-                                     currentLevel === "checker" ? 
-                                      "As a checker, please verify all claim details and milestone information before approving or rejecting." :
-                                      "As a manager, please review this claim and provide your approval or rejection with appropriate comments."}
+                                    {currentStep?.description || 'Please review this claim and provide your decision with appropriate comments.'}
                                   </p>
                                   
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -619,9 +615,7 @@ export function ClaimDetailsDrawer({
                                 
                                 <div>
                                   <label className="text-base font-medium block mb-2">
-                                    {currentLevel === "finance" ? "Finance Approval Comments" : 
-                                     currentLevel === "checker" ? "Checker Approval Comments" :
-                                     "Manager Approval Comments"}
+                                    {currentStep ? `${currentStep.department} ${currentStep.role.split('_').join(' ').toUpperCase()} Comments` : 'Approval Comments'}
                                   </label>
                                   <Textarea
                                     placeholder="Enter your comments regarding this claim approval or rejection..."
@@ -644,7 +638,8 @@ export function ClaimDetailsDrawer({
                                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        <span>Approving...</span>
+                                        <span>Approving</span>
+                                        <Spinner/>
                                       </div>
                                     ) : (
                                       <>
@@ -667,6 +662,8 @@ export function ClaimDetailsDrawer({
                                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
                                         <span>Rejecting...</span>
+                                        <Spinner/>
+
                                       </div>
                                     ) : (
                                       <>
