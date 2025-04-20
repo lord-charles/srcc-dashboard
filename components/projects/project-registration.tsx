@@ -41,6 +41,7 @@ const projectSchema = z.object({
   contractStartDate: z.date(),
   contractEndDate: z.date(),
   client: z.string().min(2, "Client name must be at least 2 characters"),
+  department: z.enum(["SU", "SBS", "SRCC"]).default("SRCC"),
   status: z.enum(["draft", "pending_approval", "active", "on_hold", "completed", "cancelled"]).default("draft"),
   reportingFrequency: z.enum(["Weekly", "Biweekly", "Monthly", "Quarterly"]),
   riskLevel: z.enum(["Low", "Medium", "High"]),
@@ -87,6 +88,7 @@ export function NewProjectComponent() {
     defaultValues: {
       status: "active",
       currency: "KES",
+      department: "SRCC",
       reportingFrequency: "Monthly",
       riskLevel: "Medium",
       procurementMethod: "Open Tender",
@@ -128,6 +130,7 @@ export function NewProjectComponent() {
         'contractStartDate',
         'contractEndDate',
         'client',
+        'department',
         'status',
         'reportingFrequency',
         // 'riskLevel',
@@ -307,6 +310,29 @@ export function NewProjectComponent() {
                   />
                   {errors.client && (
                     <p className="text-sm text-red-500">{errors.client.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Department *</Label>
+                  <Controller
+                    name="department"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="SU">SU</SelectItem>
+                          <SelectItem value="SBS">SBS</SelectItem>
+                          <SelectItem value="SRCC">SRCC</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.department && (
+                    <p className="text-sm text-red-500">{errors.department.message}</p>
                   )}
                 </div>
 
