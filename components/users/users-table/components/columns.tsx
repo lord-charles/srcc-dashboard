@@ -264,17 +264,6 @@ export const columns: ColumnDef<User>[] = [
             <span>{row.original.yearsOfExperience}y exp.</span>
             <span>•</span>
             <span className="capitalize">{row.original.availability}</span>
-            {row.original.hourlyRate > 0 && (
-              <>
-                <span>•</span>
-                <span>
-                  {new Intl.NumberFormat("en-KE", {
-                    style: "currency",
-                    currency: "KES",
-                  }).format(row.original.hourlyRate)}/hr
-                </span>
-              </>
-            )}
           </div>
           {row.original.cvUrl && (
             <a

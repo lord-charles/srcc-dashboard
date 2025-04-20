@@ -16,7 +16,7 @@ export default function BudgetTable({ budgets }: BudgetTableProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Budgets</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Budgets</h2>
           <p className="text-muted-foreground">
             Manage and track your project budgets
           </p>

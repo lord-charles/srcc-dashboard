@@ -16,7 +16,6 @@ export interface PaginatedResponse<T> {
 const getAxiosConfig = async () => {
   const cookieStore = await cookies();
   const token = cookieStore.get("token");
-  console.log(token);
   return {
     headers: {
       Authorization: token ? `Bearer ${token.value}` : "",

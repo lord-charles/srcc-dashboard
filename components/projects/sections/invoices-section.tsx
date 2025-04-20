@@ -319,7 +319,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
           <DrawerTrigger asChild>
             <Button variant="default">
               <Plus className="h-4 w-4 mr-2" />
-              Create Invoice
+              Request Invoice
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-[90vh] flex flex-col">

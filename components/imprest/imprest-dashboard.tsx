@@ -67,6 +67,7 @@ import { NewImprestDrawer } from "./new-imprest-drawer"
 import { createImprest, getMyImprest } from "@/services/imprest.service"
 import { FormValues } from "./new-imprest-drawer"
 import { ImprestAccountabilitySection } from "./imprest-accountability-section"
+import { MyImprestStats } from "./my-imprest-stats"
 
 // Type definitions
 export type ApprovalInfo = {
@@ -409,7 +410,7 @@ const ImprestDetailView = ({ imprest, onClose }: { imprest: Imprest; onClose: ()
   )
 }
 
-export default function ImprestDashboard() {
+export default function ImprestDashboard({ initialData }: { initialData: any }) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string[]>([])
   const [dateFilter, setDateFilter] = useState<string>("all")
@@ -420,7 +421,6 @@ export default function ImprestDashboard() {
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(5)
-  const [isLoading, setIsLoading] = useState(true)
   const [selectedImprest, setSelectedImprest] = useState<Imprest | null>(null)
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
   const [activeTab, setActiveTab] = useState("all")
@@ -428,29 +428,10 @@ export default function ImprestDashboard() {
   const [approvedPage, setApprovedPage] = useState(1);
   const [rejectedPage, setRejectedPage] = useState(1);
   const [disbursedPage, setDisbursedPage] = useState(1);
-  const [imprestData, setImprestData] = useState<Imprest[]>([])
+  const [imprestData, setImprestData] = useState<Imprest[]>(initialData)
 
   const { toast } = useToast()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const data = await getMyImprest();
-        setImprestData(data);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch imprest data",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [toast]);
 
   const [isNewImprestModalOpen, setIsNewImprestModalOpen] = useState(false)
 
@@ -556,7 +537,6 @@ export default function ImprestDashboard() {
     if (valueA > valueB) return direction === "asc" ? 1 : -1
     return 0
   })
-console.log(sortedData)
   // Pagination
   const indexOfLastItem = currentPage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
@@ -596,7 +576,6 @@ console.log(sortedData)
   }
 
   // Calculate summary statistics
-  const totalAmount = imprestData.reduce((sum, item) => sum + item.amount, 0)
   const pendingCount = imprestData.filter((item) => item.status === "pending_hod" || item.status === "pending_accountant").length
   const approvedCount = imprestData.filter((item) => item.status === "approved").length
   const disbursedCount = imprestData.filter((item) => item.status === "disbursed").length
@@ -666,64 +645,7 @@ console.log(sortedData)
 
   return (
     <div className="p-3 space-y-8">
-      {/* Enhanced Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-2">
-        <Card className="border-border/50 shadow-sm overflow-hidden">
-          <div className=" bg-gradient-to-br from-primary/5 to-transparent rounded-lg" />
-          <CardHeader className="pb-2 relative">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-primary" />
-              Total Imprest Amount
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-primary">{formatCurrency(totalAmount, "USD")}</div>
-            <p className="text-xs text-muted-foreground mt-1">Across all imprest applications</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 shadow-sm overflow-hidden">
-          <div className=" bg-gradient-to-br from-amber-500/5 to-transparent rounded-lg" />
-          <CardHeader className="pb-2 relative">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4 text-amber-500" />
-              Pending Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-amber-500">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 shadow-sm overflow-hidden">
-          <div className=" bg-gradient-to-br from-emerald-500/5 to-transparent rounded-lg" />
-          <CardHeader className="pb-2 relative">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Check className="h-4 w-4 text-emerald-500" />
-              Approved Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-emerald-500">{approvedCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Successfully processed</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 shadow-sm overflow-hidden">
-          <div className=" bg-gradient-to-br from-blue-500/5 to-transparent rounded-lg" />
-          <CardHeader className="pb-2 relative">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-blue-500" />
-              Disbursed Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-2xl font-bold text-blue-500">{disbursedCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Successfully disbursed</p>
-          </CardContent>
-        </Card>
-      </div>
+      <MyImprestStats imprests={initialData} />
 
       {/* Enhanced Main Content Card */}
       <Card className="w-full border-border/50 shadow-sm">
@@ -947,14 +869,7 @@ console.log(sortedData)
               </div>
 
 
-              {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Loading imprest data...</p>
-                  </div>
-                </div>
-              ) : (
+            
                 <>
                   {currentItems.length > 0 ? (
                     <div className="rounded-md">
@@ -1257,19 +1172,11 @@ console.log(sortedData)
                     </div>
                   )}
                 </>
-              )}
             </TabsContent>
 
             {/* Pending Requests Tab */}
             <TabsContent value="pending" className="m-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
-                    <p className="text-sm text-muted-foreground">Loading pending requests...</p>
-                  </div>
-                </div>
-              ) : (
+              
                 <>
                   {pendingItems.length > 0 ? (
                     <div className="rounded-md">
@@ -1571,19 +1478,11 @@ console.log(sortedData)
                     </div>
                   )}
                 </>
-              )}
             </TabsContent>
 
             {/* Approved Requests Tab */}
             <TabsContent value="approved" className="m-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-                    <p className="text-sm text-muted-foreground">Loading approved requests...</p>
-                  </div>
-                </div>
-              ) : (
+           
                 <>
                   {approvedItems.length > 0 ? (
                     <div className="rounded-md">
@@ -1892,19 +1791,11 @@ console.log(sortedData)
                     </div>
                   )}
                 </>
-              )}
             </TabsContent>
 
             {/* Disbursed Requests Tab */}
             <TabsContent value="disbursed" className="m-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Loading disbursed imprest data...</p>
-                  </div>
-                </div>
-              ) : (
+             
                 <>
                   {disbursedItems.length > 0 ? (
                     <div className="rounded-md">
@@ -2085,19 +1976,11 @@ console.log(sortedData)
                     </div>
                   )}
                 </>
-              )}
             </TabsContent>
 
             {/* Rejected Requests Tab */}
             <TabsContent value="rejected" className="m-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
-                    <p className="text-sm text-muted-foreground">Loading rejected requests...</p>
-                  </div>
-                </div>
-              ) : (
+            
                 <>
                   {rejectedItems.length > 0 ? (
                     <div className="rounded-md">
@@ -2429,7 +2312,6 @@ console.log(sortedData)
                     </div>
                   )}
                 </>
-              )}
             </TabsContent>
           </Tabs>
 

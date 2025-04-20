@@ -63,10 +63,12 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
-      <Button className="h-8" variant="outline">
-        Export <Download className="ml-2 h-4 w-4" />
-      </Button>
+      <div className="flex items-center space-x-2">
+        <DataTableViewOptions table={table} />
+        <Button className="h-8" variant="outline">
+          Export <Download className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

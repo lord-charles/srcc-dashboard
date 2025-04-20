@@ -12,7 +12,6 @@ import { PaginatedResponse } from "@/services/employees.service";
 import {
   Users,
   DollarSign,
-  Briefcase,
   UserCheck,
   UserMinus,
   TrendingUp,
@@ -27,6 +26,8 @@ import { AddToProjectHeader } from "./add-to-project-header";
 import { useState } from "react";
 import OrgTable from "./org-table/org";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ConsultantStats } from "./statcards/consultant-stats";
+import { OrganizationStats } from "./statcards/organization-stats";
 
 interface EmployeeModuleProps {
   initialData: PaginatedResponse<User>;
@@ -37,6 +38,8 @@ export default function EmployeeModule({ initialData, organizations }: EmployeeM
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  console.log(organizations);
 
   const projectId = searchParams.get("projectId");
   const projectName = searchParams.get("projectName");
@@ -93,45 +96,25 @@ export default function EmployeeModule({ initialData, organizations }: EmployeeM
   ];
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6">
+    <div className="flex-1 space-y-4 p-2">
       {isAddingToProject && (
         <AddToProjectHeader selectedUser={selectedUser} />
       )}
 
+{isAddingToProject &&(
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-          {isAddingToProject ? "Select Team Members" : "Consultant Management"}
+          Select Team Members
         </h1>
       </div>
 
-      {!isAddingToProject && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-          {stats.map((stat, index) => (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                {stat.trend && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <TrendingUp className={`h-3 w-3 ${stat.trendColor}`} />
-                    <span className={stat.trendColor}>{stat.trend}</span> from last
-                    month
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       )}
 
-      <div className="grid gap-4 pt-8">
+
+
+      <div className="grid gap-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div className="p-2 flex flex-row items-center justify-between ">
             <div>
               <CardTitle>
                 {isAddingToProject ? "Available Consultants" : "Consultant List"}
@@ -165,8 +148,8 @@ export default function EmployeeModule({ initialData, organizations }: EmployeeM
                 </Button>
               </div>
             )}
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="p-2">
             <Tabs defaultValue="individuals" className="w-full">
               <TabsList>
                 <TabsTrigger value="individuals" className="flex items-center gap-2">
@@ -178,7 +161,10 @@ export default function EmployeeModule({ initialData, organizations }: EmployeeM
                   Organizations
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="individuals" className="mt-4">
+              <TabsContent value="individuals" className="mt-4 space-y-6">
+                {!isAddingToProject && (
+                    <ConsultantStats consultants={initialData.data || []} />
+                )}
                 <EmployeeTable
                   employees={initialData.data}
                   onUserSelect={(user) => {
@@ -188,11 +174,14 @@ export default function EmployeeModule({ initialData, organizations }: EmployeeM
                   }}
                 />
               </TabsContent>
-              <TabsContent value="organizations" className="mt-4">
+              <TabsContent value="organizations" className="mt-4 space-y-6">
+                {!isAddingToProject && (
+                  <OrganizationStats organizations={organizations} />
+                )}
                 <OrgTable organizations={organizations} />
               </TabsContent>
             </Tabs>
-          </CardContent>
+          </div>
         </Card>
       </div>
     </div>

@@ -99,13 +99,13 @@ const data = {
         },
       ],
     },
+    // {
+    //   title: "Reports",
+    //   url: "#",
+    //   icon: "BarChart2",
+    // },
     {
-      title: "Reports",
-      url: "#",
-      icon: "BarChart2",
-    },
-    {
-      title: "Users",
+      title: "Consultants",
       url: "/users",
       icon: "Users",
     },
@@ -131,21 +131,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar variant="inset" {...props} className="">
-      <SidebarHeader className="pb-0 bg-dashboard">
+    <Sidebar variant="inset" {...props}>
+      <SidebarHeader >
         <SidebarMenu>
           <SidebarMenuItem>
+          <div className="relative w-[250px] h-[80px]">
             <Image
               src="/srcc-logo.webp"
-              width={500}
-              height={500}
               alt="Logo"
-              className="object-stretch"
+              fill
+              className="object-contain" // or object-stretch
             />
+          </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="">
+      <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="gap-2">
             {data.navMain.map((item) => (
@@ -155,7 +156,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className={`rounded-lg p-3.5 transition-all duration-200 hover:bg-accent/50 ${
                     isActive(item.url)
                       ? "bg-accent font-medium shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-white hover:text-foreground"
                   }`}
                 >
                   <a href={item.url} className="text-base">
@@ -164,7 +165,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         className={`mr-4 inline-flex ${
                           isActive(item.url)
                             ? "text-yellow-500"
-                            : "text-muted-foreground text-yellow-500"
+                            : "text-white text-yellow-500"
                         }`}
                       >
                         {(() => {
@@ -212,7 +213,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           className={`rounded-md p-2.5 transition-all duration-200 hover:bg-accent/50 ${
                             isActive(subItem.url)
                               ? "bg-accent font-medium text-foreground"
-                              : "text-muted-foreground hover:text-foreground"
+                              : "text-white hover:text-foreground"
                           }`}
                         >
                           <a href={subItem.url} className="text-sm">
@@ -225,6 +226,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ) : null}
               </SidebarMenuItem>
             ))}
+            <div className="h-5"/>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

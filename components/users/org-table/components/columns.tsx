@@ -225,12 +225,6 @@ export const columns: ColumnDef<Organization>[] = [
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>KRA PIN: {org.kraPin}</span>
             <span>•</span>
-            <span>
-              {new Intl.NumberFormat("en-KE", {
-                style: "currency",
-                currency: "KES",
-              }).format(org.hourlyRate)}/hr
-            </span>
           </div>
           <div className="text-xs text-muted-foreground">
             Tax Compliance Expires: {" "}
@@ -248,17 +242,6 @@ export const columns: ColumnDef<Organization>[] = [
               >
                 <FileText className="h-3 w-3" />
                 Registration
-              </a>
-            )}
-            {org.taxComplianceCertificateUrl && (
-              <a
-                href={org.taxComplianceCertificateUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-              >
-                <FileText className="h-3 w-3" />
-                Tax Compliance
               </a>
             )}
           </div>

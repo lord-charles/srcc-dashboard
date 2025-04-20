@@ -258,7 +258,7 @@ export function EditContractDialog({
                           <SelectItem value="draft">Draft</SelectItem>
                         </>
                       )}
-                      <SelectItem value="suspended">Suspended</SelectItem>
+                      {/* <SelectItem value="suspended">Suspended</SelectItem> */}
                       <SelectItem value="terminated">Terminated</SelectItem>
                       {!isDraft &&
                         contract?.status !== "suspended" &&

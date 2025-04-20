@@ -1419,7 +1419,7 @@ export default function ConsultantRegistrationForm() {
                         )}
                       </div>
                     </div>
-
+{/* 
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label
@@ -1436,7 +1436,7 @@ export default function ConsultantRegistrationForm() {
                           className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
                         />
                       </div>
-                    </div>
+                    </div> */}
                   </div>
                 )}
 

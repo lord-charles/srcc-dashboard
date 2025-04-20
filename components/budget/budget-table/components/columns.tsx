@@ -271,7 +271,7 @@ export const columns: ColumnDef<Budget>[] = [
     },
   },
   {
-    id: "actions",
+    accessorKey: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ];

@@ -43,21 +43,7 @@ export function DataTableRowActions<TData>({
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleStatusChange = async (newStatus: string) => {
-    try {
-      toast({
-        title: "Status Update",
-        description: "This feature will be implemented soon.",
-      });
-      router.refresh();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update contract status",
-        variant: "destructive",
-      });
-    }
-  };
+
 
   const handleDeleteContract = async () => {
     try {
@@ -81,7 +67,6 @@ export function DataTableRowActions<TData>({
       setIsDeleteDialogOpen(false);
     }
   };
-
   return (
     <>
       <DropdownMenu>

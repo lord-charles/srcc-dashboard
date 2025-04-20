@@ -136,7 +136,7 @@ export const columns: ColumnDef<Imprest>[] = [
     enableHiding: true,
   },
   {
-    id: "actions",
+    accessorKey: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ];

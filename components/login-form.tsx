@@ -62,14 +62,14 @@ export function LoginForm({
       onSubmit={onSubmit}
     >
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Login to your account</h1>
-        <p className="text-balance text-sm text-muted-foreground">
+        <h1 className="text-2xl font-bold text-white">Login to your account</h1>
+        <p className="text-balance text-sm text-gray-300">
           Enter your credentials below to access your account
         </p>
       </div>
       <div className="grid gap-4">
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-white">Email</Label>
           <Input
             id="email"
             name="email"
@@ -80,7 +80,7 @@ export function LoginForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-white">Password</Label>
           <Input
             id="password"
             name="password"

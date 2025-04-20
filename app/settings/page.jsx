@@ -1,8 +1,6 @@
-import { getProfile } from "@/services/employees.service";
-import { ProfileForm } from "./profile-form";
+import ComingSoonPage from "@/components/coming-soon";
+
 
 export default async function SettingsProfilePage() {
-  const profile = await getProfile()
-
-  return <ProfileForm profile={profile} />;
+  return <ComingSoonPage />;
 }

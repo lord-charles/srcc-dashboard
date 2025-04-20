@@ -14,8 +14,8 @@ body {
 
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #171717;
+    --background: 210 20% 98%; /* Soft white */
+    --foreground: 0 0% 9%; /* Equivalent to #171717 */
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
@@ -39,7 +39,7 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 167 43% 98%;
+    --sidebar-background: 167 45% 20%;
     --sidebar-foreground: 167 45% 26%;
     --sidebar-primary: 167 45% 20%;
     --sidebar-primary-foreground: 167 43% 98%;
@@ -112,3 +112,4 @@ body {
     @apply bg-background text-foreground;
   }
 }
+ 

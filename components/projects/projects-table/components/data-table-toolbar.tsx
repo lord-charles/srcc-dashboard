@@ -31,7 +31,7 @@ export function DataTableToolbar<TData>({
           onChange={(event) =>
             table.getColumn("combinedSearch")?.setFilterValue(event.target.value)
           }
-          className="h-8 w-[150px] lg:w-[450px]"
+          className="h-8 w-[150px] lg:w-[330px]"
         />
         {table.getColumn("status") && (
           <DataTableFacetedFilter
