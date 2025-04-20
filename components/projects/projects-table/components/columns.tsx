@@ -84,57 +84,31 @@ export const columns: ColumnDef<Project>[] = [
       );
     },
   },
-  {
-    accessorKey: "status",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
-    ),
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      return (
-        <Badge
-          className={
-            status === "active"
-              ? "bg-green-100 text-green-800"
-              : status === "on-hold"
-                ? "bg-yellow-100 text-yellow-800"
-                : status === "completed"
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-red-100 text-red-800"
-          }
-        >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
-      );
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-  },
-  {
-    accessorKey: "budget",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Budget" />
-    ),
-    cell: ({ row }) => {
-      const spent = row.original.amountSpent;
-      const total = row.original.totalBudget;
-      const currency = row.original.currency;
-      return (
-        <div className="flex flex-col">
-          <span className="font-medium">
-            {formatCurrency(spent, currency)} / {formatCurrency(total, currency)}
-          </span>
-          <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-            <div
-              className="bg-blue-600 h-1.5 rounded-full"
-              style={{ width: `${(spent / total) * 100}%` }}
-            />
-          </div>
-        </div>
-      );
-    },
-  },
+ 
+  // {
+  //   accessorKey: "budget",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Budget" />
+  //   ),
+  //   cell: ({ row }) => {
+  //     const spent = row.original.amountSpent;
+  //     const total = row.original.totalBudget;
+  //     const currency = row.original.currency;
+  //     return (
+  //       <div className="flex flex-col">
+  //         <span className="font-medium">
+  //           {formatCurrency(spent, currency)} / {formatCurrency(total, currency)}
+  //         </span>
+  //         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+  //           <div
+  //             className="bg-blue-600 h-1.5 rounded-full"
+  //             style={{ width: `${(spent / total) * 100}%` }}
+  //           />
+  //         </div>
+  //       </div>
+  //     );
+  //   },
+  // },
   {
     accessorKey: "riskLevel",
     header: ({ column }) => (
@@ -179,6 +153,48 @@ export const columns: ColumnDef<Project>[] = [
       );
     },
   },
+  {
+    accessorKey: "department",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="School" />
+    ),
+    cell: ({ row }) => {
+      const department = row.getValue("department") as string;
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{department}</span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      return (
+        <Badge
+          className={
+            status === "active"
+              ? "bg-green-100 text-green-800"
+              : status === "on-hold"
+                ? "bg-yellow-100 text-yellow-800"
+                : status === "completed"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-red-100 text-red-800"
+          }
+        >
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </Badge>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
+  },
+
   {
     accessorKey: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,

@@ -314,14 +314,14 @@ export function NewProjectComponent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Department *</Label>
+                  <Label>School *</Label>
                   <Controller
                     name="department"
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select department" />
+                          <SelectValue placeholder="Select School" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="SU">SU</SelectItem>
