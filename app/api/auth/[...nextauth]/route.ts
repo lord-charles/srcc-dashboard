@@ -9,20 +9,15 @@ const handler = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
+        pin: { label: "Pin", type: "password" },
       },
       async authorize(credentials) {
         try {
-          console.log(
-            "Attempting login with URL:",
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`
-          );
-
           const res = await axios.post(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
               email: credentials?.email,
-              password: credentials?.password,
+              pin: credentials?.pin,
             }
           );
 
@@ -40,15 +35,12 @@ const handler = NextAuth({
             });
 
             // Check if user has appropriate roles
-            const hasAdminRole = data.user.roles.includes("admin");
-            const hasHrRole = data.user.roles.includes("hr");
             const isEmployeeOnly =
               data.user.roles.length === 1 &&
               data.user.roles.includes("employee");
 
             // Deny access if user is employee only
             if (isEmployeeOnly) {
-              console.log("Access denied: User is employee only");
               return null;
             }
 

@@ -24,12 +24,12 @@ export function LoginForm({
 
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const pin = formData.get("pin") as string;
 
     try {
       const result = await signIn("credentials", {
         email,
-        password,
+        pin,
         redirect: false,
       });
 
@@ -80,12 +80,12 @@ export function LoginForm({
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="password" className="text-white">Password</Label>
+          <Label htmlFor="pin" className="text-white">Pin</Label>
           <Input
-            id="password"
-            name="password"
+            id="pin"
+            name="pin"
             type="password"
-            placeholder="Enter your password"
+            placeholder="Enter your pin"
             required
             disabled={isLoading}
           />
