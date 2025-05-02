@@ -185,6 +185,23 @@ export async function approveImprestAccountant(id: string, comments: string): Pr
   }
 }
 
+export async function approveImprestAccounting(id: string, comments: string): Promise<Imprest> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${API_URL}/imprest/${id}/accounting/approve`,
+      { comments },
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
 export async function rejectImprest(id: string, reason: string): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();

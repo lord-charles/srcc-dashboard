@@ -139,7 +139,10 @@ console.log(claim)
   };
 
   const isApprovalPending = claim.status.startsWith("pending_");
-  const currentStep = claim.approvalFlow?.steps.find(step => step.nextStatus === claim.status);
+  // const currentStep = claim.approvalFlow?.steps.find(step => step.nextStatus === claim.status);
+const currentStep = claim.approvalFlow?.steps.find(
+  step => claim.status?.toLowerCase().includes(step.role.toLowerCase())
+);
   const isDeadlinePassed = claim.currentLevelDeadline && new Date(claim.currentLevelDeadline) < new Date();
 
   const handleAction = async (type: "approve" | "reject") => {

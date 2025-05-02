@@ -119,3 +119,74 @@ export async function submitInvoice(id: string) {
     );
   }
 }
+
+
+export async function recordPayment(
+  invoiceId: string,
+  paymentData: Record<string, any>,
+  receiptFile?: File
+): Promise<Invoice> {
+  try {
+    const config = await getAxiosConfig();
+    const formData = new FormData();
+    Object.entries(paymentData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
+    });
+    if (receiptFile) {
+      formData.append('receiptFile', receiptFile);
+    }
+    const response = await axios.post<Invoice>(
+      `${API_URL}/invoices/${invoiceId}/payments`,
+      formData,
+      {
+        ...config,
+        headers: {
+          ...config.headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw new Error(
+      error.response?.data?.message || 'Failed to record payment'
+    );
+  }
+}
+
+
+
+export async function attachActualInvoice(
+  invoiceId: string,
+  file: File
+): Promise<Invoice> {
+  try {
+    const config = await getAxiosConfig();
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.patch<Invoice>(
+      `${API_URL}/invoices/${invoiceId}/actual-invoice`,
+      formData,
+      {
+        ...config,
+        headers: {
+          ...config.headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw new Error(
+      error.response?.data?.message || 'Failed to attach actual invoice file'
+    );
+  }
+}

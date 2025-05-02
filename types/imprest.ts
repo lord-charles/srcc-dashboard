@@ -41,9 +41,11 @@ export interface ImprestAttachment {
   uploadedAt: string;
 }
 
+
 export type ImprestStatus = 
   | "pending_hod"
   | "pending_accountant"
+  | "pending_accounting_approval"
   | "approved"
   | "rejected"
   | "disbursed"

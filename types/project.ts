@@ -142,11 +142,31 @@ export interface Invoice {
   createdBy: string;
   updatedBy: string;
   auditTrail: AuditTrailItem[];
-  payments: any[];
+  payments: Payment[];
   createdAt: string;
   updatedAt: string;
   __v: number;
   revisionRequest?: RevisionRequest;
+  actualInvoice?:string
+}
+
+export interface Payment {
+  _id: string;
+  method: 'bank_transfer' | 'cheque' | 'mpesa' | 'cash';
+  bankName?: string;
+  accountNumber?: string;
+  branchCode?: string;
+  referenceNumber?: string;
+  paidAt?: string; // ISO date string
+  amountPaid?: number;
+  receiptUrl?: string;
+  comments?: string;
+  recordedBy: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 export interface BudgetItem {

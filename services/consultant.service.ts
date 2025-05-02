@@ -77,6 +77,24 @@ export async function rejectConsultant(consultantId: string): Promise<boolean> {
   }
 }
 
+export async function requestPasswordReset(email: string): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password/request`,
+      { email },
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Password reset request error:", error.response?.data || error.message);
+    throw error.response?.data.message || error.message;
+  }
+}
+
 export async function registerOrganization(formData: FormData): Promise<any> {
   try {
     const config = await getAxiosConfig(true);

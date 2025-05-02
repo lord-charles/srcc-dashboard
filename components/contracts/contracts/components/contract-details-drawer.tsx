@@ -231,7 +231,7 @@ export function ContractDetailsDrawer({
                     className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                   >
                     <User className="h-4 w-4 mr-2" />
-                    Contractor
+                    Consultant
                   </TabsTrigger>
                   {isApprovalPending && (
                     <TabsTrigger 
@@ -342,7 +342,7 @@ export function ContractDetailsDrawer({
                           <div className="bg-blue-50 dark:bg-blue-950/40 px-6 py-4 flex items-center">
                             <User className="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400" />
                             <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-400">
-                              Contractor Summary
+                              Consultant Summary
                             </h3>
                           </div>
                           <CardContent className="p-6">
@@ -425,13 +425,13 @@ export function ContractDetailsDrawer({
                       </Card>
                     </TabsContent>
 
-                    {/* Contractor Tab */}
+                    {/* Consultant Tab */}
                     <TabsContent value="contractor" className="mt-0 space-y-6">
                       <Card className="overflow-hidden border shadow-sm">
                         <div className="bg-blue-50 dark:bg-blue-950/40 px-6 py-4 flex items-center">
                           <User className="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400" />
                           <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-400">
-                            Contractor Information
+                            Consultant Information
                           </h3>
                         </div>
                         <CardContent className="p-6">
@@ -459,23 +459,23 @@ export function ContractDetailsDrawer({
                         </CardContent>
                       </Card>
 
-                      {/* Additional contractor information could go here */}
+                      {/* Additional Consultant information could go here */}
                       <Card className="overflow-hidden border shadow-sm">
                         <div className="bg-blue-50/50 dark:bg-blue-950/20 px-6 py-4 flex items-center">
                           <FileText className="h-5 w-5 mr-2 text-blue-600 dark:text-blue-400" />
                           <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-400">
-                            Contractor Documents
+                            Consultant Documents
                           </h3>
                         </div>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground py-6">
-                            Contractor documents will appear here when available.
+                            Consultant documents will appear here when available.
                           </div>
                         </CardContent>
                       </Card>
                     </TabsContent>
 
-                    {/* Approval Tab */}
+                    {/* Approval Tab */}  
                     {isApprovalPending && (
                       <TabsContent value="approval" className="mt-0 space-y-6">
                         <Card className="overflow-hidden border shadow-sm">

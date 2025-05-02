@@ -11,6 +11,7 @@ import {
   Clock,
   Edit,
   Download,
+  ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +66,6 @@ export default function EmployeeDetailsPage({ employee }: any) {
         throw new Error("Failed to approve consultant");
       }
     } catch (error) {
-      console.log(error);
       toast({
         title: "Error",
         description:
@@ -110,9 +110,15 @@ export default function EmployeeDetailsPage({ employee }: any) {
   };
 
   return (
-    <div className=" px-4 py-8  min-h-screen">
+    <div className="p-2 min-h-screen">
       <header className="mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
-        <h1 className="text-3xl font-bold text-primary">User Profile</h1>
+        <div className="flex items-center gap-4">
+          <Button onClick={() => router.back()} className="flex items-center gap-2">
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold text-primary">User Profile</h1>
+        </div>
         <div className="flex space-x-4">
           <Button
             variant="outline"

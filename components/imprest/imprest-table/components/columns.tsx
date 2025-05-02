@@ -1,8 +1,7 @@
 "use client";
 
-import { ColumnDef, Row } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { Imprest, ImprestStatus } from "@/types/imprest";
@@ -13,6 +12,8 @@ const getStatusColor = (status: ImprestStatus) => {
     case "pending_hod":
       return "bg-yellow-500";
     case "pending_accountant":
+      return "bg-orange-500";
+    case "pending_accounting_approval":
       return "bg-orange-500";
     case "approved":
       return "bg-green-500";
@@ -29,14 +30,7 @@ const getStatusColor = (status: ImprestStatus) => {
   }
 };
 
-const customIncludesStringFilter = (
-  row: Row<Imprest>,
-  columnId: string,
-  filterValue: string
-) => {
-  const value = row.getValue(columnId) as string;
-  return value?.toLowerCase().includes((filterValue as string).toLowerCase());
-};
+
 
 export const columns: ColumnDef<Imprest>[] = [
   {
