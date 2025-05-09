@@ -33,7 +33,7 @@ interface CreateImprestData {
 export async function createImprest(data: CreateImprestData): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
-    
+
     // Create FormData for multipart/form-data request
     const formData = new FormData();
     formData.append('paymentReason', data.paymentReason);
@@ -41,14 +41,14 @@ export async function createImprest(data: CreateImprestData): Promise<Imprest> {
     formData.append('amount', data.amount.toString());
     formData.append('paymentType', data.paymentType);
     formData.append('explanation', data.explanation);
-    
+
     // Add attachments if provided
     if (data.attachments && data.attachments.length > 0) {
       data.attachments.forEach((file) => {
         formData.append('attachments', file);
       });
     }
-    
+
     // Update config headers for multipart/form-data
     const multipartConfig = {
       ...config,
@@ -57,7 +57,7 @@ export async function createImprest(data: CreateImprestData): Promise<Imprest> {
         'Content-Type': 'multipart/form-data',
       },
     };
-    
+
     const response = await axios.post<Imprest>(
       `${API_URL}/imprest`,
       formData,
@@ -86,24 +86,24 @@ interface SubmitAccountingData {
 export async function submitImprestAccounting(id: string, data: SubmitAccountingData): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
-    
+
     // Create FormData for multipart/form-data request
     const formData = new FormData();
-    
+
     // Convert receipts array to JSON string
     formData.append('receipts', JSON.stringify(data.receipts));
-    
+
     if (data.comments) {
       formData.append('comments', data.comments);
     }
-    
+
     // Add receipt files
     if (data.receiptFiles && data.receiptFiles.length > 0) {
       data.receiptFiles.forEach((file) => {
         formData.append('receiptFiles', file);
       });
     }
-    
+
     // Update config headers for multipart/form-data
     const multipartConfig = {
       ...config,
@@ -112,7 +112,7 @@ export async function submitImprestAccounting(id: string, data: SubmitAccounting
         'Content-Type': 'multipart/form-data',
       },
     };
-    
+
     const response = await axios.post<Imprest>(
       `${API_URL}/imprest/${id}/account`,
       formData,
@@ -133,7 +133,7 @@ export async function getAllImprests(): Promise<Imprest[]> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get<Imprest[]>(`${API_URL}/imprest`, config);
-  return response.data;
+    return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
@@ -143,11 +143,26 @@ export async function getAllImprests(): Promise<Imprest[]> {
   }
 }
 
+
+export async function getMyImprests(): Promise<Imprest[]> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get<Imprest[]>(`${API_URL}/imprest/my-imprest`, config);
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Error fetching my imprests:", error);
+    throw error?.response?.data?.message || error;
+  }
+}
+
 export async function getImprestById(id: string): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get<Imprest>(`${API_URL}/imprest/${id}`, config);
-  return response.data;
+    return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
@@ -161,7 +176,7 @@ export async function approveImprestHOD(id: string, comments: string): Promise<I
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(`${API_URL}/imprest/${id}/approve/hod`, { comments }, config);
-  return response.data;
+    return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
@@ -175,7 +190,7 @@ export async function approveImprestAccountant(id: string, comments: string): Pr
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(`${API_URL}/imprest/${id}/approve/accountant`, { comments }, config);
-  return response.data;
+    return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
@@ -206,7 +221,7 @@ export async function rejectImprest(id: string, reason: string): Promise<Imprest
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(`${API_URL}/imprest/${id}/reject`, { reason }, config);
-  return response.data;
+    return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();

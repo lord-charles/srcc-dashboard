@@ -215,7 +215,7 @@ function HeroGeometric({
               <Button
                 size="lg"
                 variant="outline"
-                className="border-emerald-600 text-emerald-100 hover:bg-emerald-600/10 min-w-[200px] h-12"
+                className="border-emerald-600hover:bg-emerald-600/10 min-w-[200px] h-12"
               >
                 Register as Company
               </Button>

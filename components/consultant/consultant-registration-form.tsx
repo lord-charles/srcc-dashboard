@@ -111,7 +111,6 @@ export default function ConsultantRegistrationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"bank" | "mpesa">("bank");
 
-  // Add states for file uploads
   const [cvDocument, setCvDocument] = useState<File[]>([]);
   const [certificatesCopy, setCertificatesCopy] = useState<File[]>([]);
 
@@ -223,16 +222,11 @@ export default function ConsultantRegistrationForm() {
         kraPinNumber: "KRA PIN Number",
         nhifNumber: "NHIF Number",
         nssfNumber: "NSSF Number",
-        password: "Password",
-        confirmPassword: "Confirm Password",
         dateOfBirth: "Date of Birth",
         physicalAddress: "Physical Address",
         county: "County",
         department: "Department",
         yearsOfExperience: "Years of Experience",
-        hourlyRate: "Hourly Rate",
-        // nhifDeduction: 'NHIF Deduction',
-        // nssfDeduction: 'NSSF Deduction',
         preferredWorkTypes: "Preferred Work Types",
       };
 
@@ -369,8 +363,6 @@ export default function ConsultantRegistrationForm() {
         { name: "nhifNumber" as const, label: "NHIF Number" },
         { name: "nssfNumber" as const, label: "NSSF Number" },
         { name: "county" as const, label: "County" },
-        { name: "password" as const, label: "Password" },
-        { name: "confirmPassword" as const, label: "Confirm Password" },
       ];
 
       const missingFields = fields.filter((field) => !getValues(field.name));
@@ -386,28 +378,6 @@ export default function ConsultantRegistrationForm() {
         return false;
       }
 
-      // Password validation
-      const password = getValues("password");
-      const passwordRegex = /^(?=.*[A-Z]).{8,}$/;
-
-      if (!passwordRegex.test(password)) {
-        toast({
-          title: "Invalid Password",
-          description:
-            "Password must contain at least one uppercase letter and be at least 8 characters",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (password !== getValues("confirmPassword")) {
-        toast({
-          title: "Password Mismatch",
-          description: "Passwords do not match",
-          variant: "destructive",
-        });
-        return false;
-      }
 
       return true;
     }
@@ -508,15 +478,6 @@ export default function ConsultantRegistrationForm() {
         toast({
           title: "Work Type Required",
           description: "Please select at least one preferred work type",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      if (!hourlyRate || hourlyRate <= 0) {
-        toast({
-          title: "Invalid Hourly Rate",
-          description: "Please enter a valid hourly rate (greater than 0)",
           variant: "destructive",
         });
         return false;
@@ -636,25 +597,23 @@ export default function ConsultantRegistrationForm() {
                   {Array.from({ length: totalSteps }).map((_, index) => (
                     <div key={index} className="flex-1 relative p-3">
                       <div
-                        className={`h-2 ${
-                          step > index + 1
-                            ? "bg-[#B7BE00]"
-                            : step === index + 1
+                        className={`h-2 ${step > index + 1
+                          ? "bg-[#B7BE00]"
+                          : step === index + 1
                             ? "bg-[#31876d]"
                             : "bg-gray-200"
-                        }`}
+                          }`}
                       />
                       <div
                         className={`
                         absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
                         rounded-full h-8 w-8 flex items-center justify-center text-sm font-semibold
-                        ${
-                          step > index + 1
+                        ${step > index + 1
                             ? "bg-[#B7BE00] text-[#31876d]"
                             : step === index + 1
-                            ? "bg-[#31876d] "
-                            : "bg-gray-200 text-gray-600"
-                        }
+                              ? "bg-[#31876d] "
+                              : "bg-gray-200 text-gray-600"
+                          }
                         `}
                       >
                         {index + 1}
@@ -679,23 +638,23 @@ export default function ConsultantRegistrationForm() {
                 {step === 1
                   ? "Personal Information"
                   : step === 2
-                  ? "Contact & Emergency Details"
-                  : step === 3
-                  ? "Professional Information"
-                  : step === 4
-                  ? "Education & Certifications"
-                  : "Financial Information"}
+                    ? "Contact & Emergency Details"
+                    : step === 3
+                      ? "Professional Information"
+                      : step === 4
+                        ? "Education & Certifications"
+                        : "Financial Information"}
               </CardTitle>
               <CardDescription className="text-gray-600">
                 {step === 1
                   ? "Provide your basic personal details"
                   : step === 2
-                  ? "Enter your contact and emergency information"
-                  : step === 3
-                  ? "Tell us about your professional experience"
-                  : step === 4
-                  ? "Share your educational background and certifications"
-                  : "Add your payment and statutory details"}
+                    ? "Enter your contact and emergency information"
+                    : step === 3
+                      ? "Tell us about your professional experience"
+                      : step === 4
+                        ? "Share your educational background and certifications"
+                        : "Add your payment and statutory details"}
               </CardDescription>
             </div>
             <CardContent>
@@ -1000,65 +959,7 @@ export default function ConsultantRegistrationForm() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="password"
-                          className="text-sm font-medium"
-                        >
-                          Password
-                        </Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          aria-label="Password"
-                          {...register("password", {
-                            required: "Password is required",
-                            minLength: {
-                              value: 8,
-                              message: "Password must be at least 8 characters",
-                            },
-                            pattern: {
-                              value: /^(?=.*[A-Z]).{8,}$/,
-                              message:
-                                "Password must contain at least one uppercase letter and be at least 8 characters",
-                            },
-                          })}
-                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50"
-                        />
 
-                        {errors.password && (
-                          <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.password.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="confirmPassword"
-                          className="text-sm font-medium"
-                        >
-                          Confirm Password
-                        </Label>
-                        <Input
-                          id="confirmPassword"
-                          type="password"
-                          aria-label="Confirm Password"
-                          {...register("confirmPassword", {
-                            required: "Please confirm your password",
-                            validate: (value) =>
-                              value === getValues("password") ||
-                              "Passwords do not match",
-                          })}
-                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50"
-                        />
-                        {errors.confirmPassword && (
-                          <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
-                            <AlertCircle className="h-4 w-4" />
-                            {errors.confirmPassword.message}
-                          </p>
-                        )}
-                      </div>
                     </div>
                   </div>
                 )}
@@ -1244,9 +1145,8 @@ export default function ConsultantRegistrationForm() {
                                 <Input
                                   type="number"
                                   placeholder="e.g., 5"
-                                  aria-label={`Years of Experience for Skill ${
-                                    index + 1
-                                  }`}
+                                  aria-label={`Years of Experience for Skill ${index + 1
+                                    }`}
                                   {...register(
                                     `skills.${index}.yearsOfExperience` as const
                                   )}
@@ -1266,9 +1166,8 @@ export default function ConsultantRegistrationForm() {
                                   }
                                 >
                                   <SelectTrigger
-                                    aria-label={`Proficiency Level for Skill ${
-                                      index + 1
-                                    }`}
+                                    aria-label={`Proficiency Level for Skill ${index + 1
+                                      }`}
                                     className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50"
                                   >
                                     <SelectValue placeholder="Select level" />
@@ -1419,7 +1318,7 @@ export default function ConsultantRegistrationForm() {
                         )}
                       </div>
                     </div>
-{/* 
+                    {/* 
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label
@@ -1477,9 +1376,8 @@ export default function ConsultantRegistrationForm() {
                                 {...register(
                                   `education.${index}.institution` as const
                                 )}
-                                aria-label={`Institution for Education ${
-                                  index + 1
-                                }`}
+                                aria-label={`Institution for Education ${index + 1
+                                  }`}
                                 className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
                               />
                             </div>
@@ -1492,9 +1390,8 @@ export default function ConsultantRegistrationForm() {
                                 {...register(
                                   `education.${index}.yearOfCompletion` as const
                                 )}
-                                aria-label={`Year of Completion for Education ${
-                                  index + 1
-                                }`}
+                                aria-label={`Year of Completion for Education ${index + 1
+                                  }`}
                                 className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
                               />
                             </div>
@@ -1507,9 +1404,8 @@ export default function ConsultantRegistrationForm() {
                               {...register(
                                 `education.${index}.qualification` as const
                               )}
-                              aria-label={`Qualification for Education ${
-                                index + 1
-                              }`}
+                              aria-label={`Qualification for Education ${index + 1
+                                }`}
                               className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
                             />
                           </div>
@@ -1599,9 +1495,8 @@ export default function ConsultantRegistrationForm() {
                         <Button
                           type="button"
                           variant="outline"
-                          className={`flex-1 ${
-                            paymentMethod === "bank" ? "bg-[#31876d] " : ""
-                          }`}
+                          className={`flex-1 ${paymentMethod === "bank" ? "bg-[#31876d] " : ""
+                            }`}
                           onClick={() => setPaymentMethod("bank")}
                         >
                           Bank Transfer
@@ -1609,9 +1504,8 @@ export default function ConsultantRegistrationForm() {
                         <Button
                           type="button"
                           variant="outline"
-                          className={`flex-1 ${
-                            paymentMethod === "mpesa" ? "bg-[#31876d] " : ""
-                          }`}
+                          className={`flex-1 ${paymentMethod === "mpesa" ? "bg-[#31876d] " : ""
+                            }`}
                           onClick={() => setPaymentMethod("mpesa")}
                         >
                           M-Pesa

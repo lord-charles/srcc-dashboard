@@ -35,13 +35,13 @@ import { createProject } from "@/services/projects-service";
 const projectSchema = z.object({
   name: z.string().min(2, "Project name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
-  totalBudget: z.coerce.number().min(0, "Budget must be a positive number"),
+  // totalBudget: z.coerce.number().min(0, "Budget must be a positive number"),
   totalProjectValue: z.coerce.number().min(0, "Project value must be a positive number"),
   currency: z.enum(["KES", "USD", "EUR", "GBP"]).default("KES"),
   contractStartDate: z.date(),
   contractEndDate: z.date(),
   client: z.string().min(2, "Client name must be at least 2 characters"),
-  department: z.enum(["SU", "SBS", "SRCC"]).default("SRCC"),
+  department: z.enum(["SBS", "SRCC", "SHSS", "SERC", "SIMS", "ILAB"]).default("ILAB"),
   status: z.enum(["draft", "pending_approval", "active", "on_hold", "completed", "cancelled"]).default("draft"),
   reportingFrequency: z.enum(["Weekly", "Biweekly", "Monthly", "Quarterly"]),
   riskLevel: z.enum(["Low", "Medium", "High"]),
@@ -124,7 +124,7 @@ export function NewProjectComponent() {
       const requiredFields = [
         'name',
         'description',
-        'totalBudget',
+        // 'totalBudget',
         'totalProjectValue',
         'currency',
         'contractStartDate',
@@ -314,19 +314,22 @@ export function NewProjectComponent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>School *</Label>
+                  <Label>School/Department *</Label>
                   <Controller
                     name="department"
                     control={control}
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select School" />
+                          <SelectValue placeholder="Select School/Department" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="SU">SU</SelectItem>
+                          <SelectItem value="ILAB">ILAB</SelectItem>
                           <SelectItem value="SBS">SBS</SelectItem>
                           <SelectItem value="SRCC">SRCC</SelectItem>
+                          <SelectItem value="SHSS">SHSS</SelectItem>
+                          <SelectItem value="SERC">SERC</SelectItem>
+                          <SelectItem value="SIMS">SIMS</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
@@ -336,32 +339,17 @@ export function NewProjectComponent() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="totalBudget">Total Budget *</Label>
-                    <Input
-                      id="totalBudget"
-                      type="number"
-                      {...register("totalBudget", { valueAsNumber: true })}
-                      className={errors.totalBudget ? "border-red-500" : ""}
-                    />
-                    {errors.totalBudget && (
-                      <p className="text-sm text-red-500">{errors.totalBudget.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="totalProjectValue">Total Project Value *</Label>
-                    <Input
-                      id="totalProjectValue"
-                      type="number"
-                      {...register("totalProjectValue", { valueAsNumber: true })}
-                      className={errors.totalProjectValue ? "border-red-500" : ""}
-                    />
-                    {errors.totalProjectValue && (
-                      <p className="text-sm text-red-500">{errors.totalProjectValue.message}</p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="totalProjectValue">Total Project Value *</Label>
+                  <Input
+                    id="totalProjectValue"
+                    type="number"
+                    {...register("totalProjectValue", { valueAsNumber: true })}
+                    className={errors.totalProjectValue ? "border-red-500" : ""}
+                  />
+                  {errors.totalProjectValue && (
+                    <p className="text-sm text-red-500">{errors.totalProjectValue.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

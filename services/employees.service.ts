@@ -81,7 +81,7 @@ export async function registerEmployee(
 
 export async function updateEmployee(
   id: string,
-  employee: CreateEmployeeDto
+  employee: Partial<CreateEmployeeDto>
 ): Promise<User | null> {
   try {
     const config = await getAxiosConfig();

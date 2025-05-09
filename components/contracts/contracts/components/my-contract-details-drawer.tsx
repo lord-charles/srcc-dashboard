@@ -167,8 +167,11 @@ export function MyContractDetailsDrawer({
   }
 
   const calculateMaxClaimAmount = () => {
-    const maxPerMilestone = contract.contractValue / contract.projectId.milestones.length
-    return maxPerMilestone
+    if (!contract.projectId || !contract.projectId.milestones || contract.projectId.milestones.length === 0) {
+      return 0;
+    }
+    const maxPerMilestone = contract.contractValue / contract.projectId.milestones.length;
+    return maxPerMilestone;
   }
 
   const handleMilestoneAmountChange = (milestoneId: string, value: string) => {
@@ -200,7 +203,7 @@ export function MyContractDetailsDrawer({
     const milestones = Object.entries(selectedMilestones)
       .filter(([_, { amount }]) => amount > 0)
       .map(([milestoneId, { percentage }]) => {
-        const milestone = contract.projectId.milestones.find((m) => m._id === milestoneId)
+        const milestone = contract.projectId?.milestones?.find((m) => m._id === milestoneId)
         return {
           milestoneId,
           title: milestone?.title || "",
@@ -211,7 +214,7 @@ export function MyContractDetailsDrawer({
     try {
       setIsSubmitting(true)
       await createClaim({
-        projectId: contract.projectId._id,
+        projectId: contract?.projectId._id,
         contractId: contract._id,
         amount: totalAmount,
         currency: contract.currency,
@@ -237,9 +240,9 @@ export function MyContractDetailsDrawer({
   }
 
   const isActiveMilestone = (milestone: ProjectMilestone) => {
+    if (!milestone) return false;
     const milestoneDate = new Date(milestone.dueDate)
     const now = new Date()
-
     return milestone.completed
   }
 
@@ -340,7 +343,7 @@ export function MyContractDetailsDrawer({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <label className="text-sm font-medium text-muted-foreground">Project Name</label>
-                              <p className="text-lg font-semibold">{contract.projectId.name}</p>
+                              <p className="text-lg font-semibold">{contract.projectId?.name || "Not available"}</p>
                             </div>
                             <div>
                               <label className="text-sm font-medium text-muted-foreground">Contract Value</label>
@@ -680,7 +683,8 @@ export function MyContractDetailsDrawer({
                                 </div>
 
                                 <div className="space-y-4">
-                                  {contract.projectId.milestones.map((milestone) => {
+                                  {contract.projectId?.milestones && contract.projectId.milestones.length > 0 ? (
+                                    contract.projectId.milestones.map((milestone) => {
                                     const isActive = milestone.completed
                                     const milestoneData = selectedMilestones[milestone._id] || { amount: 0, percentage: 0 };
                                     
@@ -739,7 +743,10 @@ export function MyContractDetailsDrawer({
                                         </div>
                                       </div>
                                     );
-                                  })}
+                                  })
+                                  ) : (
+                                    <div className="text-sm text-muted-foreground p-4">No milestones available.</div>
+                                  )}
                                 </div>
 
                                 <Card className="bg-muted/30 border-none">

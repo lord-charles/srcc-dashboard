@@ -73,7 +73,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     null
   );
   const [isUpdatingContract, setIsUpdatingContract] = useState(false);
-const isUserInInternalBudget = (email?: string): boolean => {
+  const isUserInInternalBudget = (email?: string): boolean => {
     if (!email) return false;
     const salaryCategory = projectData.budgetId.internalCategories?.find(
       (cat: any) => cat.name === '2237'
@@ -256,15 +256,15 @@ const isUserInInternalBudget = (email?: string): boolean => {
                   <h3 className="text-sm font-medium leading-none">
                     {member.userId?.firstName} {member.userId?.lastName}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {member.userId?.email}
                   </p>
-                  <div className="mt-2 flex flex-wrap gap-1">
+                  <div className="mt-1 flex flex-wrap gap-0.5">
                     {member.responsibilities.map((responsibility) => (
                       <Badge
                         key={responsibility}
                         variant="secondary"
-                        className="text-xs"
+                        className="text-[8px]"
                       >
                         {responsibility}
                       </Badge>
@@ -275,10 +275,10 @@ const isUserInInternalBudget = (email?: string): boolean => {
               <div className="flex flex-col items-end">
                 <div className="mb-2">
                   {getMemberContract(member.userId?._id) ? (
-                    <div className="flex items-center">
+                    <div className="">
                       <Badge
                         variant="outline"
-                        className="bg-green-50 text-green-700 border-green-200 flex gap-1 items-center cursor-pointer hover:bg-green-100"
+                        className="bg-green-50  text-green-700 border-green-200 flex gap-1 items-center cursor-pointer hover:bg-green-100"
                         onClick={() =>
                           handleEditContract(
                             getMemberContract(member.userId?._id)!
@@ -286,7 +286,9 @@ const isUserInInternalBudget = (email?: string): boolean => {
                         }
                       >
                         <FileSignature className="h-3 w-3" />
-                        {getMemberContract(member.userId?._id)?.contractNumber}
+                        <div className="text-[8px]">
+                          {getMemberContract(member.userId?._id)?.contractNumber}
+                        </div>
                       </Badge>
                       <Badge
                         variant="outline"
@@ -294,55 +296,55 @@ const isUserInInternalBudget = (email?: string): boolean => {
                         style={{
                           backgroundColor:
                             getMemberContract(member.userId?._id)?.status ===
-                            "active"
+                              "active"
                               ? "rgb(240, 253, 244)"
                               : getMemberContract(member.userId?._id)
-                                  ?.status === "draft"
-                              ? "rgb(240, 249, 255)"
-                              : getMemberContract(member.userId?._id)
+                                ?.status === "draft"
+                                ? "rgb(240, 249, 255)"
+                                : getMemberContract(member.userId?._id)
                                   ?.status === "pending_signature"
-                              ? "rgb(254, 249, 195)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "suspended"
-                              ? "rgb(254, 242, 242)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "terminated"
-                              ? "rgb(249, 250, 251)"
-                              : "rgb(249, 250, 251)",
+                                  ? "rgb(254, 249, 195)"
+                                  : getMemberContract(member.userId?._id)
+                                    ?.status === "suspended"
+                                    ? "rgb(254, 242, 242)"
+                                    : getMemberContract(member.userId?._id)
+                                      ?.status === "terminated"
+                                      ? "rgb(249, 250, 251)"
+                                      : "rgb(249, 250, 251)",
                           color:
                             getMemberContract(member.userId?._id)?.status ===
-                            "active"
+                              "active"
                               ? "rgb(22, 101, 52)"
                               : getMemberContract(member.userId?._id)
-                                  ?.status === "draft"
-                              ? "rgb(3, 105, 161)"
-                              : getMemberContract(member.userId?._id)
+                                ?.status === "draft"
+                                ? "rgb(3, 105, 161)"
+                                : getMemberContract(member.userId?._id)
                                   ?.status === "pending_signature"
-                              ? "rgb(161, 98, 7)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "suspended"
-                              ? "rgb(185, 28, 28)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "terminated"
-                              ? "rgb(107, 114, 128)"
-                              : "rgb(107, 114, 128)",
+                                  ? "rgb(161, 98, 7)"
+                                  : getMemberContract(member.userId?._id)
+                                    ?.status === "suspended"
+                                    ? "rgb(185, 28, 28)"
+                                    : getMemberContract(member.userId?._id)
+                                      ?.status === "terminated"
+                                      ? "rgb(107, 114, 128)"
+                                      : "rgb(107, 114, 128)",
                           borderColor:
                             getMemberContract(member.userId?._id)?.status ===
-                            "active"
+                              "active"
                               ? "rgb(187, 247, 208)"
                               : getMemberContract(member.userId?._id)
-                                  ?.status === "draft"
-                              ? "rgb(186, 230, 253)"
-                              : getMemberContract(member.userId?._id)
+                                ?.status === "draft"
+                                ? "rgb(186, 230, 253)"
+                                : getMemberContract(member.userId?._id)
                                   ?.status === "pending_signature"
-                              ? "rgb(254, 240, 138)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "suspended"
-                              ? "rgb(254, 202, 202)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "terminated"
-                              ? "rgb(229, 231, 235)"
-                              : "rgb(229, 231, 235)",
+                                  ? "rgb(254, 240, 138)"
+                                  : getMemberContract(member.userId?._id)
+                                    ?.status === "suspended"
+                                    ? "rgb(254, 202, 202)"
+                                    : getMemberContract(member.userId?._id)
+                                      ?.status === "terminated"
+                                      ? "rgb(229, 231, 235)"
+                                      : "rgb(229, 231, 235)",
                         }}
                         onClick={() =>
                           handleEditContract(
@@ -350,7 +352,9 @@ const isUserInInternalBudget = (email?: string): boolean => {
                           )
                         }
                       >
-                        {getMemberContract(member.userId?._id)?.status}
+                        <div className="text-[8px]">
+                          {getMemberContract(member.userId?._id)?.status}
+                        </div>
                       </Badge>
                     </div>
                   ) : (
@@ -462,10 +466,10 @@ const isUserInInternalBudget = (email?: string): boolean => {
         teamMemberName={
           teamMembers.find((member) => member.userId?._id === contractMemberId)
             ?.userId?.firstName +
-            " " +
-            teamMembers.find(
-              (member) => member.userId?._id === contractMemberId
-            )?.userId?.lastName || ""
+          " " +
+          teamMembers.find(
+            (member) => member.userId?._id === contractMemberId
+          )?.userId?.lastName || ""
         }
         teamMemberEmail={teamMembers.find((member) => member.userId?._id === contractMemberId)?.userId?.email || ""}
         internalCategories={projectData?.budgetId?.internalCategories || []}
