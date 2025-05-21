@@ -31,6 +31,7 @@ import Header from "./header";
 import Footer from "./footer";
 import { useToast } from "@/hooks/use-toast";
 import { registerConsultant } from "@/services/consultant.service";
+import { FileUpload as FileUpload2 } from "@/components/ui/file-upload2";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -198,15 +199,6 @@ export default function ConsultantRegistrationForm() {
     name: "education",
   });
 
-  const {
-    fields: certificationFields,
-    append: appendCertification,
-    remove: removeCertification,
-  } = useFieldArray({
-    control,
-    name: "certifications",
-  });
-
   const totalSteps = 5;
 
   const onSubmit = async (data: FormData) => {
@@ -220,8 +212,8 @@ export default function ConsultantRegistrationForm() {
         phoneNumber: "Phone Number",
         nationalId: "National ID",
         kraPinNumber: "KRA PIN Number",
-        nhifNumber: "NHIF Number",
-        nssfNumber: "NSSF Number",
+        // nhifNumber: "NHIF Number",
+        // nssfNumber: "NSSF Number",
         dateOfBirth: "Date of Birth",
         physicalAddress: "Physical Address",
         county: "County",
@@ -360,8 +352,8 @@ export default function ConsultantRegistrationForm() {
         { name: "dateOfBirth" as const, label: "Date of Birth" },
         { name: "yearsOfExperience" as const, label: "Years of Experience" },
         { name: "kraPinNumber" as const, label: "KRA PIN Number" },
-        { name: "nhifNumber" as const, label: "NHIF Number" },
-        { name: "nssfNumber" as const, label: "NSSF Number" },
+        // { name: "nhifNumber" as const, label: "NHIF Number" },
+        // { name: "nssfNumber" as const, label: "NSSF Number" },
         { name: "county" as const, label: "County" },
       ];
 
@@ -436,7 +428,6 @@ export default function ConsultantRegistrationForm() {
       const skills = getValues("skills") || [];
       const department = getValues("department");
       const preferredWorkTypes = getValues("preferredWorkTypes") || [];
-      const hourlyRate = getValues("hourlyRate");
 
       // Validate skills
       if (skills.length === 0 || !skills[0].name) {
@@ -670,7 +661,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="firstName"
                           className="text-sm font-medium"
                         >
-                          First Name
+                          First Name <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="firstName"
@@ -706,7 +697,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="lastName"
                           className="text-sm font-medium"
                         >
-                          Last Name
+                          Last Name <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           required
@@ -732,7 +723,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="nationalId"
                           className="text-sm font-medium"
                         >
-                          National ID
+                          National ID <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="nationalId"
@@ -746,7 +737,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="dateOfBirth"
                           className="text-sm font-medium"
                         >
-                          Date of Birth *
+                          Date of Birth <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           type="date"
@@ -814,7 +805,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="yearsOfExperience"
                           className="text-sm font-medium"
                         >
-                          Years of work Experience
+                          Years of work Experience <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="yearsOfExperience"
@@ -838,7 +829,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="kraPinNumber"
                           className="text-sm font-medium"
                         >
-                          KRA PIN Number
+                          KRA PIN Number <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="kraPinNumber"
@@ -879,7 +870,7 @@ export default function ConsultantRegistrationForm() {
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                       <div className="space-y-2">
                         <Label htmlFor="county" className="text-sm font-medium">
-                          County
+                          County <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           onValueChange={(value) => setValue("county", value)}
@@ -969,7 +960,7 @@ export default function ConsultantRegistrationForm() {
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="email" className="text-sm font-medium">
-                          Email
+                          Email <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="email"
@@ -984,7 +975,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="phoneNumber"
                           className="text-sm font-medium"
                         >
-                          Phone Number
+                          Phone Number <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="phoneNumber"
@@ -1015,7 +1006,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="physicalAddress"
                           className="text-sm font-medium"
                         >
-                          Physical Address
+                          Physical Address <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="physicalAddress"
@@ -1129,7 +1120,7 @@ export default function ConsultantRegistrationForm() {
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 flex-1">
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">
-                                  Skill Name
+                                  Skill Name <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   placeholder="e.g., Project Management"
@@ -1140,7 +1131,7 @@ export default function ConsultantRegistrationForm() {
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">
-                                  Years of Experience
+                                  Years of Experience <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   type="number"
@@ -1155,7 +1146,7 @@ export default function ConsultantRegistrationForm() {
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">
-                                  Proficiency Level
+                                  Proficiency Level <span className="text-red-500">*</span>
                                 </Label>
                                 <Select
                                   onValueChange={(value) =>
@@ -1209,7 +1200,7 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="department"
                           className="text-sm font-medium"
                         >
-                          Department
+                          Department <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           onValueChange={(value) =>
@@ -1224,32 +1215,49 @@ export default function ConsultantRegistrationForm() {
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="software">
-                              Software Engineering
-                            </SelectItem>
+                            <SelectItem value="software">Software Engineering</SelectItem>
                             <SelectItem value="data">Data Science</SelectItem>
-                            <SelectItem value="business">
-                              Business Analysis
-                            </SelectItem>
-                            <SelectItem value="project">
-                              Project Management
-                            </SelectItem>
+                            <SelectItem value="business">Business Analysis</SelectItem>
+                            <SelectItem value="project">Project Management</SelectItem>
+                            <SelectItem value="accounting">Accounting, Auditing & Finance</SelectItem>
+                            <SelectItem value="building_architecture">Building & Architecture</SelectItem>
+                            <SelectItem value="business_development">Business Development</SelectItem>
+                            <SelectItem value="business_processes_engineering">Business Processes Engineering</SelectItem>
+                            <SelectItem value="communications_pr">Communications and Public Relations</SelectItem>
+                            <SelectItem value="community_social_services">Community & Social Services</SelectItem>
+                            <SelectItem value="creative_design">Creative & Design</SelectItem>
+                            <SelectItem value="customer_service_support">Customer Service & Support</SelectItem>
+                            <SelectItem value="data_analytics">Data Analytics</SelectItem>
+                            <SelectItem value="engineering_technology">Engineering & Technology</SelectItem>
+                            <SelectItem value="farming_agriculture">Farming, Agriculture & Agribusiness</SelectItem>
+                            <SelectItem value="health_safety">Health & Safety</SelectItem>
+                            <SelectItem value="hospitality">Hospitality, Leisure, Food Services & Catering</SelectItem>
+                            <SelectItem value="human_resources">Human Resources</SelectItem>
+                            <SelectItem value="legal_services">Legal Services</SelectItem>
+                            <SelectItem value="logistics_transport">Logistics & Transport Services</SelectItem>
+                            <SelectItem value="medical_pharmaceutical">Medical & Pharmaceutical</SelectItem>
+                            <SelectItem value="monitoring_evaluation_learning">Monitoring, Evaluation and Learning</SelectItem>
+                            <SelectItem value="policy_trade_economic_advisory">Policy, Trade and Economic Advisory</SelectItem>
+                            <SelectItem value="product_project_management">Product & Project Management</SelectItem>
+                            <SelectItem value="quality_control_assurance">Quality Control & Assurance</SelectItem>
+                            <SelectItem value="real_estate_property_management">Real Estate & Property Management</SelectItem>
+                            <SelectItem value="sales_marketing">Sales & Marketing</SelectItem>
+                            <SelectItem value="security_safety">Security and Safety</SelectItem>
+                            <SelectItem value="software_development">Software Development</SelectItem>
+                            <SelectItem value="strategy">Strategy</SelectItem>
+                            <SelectItem value="supply_chain_procurement">Supply Chain & Procurement</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">
-                          Preferred Work Type
+                          Preferred Work Type <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           onValueChange={(value) => {
-                            const currentTypes =
-                              getValues("preferredWorkTypes") || [];
+                            const currentTypes = getValues("preferredWorkTypes") || [];
                             if (!currentTypes.includes(value)) {
-                              setValue("preferredWorkTypes", [
-                                ...currentTypes,
-                                value,
-                              ]);
+                              setValue("preferredWorkTypes", [...currentTypes, value]);
                             }
                           }}
                         >
@@ -1260,56 +1268,11 @@ export default function ConsultantRegistrationForm() {
                             <SelectValue placeholder="Select work type" />
                           </SelectTrigger>
                           <SelectContent>
-                            {["remote", "onsite", "hybrid"].map((type) => {
-                              const currentTypes =
-                                getValues("preferredWorkTypes") || [];
-                              const isDisabled = currentTypes.includes(type);
-                              return (
-                                <SelectItem
-                                  key={type}
-                                  value={type}
-                                  disabled={isDisabled}
-                                >
-                                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                                  {isDisabled && " (Selected)"}
-                                </SelectItem>
-                              );
-                            })}
+                            <SelectItem value="remote">Remote</SelectItem>
+                            <SelectItem value="onsite">Onsite</SelectItem>
+                            <SelectItem value="hybrid">Hybrid</SelectItem>
                           </SelectContent>
                         </Select>
-
-                        {/* Display selected work types */}
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {getValues("preferredWorkTypes")?.map(
-                            (type, index) => (
-                              <Badge
-                                key={index}
-                                variant="secondary"
-                                className="flex items-center gap-1 bg-[#31876d]/10"
-                              >
-                                {type.charAt(0).toUpperCase() + type.slice(1)}
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-4 w-4 p-0 hover:bg-transparent text-[#31876d] hover:text-[#31876d]/80"
-                                  onClick={() => {
-                                    const currentTypes =
-                                      getValues("preferredWorkTypes");
-                                    setValue(
-                                      "preferredWorkTypes",
-                                      currentTypes?.filter(
-                                        (_, i) => i !== index
-                                      )
-                                    );
-                                  }}
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </Badge>
-                            )
-                          )}
-                        </div>
                         {errors.preferredWorkTypes && (
                           <p className="text-red-500 text-sm flex items-center gap-1 mt-1">
                             <AlertCircle className="h-4 w-4" />
@@ -1318,24 +1281,6 @@ export default function ConsultantRegistrationForm() {
                         )}
                       </div>
                     </div>
-                    {/* 
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="hourlyRate"
-                          className="text-sm font-medium"
-                        >
-                          Hourly Rate (KES)
-                        </Label>
-                        <Input
-                          id="hourlyRate"
-                          type="number"
-                          aria-label="Hourly Rate"
-                          {...register("hourlyRate", { required: true })}
-                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
-                        />
-                      </div>
-                    </div> */}
                   </div>
                 )}
 
@@ -1370,7 +1315,7 @@ export default function ConsultantRegistrationForm() {
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">
-                                Institution
+                                Institution <span className="text-red-500">*</span>
                               </Label>
                               <Input
                                 {...register(
@@ -1383,7 +1328,7 @@ export default function ConsultantRegistrationForm() {
                             </div>
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">
-                                Year of Completion
+                                Year of Completion <span className="text-red-500">*</span>
                               </Label>
                               <Input
                                 type="number"
@@ -1398,7 +1343,7 @@ export default function ConsultantRegistrationForm() {
                           </div>
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">
-                              Qualification
+                              Qualification <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               {...register(
@@ -1431,7 +1376,9 @@ export default function ConsultantRegistrationForm() {
                       </h3>
                       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium">CV</Label>
+                          <Label className="text-sm font-medium">
+                            CV <span className="text-red-500">*</span>
+                          </Label>
                           <FileUpload
                             onChange={(files) => {
                               console.log("CV updated:", files);
@@ -1441,49 +1388,17 @@ export default function ConsultantRegistrationForm() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-sm font-medium">
-                            Academic Certificates
+                            Academic Certificates <span className="text-red-500">*</span>
                           </Label>
-                          <FileUpload
-                            onChange={(files) => {
-                              console.log(
-                                "Academic Certificates updated:",
-                                files
-                              );
+                          <FileUpload2
+                            value={certificatesCopy}
+                            onChange={(files: File[]) => {
+                              console.log("Academic Certificates updated:", files);
                               setCertificatesCopy(files);
                             }}
                           />
                         </div>
                       </div>
-                      {/* <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">National ID Copy *</Label>
-                          <FileUpload
-                            onChange={(files) => {
-                              console.log('National ID copy updated:', files);
-                              setNationalIdCopy(files);
-                            }}
-                          />
-                          {nationalIdCopy[0] && (
-                            <p className="text-xs text-muted-foreground">
-                              Selected: {nationalIdCopy[0].name}
-                            </p>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">KRA PIN Copy *</Label>
-                          <FileUpload
-                            onChange={(files) => {
-                              console.log('KRA PIN copy updated:', files);
-                              setKraPinCopy(files);
-                            }}
-                          />
-                          {kraPinCopy[0] && (
-                            <p className="text-xs text-muted-foreground">
-                              Selected: {kraPinCopy[0].name}
-                            </p>
-                          )}
-                        </div>
-                      </div> */}
                     </div>
                   </div>
                 )}
