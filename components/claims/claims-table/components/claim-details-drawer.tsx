@@ -82,7 +82,7 @@ const getStatusIcon = (status: ClaimStatus) => {
 };
 
 const formatStatus = (status: ClaimStatus) => {
-  return status.split("_").map(word => 
+  return status.split("_").map(word =>
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(" ");
 };
@@ -123,7 +123,7 @@ export function ClaimDetailsDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const { toast } = useToast();
-console.log(claim)
+  console.log(claim)
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
   const onOpenChange = isControlled ? controlledOnOpenChange : setUncontrolledOpen;
@@ -140,9 +140,9 @@ console.log(claim)
 
   const isApprovalPending = claim.status.startsWith("pending_");
   // const currentStep = claim.approvalFlow?.steps.find(step => step.nextStatus === claim.status);
-const currentStep = claim.approvalFlow?.steps.find(
-  step => claim.status?.toLowerCase().includes(step.role.toLowerCase())
-);
+  const currentStep = claim.approvalFlow?.steps.find(
+    step => claim.status?.toLowerCase().includes(step.role.toLowerCase())
+  );
   const isDeadlinePassed = claim.currentLevelDeadline && new Date(claim.currentLevelDeadline) < new Date();
 
   const handleAction = async (type: "approve" | "reject") => {
@@ -158,7 +158,7 @@ const currentStep = claim.approvalFlow?.steps.find(
     try {
       setIsSubmitting(true);
       setActionType(type);
-      
+
       if (type === "approve") {
         await approveClaim(claim._id, comments);
         toast({
@@ -172,7 +172,7 @@ const currentStep = claim.approvalFlow?.steps.find(
           description: "The claim has been rejected.",
         });
       }
-      
+
       onClose?.();
       setComments("");
       window.location.reload();
@@ -211,8 +211,8 @@ const currentStep = claim.approvalFlow?.steps.find(
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className={cn("border px-3 py-1.5 flex items-center", getStatusColor(claim.status))}
                   >
                     {getStatusIcon(claim.status)}
@@ -228,46 +228,46 @@ const currentStep = claim.approvalFlow?.steps.find(
             </DrawerHeader>
 
             <div className="flex-1 overflow-hidden">
-              <Tabs 
-                defaultValue="overview" 
-                value={activeTab} 
+              <Tabs
+                defaultValue="overview"
+                value={activeTab}
                 onValueChange={setActiveTab}
                 className="h-full flex flex-col"
               >
                 <div className="px-6 border-b">
                   <TabsList className="h-14 w-full justify-start gap-2 bg-transparent">
-                    <TabsTrigger 
-                      value="overview" 
+                    <TabsTrigger
+                      value="overview"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <Info className="h-4 w-4 mr-2" />
                       Overview
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="milestones" 
+                    <TabsTrigger
+                      value="milestones"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <Receipt className="h-4 w-4 mr-2" />
                       Milestones
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="claimant" 
+                    <TabsTrigger
+                      value="claimant"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <User className="h-4 w-4 mr-2" />
                       Claimant
                     </TabsTrigger>
                     {isApprovalPending && (
-                      <TabsTrigger 
-                        value="approval" 
+                      <TabsTrigger
+                        value="approval"
                         className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                       >
                         <ClipboardList className="h-4 w-4 mr-2" />
                         Approval
                       </TabsTrigger>
                     )}
-                    <TabsTrigger 
-                      value="history" 
+                    <TabsTrigger
+                      value="history"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <History className="h-4 w-4 mr-2" />
@@ -364,7 +364,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                     {formatStatus(claim.status)}
                                   </div>
                                 </div>
-                                
+
                                 {claim.currentLevelDeadline && (
                                   <div className="space-y-1">
                                     <span className="text-sm font-medium text-muted-foreground flex items-center">
@@ -381,7 +381,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                     </p>
                                   </div>
                                 )}
-                                
+
                                 <div className="space-y-1">
                                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                                     <User className="h-3.5 w-3.5 mr-1.5" />
@@ -396,7 +396,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                           </Card>
                         </div>
 
-                    
+
                       </TabsContent>
 
                       {/* Milestones Tab */}
@@ -428,7 +428,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
-                                  
+
                                   <div className="relative pt-1">
                                     <div className="flex items-center justify-between mb-2">
                                       <div>
@@ -443,13 +443,13 @@ const currentStep = claim.approvalFlow?.steps.find(
                                       </div>
                                     </div>
                                     <div className="overflow-hidden h-2 text-xs flex rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                                      <div 
-                                        style={{ width: `${milestone.percentageClaimed}%` }} 
+                                      <div
+                                        style={{ width: `${milestone.percentageClaimed}%` }}
                                         className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500"
                                       ></div>
                                     </div>
                                   </div>
-                                  
+
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 p-4 rounded-lg">
                                     <div className="space-y-1">
                                       <div className="flex items-center text-sm font-medium text-muted-foreground">
@@ -479,7 +479,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                       </p>
                                     </div>
                                   </div>
-                                  
+
                                   {index < claim.milestones.length - 1 && (
                                     <Separator className="my-4" />
                                   )}
@@ -503,13 +503,13 @@ const currentStep = claim.approvalFlow?.steps.find(
                             <div className="flex flex-col md:flex-row items-start gap-6">
                               <div className="flex-shrink-0">
                                 <Avatar className="h-24 w-24">
-                                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${claim.claimantId.firstName}%20${claim.claimantId.lastName}`} alt={`${claim.claimantId.firstName} ${claim.claimantId.lastName}`} />
+                                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${claim?.claimantId?.firstName || "john"}%20${claim?.claimantId?.lastName || "doe"}`} alt={`${claim?.claimantId?.firstName || "john"} ${claim?.claimantId?.lastName || "doe"}`} />
                                   <AvatarFallback className="text-2xl">
-                                    {getInitials(claim.claimantId.firstName, claim.claimantId.lastName)}
+                                    {getInitials(claim?.claimantId?.firstName || "john", claim?.claimantId?.lastName || "doe")}
                                   </AvatarFallback>
                                 </Avatar>
                               </div>
-                              
+
                               <div className="flex-1 space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                   <div className="space-y-1">
@@ -518,7 +518,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                       Full Name
                                     </div>
                                     <p className="font-semibold text-lg">
-                                      {claim.claimantId.firstName} {claim.claimantId.lastName}
+                                      {claim.claimantId?.firstName || ""} {claim.claimantId?.lastName || ""}
                                     </p>
                                   </div>
                                   <div className="space-y-1">
@@ -527,11 +527,11 @@ const currentStep = claim.approvalFlow?.steps.find(
                                       Email Address
                                     </div>
                                     <p className="font-medium">
-                                      {claim.claimantId.email}
+                                      {claim.claimantId?.email || ""}
                                     </p>
                                   </div>
                                 </div>
-                                
+
                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                                   <h4 className="font-medium mb-3 flex items-center text-blue-700 dark:text-blue-400">
                                     <Info className="h-4 w-4 mr-2" />
@@ -598,7 +598,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                   <p className="text-sm text-muted-foreground mb-4">
                                     {currentStep?.description || 'Please review this claim and provide your decision with appropriate comments.'}
                                   </p>
-                                  
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="space-y-1">
                                       <span className="text-sm font-medium text-muted-foreground">Claim Amount</span>
@@ -615,7 +615,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 <div>
                                   <label className="text-base font-medium block mb-2">
                                     {currentStep ? `${currentStep.department} ${currentStep.role.split('_').join(' ').toUpperCase()} Comments` : 'Approval Comments'}
@@ -642,7 +642,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
                                         <span>Approving</span>
-                                        <Spinner/>
+                                        <Spinner />
                                       </div>
                                     ) : (
                                       <>
@@ -659,13 +659,13 @@ const currentStep = claim.approvalFlow?.steps.find(
                                     disabled={isSubmitting || !comments.trim()}
                                   >
                                     {isSubmitting && actionType === "reject" ? (
-                                     <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2">
                                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
                                         <span>Rejecting...</span>
-                                        <Spinner/>
+                                        <Spinner />
 
                                       </div>
                                     ) : (
@@ -704,7 +704,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                           <FileEdit className="h-3 w-3 text-teal-600 dark:text-teal-400" />
                                         )}
                                       </div>
-                                      
+
                                       <div className="bg-muted/30 rounded-lg p-4">
                                         <div className="flex items-center justify-between mb-2">
                                           <div className="font-medium">
@@ -714,12 +714,12 @@ const currentStep = claim.approvalFlow?.steps.find(
                                             {formatDate(entry.performedAt)} {formatTime(entry.performedAt)}
                                           </div>
                                         </div>
-                                        
+
                                         <div className="text-sm mb-3">
                                           <span className="text-muted-foreground">Performed by: </span>
                                           <span className="font-medium">{entry.performedBy}</span>
                                         </div>
-                                        
+
                                         {entry.details && (
                                           <div className="bg-background p-4 rounded-md border text-sm">
                                             <div className="flex items-center mb-2">
@@ -748,7 +748,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                     <CheckCircle2 className="h-5 w-5 mr-2 text-teal-600 dark:text-teal-400" />
                                     Approval Records
                                   </h3>
-                                  
+
                                   {claim.approval.checkerApproval && (
                                     <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
                                       <div className="flex items-center justify-between mb-3">
@@ -794,7 +794,7 @@ const currentStep = claim.approvalFlow?.steps.find(
                                       </div>
                                     </div>
                                   )}
-                                  
+
                                   {claim.approval.financeApproval && (
                                     <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
                                       <div className="flex items-center justify-between mb-3">

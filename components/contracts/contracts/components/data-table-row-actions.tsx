@@ -23,8 +23,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { deleteContract } from "@/services/contracts.service";
 import { Spinner } from "@/components/ui/spinner";
@@ -136,8 +134,8 @@ export function DataTableRowActions<TData>({
                   Contracted User:
                 </span>
                 <span className="text-sm">
-                  {contract.contractedUserId.firstName}{" "}
-                  {contract.contractedUserId.lastName}
+                  {contract?.contractedUserId?.firstName || ""}{" "}
+                  {contract?.contractedUserId?.lastName || ""}
                 </span>
               </div>
             </div>

@@ -58,7 +58,6 @@ import { updateEmployee } from "@/services/employees.service"
 import type { UserRole } from "@/types/user"
 
 const updateUserRoles = async (userId: string, roles: UserRole[]) => {
-  // Call the real API to update only the roles field
   return updateEmployee(userId, { roles })
 }
 
@@ -192,21 +191,20 @@ export default function EmployeeDetailsPage({ employee }: any) {
   }
 
   return (
-    <div className="p-4 md:p-6 min-h-screen bg-gray-50">
+    <div className="p-2 md:p-6 min-h-screen ">
       <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
           <Button
             onClick={() => router.back()}
-            variant="ghost"
+            variant="default"
             size="sm"
-            className="flex items-center gap-2 hover:bg-gray-100"
+            className="flex items-center gap-2"
           >
             <ChevronLeft className="w-4 h-4" />
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">User Profile</h1>
-            <p className="text-gray-500 mt-1">Manage user information and settings</p>
+            <h1 className="text-3xl font-bold ">User Profile</h1>
           </div>
         </div>
         <div className="flex space-x-3">
@@ -235,16 +233,16 @@ export default function EmployeeDetailsPage({ employee }: any) {
                   src="/placeholder.svg?height=128&width=128"
                   alt={`${employee?.firstName} ${employee?.lastName}`}
                 />
-                <AvatarFallback className="text-4xl bg-gray-200">
+                <AvatarFallback className="text-4x">
                   {employee?.firstName?.[0]}
                   {employee?.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold ">
                   {[employee?.firstName, employee?.middleName, employee?.lastName].filter(Boolean).join(" ")}
                 </h2>
-                <p className="text-gray-500">{employee?.employeeId || "No ID"}</p>
+                <p >{employee?.employeeId || "No ID"}</p>
               </div>
               <Badge
                 variant={
@@ -330,23 +328,23 @@ export default function EmployeeDetailsPage({ employee }: any) {
             <Separator className="my-6" />
             <div className="space-y-4">
               <div className="flex items-center text-sm">
-                <Briefcase className="mr-3 h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{employee?.department || "Not specified"}</span>
+                <Briefcase className="mr-3 h-4 w-4 " />
+                <span >{employee?.department || "Not specified"}</span>
               </div>
               <div className="flex items-center text-sm">
-                <Mail className="mr-3 h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{employee?.email || "No email"}</span>
+                <Mail className="mr-3 h-4 w-4 " />
+                <span >{employee?.email || "No email"}</span>
               </div>
               <div className="flex items-center text-sm">
-                <Phone className="mr-3 h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">{employee?.phoneNumber || "No phone"}</span>
+                <Phone className="mr-3 h-4 w-4 " />
+                <span >{employee?.phoneNumber || "No phone"}</span>
                 {employee?.alternativePhoneNumber && (
-                  <span className="ml-2 text-gray-500">(Alt: {employee.alternativePhoneNumber})</span>
+                  <span className="ml-2 ">(Alt: {employee.alternativePhoneNumber})</span>
                 )}
               </div>
               <div className="flex items-center text-sm">
-                <CreditCard className="mr-3 h-4 w-4 text-gray-500" />
-                <span className="text-gray-700">ID: {employee?.nationalId || "Not provided"}</span>
+                <CreditCard className="mr-3 h-4 w-4 " />
+                <span >ID: {employee?.nationalId || "Not provided"}</span>
               </div>
             </div>
           </CardContent>
@@ -354,7 +352,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
 
         <div className="lg:col-span-3 space-y-6">
           <Tabs defaultValue="employment" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-12 rounded-lg bg-gray-100 p-1">
+            <TabsList className="grid w-full grid-cols-4 h-12 rounded-lg  p-1">
               <TabsTrigger value="employment" className="rounded-md">
                 Employment
               </TabsTrigger>
@@ -372,83 +370,83 @@ export default function EmployeeDetailsPage({ employee }: any) {
             <TabsContent value="employment" className="mt-6">
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-gray-900">
-                    <Briefcase className="mr-2 h-5 w-5 text-gray-700" />
+                  <CardTitle className="flex items-center ">
+                    <Briefcase className="mr-2 h-5 w-5 " />
                     Employment Details
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">Department</p>
-                      <p className="font-medium text-gray-900 mt-1">{employee?.department || "Not assigned"}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border border-gray-100 shadow-sm rounded-md">
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">Department</p>
+                      <p className="font-medium  mt-1">{employee?.department || "Not assigned"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">Availability</p>
-                      <p className="font-medium text-gray-900 mt-1 capitalize">
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">Availability</p>
+                      <p className="font-medium  mt-1 capitalize">
                         {employee?.availability || "Not specified"}
                       </p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">Experience (Years)</p>
-                      <p className="font-medium text-gray-900 mt-1">{employee?.yearsOfExperience || 0}</p>
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">Experience (Years)</p>
+                      <p className="font-medium  mt-1">{employee?.yearsOfExperience || 0}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">Hourly Rate</p>
-                      <p className="font-medium text-gray-900 mt-1">
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">Hourly Rate</p>
+                      <p className="font-medium  mt-1">
                         {employee?.hourlyRate ? `KES ${employee.hourlyRate}` : "Not set"}
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Skills</h3>
+                    <h3 className="text-lg font-semibold  mb-4">Skills</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {employee?.skills?.length > 0 ? (
                         employee.skills.map((skill: any, index: number) => (
-                          <div key={index} className="p-4 border border-gray-100 rounded-lg bg-white shadow-sm">
-                            <p className="font-medium capitalize text-gray-900">{skill.name}</p>
-                            <div className="text-sm text-gray-500 mt-2">
+                          <div key={index} className="p-4 border border-gray-100 rounded-lg  shadow-sm">
+                            <p className="font-medium capitalize ">{skill.name}</p>
+                            <div className="text-sm  mt-2">
                               <p>Experience: {skill.yearsOfExperience} years</p>
                               <p className="capitalize">Level: {skill.proficiencyLevel}</p>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <p className="text-gray-500">No skills listed</p>
+                        <p >No skills listed</p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Education</h3>
+                    <h3 className="text-lg font-semibold  mb-4">Education</h3>
                     <div className="space-y-4">
                       {employee?.education?.length > 0 ? (
                         employee.education.map((edu: any, index: number) => (
-                          <div key={index} className="p-4 border border-gray-100 rounded-lg bg-white shadow-sm">
-                            <p className="font-medium text-gray-900">{edu.qualification}</p>
-                            <p className="text-sm text-gray-500 mt-1">{edu.institution}</p>
-                            <p className="text-sm text-gray-500">Completed: {edu.yearOfCompletion}</p>
+                          <div key={index} className="p-4 border border-gray-100 rounded-lg  shadow-sm">
+                            <p className="font-medium ">{edu.qualification}</p>
+                            <p className="text-sm  mt-1">{edu.institution}</p>
+                            <p className="text-sm ">Completed: {edu.yearOfCompletion}</p>
                           </div>
                         ))
                       ) : (
-                        <p className="text-gray-500">No education history listed</p>
+                        <p >No education history listed</p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Documents</h3>
+                    <h3 className="text-lg font-semibold  mb-4">Documents</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {employee?.cvUrl && (
                         <a
                           href={employee.cvUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center p-4 border border-gray-100 rounded-lg bg-white shadow-sm hover:bg-gray-50 transition-colors"
+                          className="flex items-center p-4 border border-gray-100 rounded-lg  shadow-sm hover: transition-colors"
                         >
-                          <Download className="mr-3 h-5 w-5 text-gray-700" />
-                          <span className="text-gray-900">Download CV</span>
+                          <Download className="mr-3 h-5 w-5 " />
+                          <span className="">Download CV</span>
                         </a>
                       )}
                       {employee?.academicCertificates?.map((cert: any, index: number) => (
@@ -457,10 +455,10 @@ export default function EmployeeDetailsPage({ employee }: any) {
                           href={cert.documentUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center p-4 border border-gray-100 rounded-lg bg-white shadow-sm hover:bg-gray-50 transition-colors"
+                          className="flex items-center p-4 border border-gray-100 rounded-lg  shadow-sm hover: transition-colors"
                         >
-                          <Download className="mr-3 h-5 w-5 text-gray-700" />
-                          <span className="text-gray-900">Academic Certificate {index + 1}</span>
+                          <Download className="mr-3 h-5 w-5 " />
+                          <span className="">Academic Certificate {index + 1}</span>
                         </a>
                       ))}
                     </div>
@@ -472,8 +470,8 @@ export default function EmployeeDetailsPage({ employee }: any) {
             <TabsContent value="financial" className="mt-6">
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-gray-900">
-                    <DollarSign className="mr-2 h-5 w-5 text-gray-700" />
+                  <CardTitle className="flex items-center ">
+                    <DollarSign className="mr-2 h-5 w-5 " />
                     Financial Overview
                   </CardTitle>
                 </CardHeader>
@@ -481,10 +479,10 @@ export default function EmployeeDetailsPage({ employee }: any) {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <Card className="border border-gray-100 shadow-sm">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-base font-medium text-gray-700">Base Salary</CardTitle>
+                        <CardTitle className="text-base font-medium ">Base Salary</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">
+                        <div className="text-2xl font-bold ">
                           KES {(employee?.baseSalary || 0).toLocaleString()}
                         </div>
                         <Progress value={100} className="h-2 mt-4" />
@@ -520,20 +518,20 @@ export default function EmployeeDetailsPage({ employee }: any) {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Deduction Details</h3>
+                      <h3 className="text-lg font-semibold  mb-4">Deduction Details</h3>
                       <div className="space-y-4">
-                        <div className="p-4 border border-gray-100 rounded-lg bg-white shadow-sm">
+                        <div className="p-4 border border-gray-100 rounded-lg  shadow-sm">
                           <div className="flex justify-between items-center">
-                            <span className="font-medium text-gray-700">NHIF Deduction</span>
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium ">NHIF Deduction</span>
+                            <span className="font-medium ">
                               KES {(employee?.nhifDeduction || 0).toLocaleString()}
                             </span>
                           </div>
                         </div>
-                        <div className="p-4 border border-gray-100 rounded-lg bg-white shadow-sm">
+                        <div className="p-4 border border-gray-100 rounded-lg  shadow-sm">
                           <div className="flex justify-between items-center">
-                            <span className="font-medium text-gray-700">NSSF Deduction</span>
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium ">NSSF Deduction</span>
+                            <span className="font-medium ">
                               KES {(employee?.nssfDeduction || 0).toLocaleString()}
                             </span>
                           </div>
@@ -542,16 +540,16 @@ export default function EmployeeDetailsPage({ employee }: any) {
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Information</h3>
-                      <div className="p-4 border border-gray-100 rounded-lg bg-white shadow-sm">
+                      <h3 className="text-lg font-semibold  mb-4">Payment Information</h3>
+                      <div className="p-4 border border-gray-100 rounded-lg  shadow-sm">
                         <div className="space-y-4">
                           <div className="flex justify-between items-center">
-                            <span className="font-medium text-gray-700">Payment Method</span>
+                            <span className="font-medium ">Payment Method</span>
                             <Badge variant="outline">{employee?.paymentMethod || "Not specified"}</Badge>
                           </div>
                           <Separator />
                           <div>
-                            <p className="font-medium text-gray-700 mb-2">Bank Details</p>
+                            <p className="font-medium  mb-2">Bank Details</p>
                             {employee?.bankDetails?.bankName ? (
                               <div className="text-sm text-gray-600 space-y-1">
                                 <p>Bank: {employee.bankDetails.bankName}</p>
@@ -559,16 +557,16 @@ export default function EmployeeDetailsPage({ employee }: any) {
                                 <p>Branch Code: {employee.bankDetails.branchCode}</p>
                               </div>
                             ) : (
-                              <p className="text-sm text-gray-500">No bank details provided</p>
+                              <p className="text-sm ">No bank details provided</p>
                             )}
                           </div>
                           <Separator />
                           <div>
-                            <p className="font-medium text-gray-700 mb-2">M-Pesa Details</p>
+                            <p className="font-medium  mb-2">M-Pesa Details</p>
                             {employee?.mpesaDetails?.phoneNumber ? (
                               <p className="text-sm text-gray-600">Phone: {employee.mpesaDetails.phoneNumber}</p>
                             ) : (
-                              <p className="text-sm text-gray-500">No M-Pesa details provided</p>
+                              <p className="text-sm ">No M-Pesa details provided</p>
                             )}
                           </div>
                         </div>
@@ -582,78 +580,78 @@ export default function EmployeeDetailsPage({ employee }: any) {
             <TabsContent value="personal" className="mt-6">
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center text-gray-900">
-                    <User className="mr-2 h-5 w-5 text-gray-700" />
+                  <CardTitle className="flex items-center ">
+                    <User className="mr-2 h-5 w-5 " />
                     Personal Information
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">Date of Birth</p>
-                      <p className="font-medium text-gray-900 mt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border border-gray-100 shadow-sm rounded-md bg-card">
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">Date of Birth</p>
+                      <p className="font-medium  mt-1">
                         {employee?.dateOfBirth ? format(new Date(employee.dateOfBirth), "dd MMM yyyy") : "Not provided"}
                       </p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">National ID</p>
-                      <p className="font-medium text-gray-900 mt-1">{employee?.nationalId || "Not provided"}</p>
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">National ID</p>
+                      <p className="font-medium  mt-1">{employee?.nationalId || "Not provided"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">KRA PIN</p>
-                      <p className="font-medium text-gray-900 mt-1">{employee?.kraPinNumber || "Not provided"}</p>
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">KRA PIN</p>
+                      <p className="font-medium  mt-1">{employee?.kraPinNumber || "Not provided"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">NHIF Number</p>
-                      <p className="font-medium text-gray-900 mt-1">{employee?.nhifNumber || "Not provided"}</p>
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">NHIF Number</p>
+                      <p className="font-medium  mt-1">{employee?.nhifNumber || "Not provided"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-500">NSSF Number</p>
-                      <p className="font-medium text-gray-900 mt-1">{employee?.nssfNumber || "Not provided"}</p>
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">NSSF Number</p>
+                      <p className="font-medium  mt-1">{employee?.nssfNumber || "Not provided"}</p>
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Address Information</h3>
+                  <div className="border border-gray-100 shadow-sm rounded-md bg-card p-4">
+                    <h3 className="text-lg font-semibold  mb-4 ">Address Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-sm font-medium text-gray-500">Physical Address</p>
-                        <p className="font-medium text-gray-900 mt-1">{employee?.physicalAddress || "Not provided"}</p>
+                      <div className=" p-4 rounded-lg">
+                        <p className="text-sm font-medium ">Physical Address</p>
+                        <p className="font-medium  mt-1">{employee?.physicalAddress || "Not provided"}</p>
                       </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-sm font-medium text-gray-500">Postal Address</p>
-                        <p className="font-medium text-gray-900 mt-1">{employee?.postalAddress || "Not provided"}</p>
+                      <div className=" p-4 rounded-lg">
+                        <p className="text-sm font-medium ">Postal Address</p>
+                        <p className="font-medium  mt-1">{employee?.postalAddress || "Not provided"}</p>
                       </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-sm font-medium text-gray-500">County</p>
-                        <p className="font-medium text-gray-900 mt-1 capitalize">
+                      <div className=" p-4 rounded-lg">
+                        <p className="text-sm font-medium ">County</p>
+                        <p className="font-medium  mt-1 capitalize">
                           {employee?.county || "Not provided"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Emergency Contact</h3>
+                  <div className="border border-gray-100 shadow-sm rounded-md bg-card p-4">
+                    <h3 className="text-lg font-semibold  mb-4">Emergency Contact</h3>
                     {employee?.emergencyContact?.name ? (
-                      <div className="p-4 border border-gray-100 rounded-lg bg-white shadow-sm">
+                      <div className="p-4 border border-gray-100 rounded-lg  shadow-sm">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <p className="text-sm font-medium text-gray-500">Name</p>
-                            <p className="font-medium text-gray-900 mt-1">{employee.emergencyContact.name}</p>
+                            <p className="text-sm font-medium ">Name</p>
+                            <p className="font-medium  mt-1">{employee.emergencyContact.name}</p>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-500">Relationship</p>
-                            <p className="font-medium text-gray-900 mt-1">{employee.emergencyContact.relationship}</p>
+                            <p className="text-sm font-medium ">Relationship</p>
+                            <p className="font-medium  mt-1">{employee.emergencyContact.relationship}</p>
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-500">Phone</p>
-                            <p className="font-medium text-gray-900 mt-1">{employee.emergencyContact.phoneNumber}</p>
+                            <p className="text-sm font-medium ">Phone</p>
+                            <p className="font-medium  mt-1">{employee.emergencyContact.phoneNumber}</p>
                           </div>
                           {employee.emergencyContact.alternativePhoneNumber && (
                             <div>
-                              <p className="text-sm font-medium text-gray-500">Alternative Phone</p>
-                              <p className="font-medium text-gray-900 mt-1">
+                              <p className="text-sm font-medium ">Alternative Phone</p>
+                              <p className="font-medium  mt-1">
                                 {employee.emergencyContact.alternativePhoneNumber}
                               </p>
                             </div>
@@ -661,7 +659,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-gray-500">No emergency contact provided</p>
+                      <p >No emergency contact provided</p>
                     )}
                   </div>
                 </CardContent>
@@ -672,8 +670,8 @@ export default function EmployeeDetailsPage({ employee }: any) {
               <Card className="border-0 shadow-sm">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
-                    <CardTitle className="flex items-center text-gray-900">
-                      <Shield className="mr-2 h-5 w-5 text-gray-700" />
+                    <CardTitle className="flex items-center ">
+                      <Shield className="mr-2 h-5 w-5 " />
                       Role Management
                     </CardTitle>
                     <div className="flex items-center gap-2">
@@ -692,7 +690,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                           <div className="py-4">
                             <div className="mb-4">
                               <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 " />
                                 <Input
                                   placeholder="Search roles..."
                                   className="pl-9"
@@ -707,19 +705,19 @@ export default function EmployeeDetailsPage({ employee }: any) {
                                   {filteredAvailableRoles.map((role) => (
                                     <div
                                       key={role}
-                                      className="flex items-center justify-between p-3 rounded-md hover:bg-gray-100 cursor-pointer"
+                                      className="flex items-center justify-between p-3 rounded-md cursor-pointer"
                                       onClick={() => handleAddRole(role)}
                                     >
                                       <div className="flex items-center">
-                                        <Shield className="h-4 w-4 mr-2 text-gray-500" />
+                                        <Shield className="h-4 w-4 mr-2 " />
                                         <span className="font-medium capitalize">{role.replace(/_/g, " ")}</span>
                                       </div>
-                                      <Plus className="h-4 w-4 text-gray-500" />
+                                      <Plus className="h-4 w-4 " />
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <div className="text-center py-8 text-gray-500">
+                                <div className="text-center py-8 ">
                                   No roles found matching your search
                                 </div>
                               )}
@@ -749,17 +747,17 @@ export default function EmployeeDetailsPage({ employee }: any) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Current Roles</p>
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium  mb-3">Current Roles</p>
                       {userRoles.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                           {userRoles.map((role) => (
                             <div
                               key={role}
-                              className="flex items-center justify-between p-3 bg-white rounded-md border border-gray-100 shadow-sm"
+                              className="flex items-center justify-between p-3  rounded-md border border-gray-100 shadow-sm"
                             >
                               <div className="flex items-center">
-                                <Shield className="h-4 w-4 mr-2 text-gray-700" />
+                                <Shield className="h-4 w-4 mr-2 " />
                                 <span className="font-medium capitalize">{role.replace(/_/g, " ")}</span>
                               </div>
                               <AlertDialog>
@@ -767,7 +765,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-8 w-8 text-gray-500 hover:text-red-600"
+                                    className="h-8 w-8  hover:text-red-600"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -795,28 +793,28 @@ export default function EmployeeDetailsPage({ employee }: any) {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-8 text-gray-500 bg-white rounded-md border border-dashed border-gray-200">
+                        <div className="text-center py-8   rounded-md border border-dashed border-gray-200">
                           No roles assigned to this user
                         </div>
                       )}
                     </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-gray-700 mb-3">Role Permissions</p>
+                    <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium  mb-3">Role Permissions</p>
                       <div className="space-y-4">
-                        <div className="p-4 bg-white rounded-md border border-gray-100 shadow-sm">
-                          <p className="font-medium text-gray-900 mb-2">Admin</p>
-                          <p className="text-sm text-gray-500">
+                        <div className="p-4  rounded-md border border-gray-100 shadow-sm">
+                          <p className="font-medium  mb-2">Admin</p>
+                          <p className="text-sm ">
                             Full access to all system features and user management
                           </p>
                         </div>
-                        <div className="p-4 bg-white rounded-md border border-gray-100 shadow-sm">
-                          <p className="font-medium text-gray-900 mb-2">Consultant</p>
-                          <p className="text-sm text-gray-500">Access to project assignments and time tracking</p>
+                        <div className="p-4  rounded-md border border-gray-100 shadow-sm">
+                          <p className="font-medium  mb-2">Consultant</p>
+                          <p className="text-sm ">Access to project assignments and time tracking</p>
                         </div>
-                        <div className="p-4 bg-white rounded-md border border-gray-100 shadow-sm">
-                          <p className="font-medium text-gray-900 mb-2">Finance Approver</p>
-                          <p className="text-sm text-gray-500">Can approve financial transactions and payments</p>
+                        <div className="p-4  rounded-md border border-gray-100 shadow-sm">
+                          <p className="font-medium  mb-2">Finance Approver</p>
+                          <p className="text-sm ">Can approve financial transactions and payments</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -842,42 +840,42 @@ export default function EmployeeDetailsPage({ employee }: any) {
 
           <Card className="border-0 shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center text-gray-900">
-                <Clock className="mr-2 h-5 w-5 text-gray-700" />
+              <CardTitle className="flex items-center ">
+                <Clock className="mr-2 h-5 w-5 " />
                 System Information
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-500">Created At</p>
-                  <p className="font-medium text-gray-900 mt-1">
+                <div className=" p-4 rounded-lg">
+                  <p className="text-sm font-medium ">Created At</p>
+                  <p className="font-medium  mt-1">
                     {employee?.createdAt ? format(new Date(employee.createdAt), "dd MMM yyyy HH:mm") : "N/A"}
                   </p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-500">Last Updated</p>
-                  <p className="font-medium text-gray-900 mt-1">
+                <div className=" p-4 rounded-lg">
+                  <p className="text-sm font-medium ">Last Updated</p>
+                  <p className="font-medium  mt-1">
                     {employee?.updatedAt ? format(new Date(employee.updatedAt), "dd MMM yyyy HH:mm") : "N/A"}
                   </p>
                 </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-500">Status</p>
+                <div className=" p-4 rounded-lg">
+                  <p className="text-sm font-medium ">Status</p>
                   <div className="flex items-center mt-1">
                     {employee?.status === "active" ? (
                       <>
                         <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
-                        <span className="font-medium text-gray-900 capitalize">{employee?.status}</span>
+                        <span className="font-medium  capitalize">{employee?.status}</span>
                       </>
                     ) : employee?.status === "pending" ? (
                       <>
                         <Clock className="h-4 w-4 text-amber-500 mr-2" />
-                        <span className="font-medium text-gray-900 capitalize">{employee?.status}</span>
+                        <span className="font-medium  capitalize">{employee?.status}</span>
                       </>
                     ) : (
                       <>
                         <XCircle className="h-4 w-4 text-red-500 mr-2" />
-                        <span className="font-medium text-gray-900 capitalize">{employee?.status || "unknown"}</span>
+                        <span className="font-medium  capitalize">{employee?.status || "unknown"}</span>
                       </>
                     )}
                   </div>

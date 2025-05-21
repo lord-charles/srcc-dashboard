@@ -379,9 +379,9 @@ export default function ContractStats({ contractsData }: { contractsData: Contra
             mostAmendedContract:
               mostAmendmentsCount > 0
                 ? {
-                    contractNumber: mostAmendedContractNumber,
-                    count: mostAmendmentsCount,
-                  }
+                  contractNumber: mostAmendedContractNumber,
+                  count: mostAmendmentsCount,
+                }
                 : null,
           },
           projectAssociation: {
@@ -621,9 +621,8 @@ export default function ContractStats({ contractsData }: { contractsData: Contra
                         <div key={i} className="flex items-center justify-between text-sm group">
                           <div className="flex items-center gap-1.5 truncate pr-2 max-w-[70%]">
                             <span
-                              className={`h-2 w-2 rounded-full ${
-                                ["bg-emerald-500", "bg-blue-500", "bg-amber-500"][i % 3]
-                              }`}
+                              className={`h-2 w-2 rounded-full ${["bg-emerald-500", "bg-blue-500", "bg-amber-500"][i % 3]
+                                }`}
                             ></span>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -648,7 +647,7 @@ export default function ContractStats({ contractsData }: { contractsData: Contra
               </div>
             )}
           </CardContent>
-       
+
         </Card>
 
         {/* Contract Status Card */}
@@ -687,7 +686,7 @@ export default function ContractStats({ contractsData }: { contractsData: Contra
                     >
                       <div className={`h-3 w-3 rounded-full ${getStatusColor(status)} mb-1`}></div>
                       <p className="text-xl font-bold">{count}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{status}</p>
+                      <p className="text-[8px] text-muted-foreground capitalize">{status}</p>
                     </div>
                   ))}
                 </div>
