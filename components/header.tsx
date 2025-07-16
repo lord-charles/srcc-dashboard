@@ -39,20 +39,20 @@ export function Header() {
   const initials = user
     ? (user.firstName && user.lastName
         ? `${user.firstName[0]}${user.lastName[0]}`
-        : user.email.substring(0, 2)
+        : user.email?.substring(0, 2) ?? ''
       ).toUpperCase()
     : "";
 
   const displayName = user
     ? user.firstName
-      ? `${user.firstName} ${user.lastName}`
-      : user.email
-    : "";
+      ? `${user.firstName} ${user.lastName || ''}`.trim()
+      : user.email || ''
+    : '';
 
   const welcomeMessage = user?.firstName
-    ? `Welcome back, ${user.firstName}`
+    ? `Welcome back, ${user?.firstName}`
     : "Welcome!";
-
+  console.log(session);
   return (
     <>
       {user?.registrationStatus === "quick" && (

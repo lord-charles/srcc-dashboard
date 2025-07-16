@@ -37,6 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Spinner } from "../ui/spinner";
 import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 interface SkillField {
   name: string;
@@ -86,8 +87,8 @@ interface FormData {
   kraPinNumber: string;
   nhifNumber: string;
   nssfNumber: string;
-  password: string;
-  confirmPassword: string;
+  // password: string;
+  // confirmPassword: string;
   dateOfBirth: string;
   physicalAddress: string;
   postalAddress?: string;
@@ -130,8 +131,8 @@ export default function ConsultantRegistrationForm() {
     kraPinNumber: "",
     nhifNumber: "",
     nssfNumber: "",
-    password: "",
-    confirmPassword: "",
+    // password: "",
+    // confirmPassword: "",
     dateOfBirth: "",
     physicalAddress: "",
     postalAddress: "",
@@ -338,6 +339,9 @@ export default function ConsultantRegistrationForm() {
       setStep(1);
       reset();
       setIsLoading(false);
+      setTimeout(() => {
+        redirect("/analytics");
+      }, 1000);
     } catch (error: any) {
       setIsLoading(false);
       toast({
@@ -413,19 +417,6 @@ export default function ConsultantRegistrationForm() {
         toast({
           title: "Invalid Email",
           description: "Please enter a valid email address",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      // Validate phone numbers (Kenyan format)
-      const phoneRegex = /^(?:\+254|0)[17]\d{8}$/;
-
-      if (!phoneRegex.test(formValues.phoneNumber)) {
-        toast({
-          title: "Invalid Phone Number",
-          description:
-            "Please enter a valid Kenyan phone number (e.g., +254712345678 or 0712345678)",
           variant: "destructive",
         });
         return false;

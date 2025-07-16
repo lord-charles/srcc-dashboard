@@ -22,7 +22,7 @@ const handler = NextAuth({
           );
 
           const data = res.data;
-          console.log(data);
+          console.log("data", data);
 
           if (res.status === 200 && data.user) {
             // Store token in cookie
@@ -45,20 +45,9 @@ const handler = NextAuth({
               return null;
             }
 
-            return {
-              id: data.user.id,
-              firstName: data.user.firstName,
-              lastName: data.user.lastName,
-              email: data.user.email,
-              roles: data.user.roles,
-              employeeId: data.user.employeeId,
-              department: data.user.department,
-              position: data.user.position,
-              registrationStatus: data.user.registrationStatus,
-              phoneNumber: data.user.phoneNumber,
-              nationalId: data.user.nationalId,
-              token: data.user.accessToken,
-            };
+            // Return the raw data from the API. This will be passed as the `user` object
+            // to the `jwt` callback on initial sign-in.
+            return data;
           }
 
           console.log("Login failed: Invalid response", {
@@ -84,37 +73,60 @@ const handler = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log("user", user, token);
+      // On initial sign-in, `user` contains the response from the `authorize` function.
+      // We save the enriched accessToken from the backend into the NextAuth token.
       if (user) {
-        token.id = user.id;
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.email = user.email;
-        token.roles = user.roles;
-        token.employeeId = user.employeeId;
-        token.department = user.department;
-        token.position = user.position;
-        token.registrationStatus = user.registrationStatus;
-        token.phoneNumber = user.phoneNumber;
-        token.nationalId = user.nationalId;
-        token.accessToken = user.token;
+        const apiResponse = user as any;
+        token.accessToken = apiResponse.token;
+      }
+
+      // On every request, decode the accessToken to populate the token object.
+      // This ensures the session is always up-to-date.
+      if (token.accessToken) {
+        try {
+          const decoded = JSON.parse(
+            Buffer.from(
+              (token.accessToken as string).split(".")[1],
+              "base64"
+            ).toString()
+          );
+          token.id = decoded.sub;
+          token.email = decoded.email;
+          token.roles = decoded.roles;
+          token.firstName = decoded.firstName;
+          token.lastName = decoded.lastName;
+          token.employeeId = decoded.employeeId;
+          token.department = decoded.department;
+          token.position = decoded.position;
+          token.registrationStatus = decoded.registrationStatus;
+          token.phoneNumber = decoded.phoneNumber;
+          token.nationalId = decoded.nationalId;
+        } catch (error) {
+          console.error("Error decoding token:", error);
+          return { ...token, error: "InvalidAccessToken" };
+        }
       }
 
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.firstName = token.firstName as string;
-        session.user.lastName = token.lastName as string;
-        session.user.email = token.email as string;
-        session.user.roles = token.roles as string[];
-        session.user.employeeId = token.employeeId as string;
-        session.user.department = token.department as string;
-        session.user.position = token.position as string;
-        session.user.registrationStatus = token.registrationStatus as string;
-        session.user.phoneNumber = token.phoneNumber as string;
-        session.user.nationalId = token.nationalId as string;
-        session.user.token = token.accessToken as string;
+      // The session object is populated from the token object.
+      // We add checks to ensure the properties exist before assigning them.
+      if (token && session.user) {
+        if (token.id) session.user.id = token.id;
+        if (token.email) session.user.email = token.email;
+        if (token.roles) session.user.roles = token.roles;
+        if (token.firstName) session.user.firstName = token.firstName;
+        if (token.lastName) session.user.lastName = token.lastName;
+        if (token.employeeId) session.user.employeeId = token.employeeId;
+        if (token.department) session.user.department = token.department;
+        if (token.position) session.user.position = token.position;
+        if (token.registrationStatus)
+          session.user.registrationStatus = token.registrationStatus;
+        if (token.phoneNumber) session.user.phoneNumber = token.phoneNumber;
+        if (token.nationalId) session.user.nationalId = token.nationalId;
+        if (token.accessToken) session.user.token = token.accessToken;
       }
       return session;
     },

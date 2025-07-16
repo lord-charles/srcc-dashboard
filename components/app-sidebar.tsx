@@ -132,17 +132,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar variant="inset" {...props}>
-      <SidebarHeader >
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-          <div className="relative w-[250px] h-[80px]">
-            <Image
-              src="/srcc-logo.webp"
-              alt="Logo"
-              fill
-              className="object-contain" // or object-stretch
-            />
-          </div>
+            <div className="relative w-[250px] h-[80px]">
+              <Image
+                src="/srcc-logo.webp"
+                alt="Logo"
+                fill
+                className="object-contain" // or object-stretch
+              />
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -163,9 +163,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     {item.icon && (
                       <span
                         className={`mr-4 inline-flex ${
-                          isActive(item.url)
-                            ? "text-yellow-500"
-                            : "text-white text-yellow-500"
+                          isActive(item.url) ? "text-yellow-500" : "text-white "
                         }`}
                       >
                         {(() => {
@@ -226,7 +224,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ) : null}
               </SidebarMenuItem>
             ))}
-            <div className="h-5"/>
+            <div className="h-5" />
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

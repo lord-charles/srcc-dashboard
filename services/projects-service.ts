@@ -41,7 +41,8 @@ export async function getProjects() {
       config
     );
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
+    console.log(error.response?.data);
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }

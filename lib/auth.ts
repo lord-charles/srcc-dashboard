@@ -52,6 +52,9 @@ export const authOptions: NextAuthOptions = {
               token: data.token,
               department: data.user.department,
               position: data.user.position,
+              registrationStatus: data.user.registrationStatus,
+              phoneNumber: data.user.phoneNumber,
+              nationalId: data.user.nationalId,
             };
           }
 
@@ -83,39 +86,40 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        // Spread the existing token and add user properties
-        return {
-          ...token,
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          roles: user.roles,
-          employeeId: user.employeeId,
-          token: user.token,
-          department: user.department,
-          position: user.position,
-        };
+        // On initial sign-in, `user` is the object from `authorize`
+        token.id = user.id;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.email = user.email;
+        token.roles = user.roles;
+        token.employeeId = user.employeeId;
+        token.department = user.department;
+        token.position = user.position;
+        token.accessToken = user.token; // Store the raw backend token
+        token.registrationStatus = user.registrationStatus;
+        token.phoneNumber = user.phoneNumber;
+        token.nationalId = user.nationalId;
       }
       return token;
     },
     async session({ session, token }) {
-      // Spread the existing session and update user properties
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id,
-          firstName: token.firstName,
-          lastName: token.lastName,
-          email: token.email,
-          roles: token.roles,
-          employeeId: token.employeeId,
-          token: token.token,
-          department: token.department,
-          position: token.position,
-        },
-      };
+      // The `session` object is what the client sees.
+      // We populate it from the `token` object.
+      if (token && session.user) {
+        session.user.id = token.id;
+        session.user.firstName = token.firstName;
+        session.user.lastName = token.lastName;
+        session.user.email = token.email;
+        session.user.roles = token.roles;
+        session.user.employeeId = token.employeeId;
+        session.user.department = token.department;
+        session.user.position = token.position;
+        session.user.token = token.accessToken;
+        session.user.registrationStatus = token.registrationStatus;
+        session.user.phoneNumber = token.phoneNumber;
+        session.user.nationalId = token.nationalId;
+      }
+      return session;
     },
   },
 };
