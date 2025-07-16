@@ -35,7 +35,8 @@ interface NavUserProps {
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
-  const initials = `${user?.firstName[0]}${user?.lastName[0]}`.toUpperCase();
+  const initials =
+    `${user?.firstName?.[0]}${user?.lastName?.[0]}`.toUpperCase();
 
   return (
     <SidebarMenu>
@@ -53,10 +54,10 @@ export function NavUser({ user }: NavUserProps) {
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">
-                  {user.firstName} {user.lastName}
+                  {user?.firstName} {user?.lastName}
                 </span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {user.email}
+                  {user?.email}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -77,10 +78,10 @@ export function NavUser({ user }: NavUserProps) {
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {user.firstName} {user.lastName}
+                    {user?.firstName} {user?.lastName}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {user.position}
+                    {user?.position}
                   </span>
                 </div>
               </div>

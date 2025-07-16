@@ -25,7 +25,7 @@ export async function registerConsultant(formData: FormData): Promise<any> {
         ...config,
         headers: {
           ...config.headers,
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -35,12 +35,17 @@ export async function registerConsultant(formData: FormData): Promise<any> {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Consultant registration error:", error.response?.data || error.message);
-    throw error.response?.data.message
+    console.error(
+      "Consultant registration error:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data.message;
   }
 }
 
-export async function approveConsultant(consultantId: string): Promise<boolean> {
+export async function approveConsultant(
+  consultantId: string
+): Promise<boolean> {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -49,13 +54,12 @@ export async function approveConsultant(consultantId: string): Promise<boolean> 
       config
     );
     return true;
-  } catch (error:any) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to approve consultant:", error);
-      throw error.response?.data.message
-
+    throw error.response?.data.message;
   }
 }
 
@@ -68,12 +72,12 @@ export async function rejectConsultant(consultantId: string): Promise<boolean> {
       config
     );
     return true;
-  } catch (error:any) {
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to reject consultant:", error);
-    throw error.response?.data.message
+    throw error.response?.data.message;
   }
 }
 
@@ -90,7 +94,10 @@ export async function requestPasswordReset(email: string): Promise<any> {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Password reset request error:", error.response?.data || error.message);
+    console.error(
+      "Password reset request error:",
+      error.response?.data || error.message
+    );
     throw error.response?.data.message || error.message;
   }
 }
@@ -105,7 +112,7 @@ export async function registerOrganization(formData: FormData): Promise<any> {
         ...config,
         headers: {
           ...config.headers,
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -115,7 +122,91 @@ export async function registerOrganization(formData: FormData): Promise<any> {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Organization registration error:", error.response?.data || error.message);
+    console.error(
+      "Organization registration error:",
+      error.response?.data || error.message
+    );
     throw error.response?.data.message || error.message;
+  }
+}
+
+export async function quickRegister(data: {
+  email: string;
+  phoneNumber: string;
+  nationalId: string;
+  password: string;
+}): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/quick-register`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      "Quick registration error:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data.message || "An unexpected error occurred.";
+  }
+}
+
+export async function verifyOtp(data: {
+  email: string;
+  pin: string;
+  verificationType: "email" | "phone";
+}): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/verify-otp`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      "OTP verification error:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data.message || "An unexpected error occurred.";
+  }
+}
+
+export const verifyEmailOtp = async (email: string, pin: string) =>
+  verifyOtp({ email, pin, verificationType: "email" });
+export const verifyPhoneOtp = async (email: string, pin: string) =>
+  verifyOtp({ email, pin, verificationType: "phone" });
+
+export async function getVerificationStatus(
+  email: string
+): Promise<{ isEmailVerified: boolean; isPhoneVerified: boolean }> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/verification-status`,
+      {
+        ...config,
+        params: { email },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      "Get verification status error:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data.message || "An unexpected error occurred.";
   }
 }

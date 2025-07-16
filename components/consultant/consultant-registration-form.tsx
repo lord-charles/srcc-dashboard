@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +36,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Spinner } from "../ui/spinner";
+import { useSession } from "next-auth/react";
 
 interface SkillField {
   name: string;
@@ -108,6 +109,7 @@ interface FormData {
 }
 
 export default function ConsultantRegistrationForm() {
+  const { data: session } = useSession();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"bank" | "mpesa">("bank");
@@ -180,6 +182,15 @@ export default function ConsultantRegistrationForm() {
   } = useForm<FormData>({
     defaultValues,
   });
+
+  useEffect(() => {
+    if (session?.user) {
+      const { email, phoneNumber, nationalId } = session.user;
+      if (email) setValue("email", email);
+      if (phoneNumber) setValue("phoneNumber", phoneNumber);
+      if (nationalId) setValue("nationalId", nationalId);
+    }
+  }, [session, setValue]);
 
   const {
     fields: skillFields,
@@ -369,7 +380,6 @@ export default function ConsultantRegistrationForm() {
         });
         return false;
       }
-
 
       return true;
     }
@@ -588,23 +598,25 @@ export default function ConsultantRegistrationForm() {
                   {Array.from({ length: totalSteps }).map((_, index) => (
                     <div key={index} className="flex-1 relative p-3">
                       <div
-                        className={`h-2 ${step > index + 1
-                          ? "bg-[#B7BE00]"
-                          : step === index + 1
+                        className={`h-2 ${
+                          step > index + 1
+                            ? "bg-[#B7BE00]"
+                            : step === index + 1
                             ? "bg-[#31876d]"
                             : "bg-gray-200"
-                          }`}
+                        }`}
                       />
                       <div
                         className={`
                         absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2
                         rounded-full h-8 w-8 flex items-center justify-center text-sm font-semibold
-                        ${step > index + 1
+                        ${
+                          step > index + 1
                             ? "bg-[#B7BE00] text-[#31876d]"
                             : step === index + 1
-                              ? "bg-[#31876d] "
-                              : "bg-gray-200 text-gray-600"
-                          }
+                            ? "bg-[#31876d] "
+                            : "bg-gray-200 text-gray-600"
+                        }
                         `}
                       >
                         {index + 1}
@@ -629,23 +641,23 @@ export default function ConsultantRegistrationForm() {
                 {step === 1
                   ? "Personal Information"
                   : step === 2
-                    ? "Contact & Emergency Details"
-                    : step === 3
-                      ? "Professional Information"
-                      : step === 4
-                        ? "Education & Certifications"
-                        : "Financial Information"}
+                  ? "Contact & Emergency Details"
+                  : step === 3
+                  ? "Professional Information"
+                  : step === 4
+                  ? "Education & Certifications"
+                  : "Financial Information"}
               </CardTitle>
               <CardDescription className="text-gray-600">
                 {step === 1
                   ? "Provide your basic personal details"
                   : step === 2
-                    ? "Enter your contact and emergency information"
-                    : step === 3
-                      ? "Tell us about your professional experience"
-                      : step === 4
-                        ? "Share your educational background and certifications"
-                        : "Add your payment and statutory details"}
+                  ? "Enter your contact and emergency information"
+                  : step === 3
+                  ? "Tell us about your professional experience"
+                  : step === 4
+                  ? "Share your educational background and certifications"
+                  : "Add your payment and statutory details"}
               </CardDescription>
             </div>
             <CardContent>
@@ -729,7 +741,8 @@ export default function ConsultantRegistrationForm() {
                           id="nationalId"
                           aria-label="National ID"
                           {...register("nationalId", { required: true })}
-                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
+                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          readOnly={!!session?.user?.nationalId}
                         />
                       </div>
                       <div className="space-y-2">
@@ -805,7 +818,8 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="yearsOfExperience"
                           className="text-sm font-medium"
                         >
-                          Years of work Experience <span className="text-red-500">*</span>
+                          Years of work Experience{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="yearsOfExperience"
@@ -950,7 +964,6 @@ export default function ConsultantRegistrationForm() {
                           </SelectContent>
                         </Select>
                       </div>
-
                     </div>
                   </div>
                 )}
@@ -967,7 +980,8 @@ export default function ConsultantRegistrationForm() {
                           type="email"
                           aria-label="Email"
                           {...register("email", { required: true })}
-                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
+                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          readOnly={!!session?.user?.email}
                         />
                       </div>
                       <div className="space-y-2">
@@ -981,7 +995,8 @@ export default function ConsultantRegistrationForm() {
                           id="phoneNumber"
                           aria-label="Phone Number"
                           {...register("phoneNumber", { required: true })}
-                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
+                          className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                          readOnly={!!session?.user?.phoneNumber}
                         />
                       </div>
                     </div>
@@ -1006,7 +1021,8 @@ export default function ConsultantRegistrationForm() {
                           htmlFor="physicalAddress"
                           className="text-sm font-medium"
                         >
-                          Physical Address <span className="text-red-500">*</span>
+                          Physical Address{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="physicalAddress"
@@ -1120,7 +1136,8 @@ export default function ConsultantRegistrationForm() {
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 flex-1">
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">
-                                  Skill Name <span className="text-red-500">*</span>
+                                  Skill Name{" "}
+                                  <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   placeholder="e.g., Project Management"
@@ -1131,13 +1148,15 @@ export default function ConsultantRegistrationForm() {
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">
-                                  Years of Experience <span className="text-red-500">*</span>
+                                  Years of Experience{" "}
+                                  <span className="text-red-500">*</span>
                                 </Label>
                                 <Input
                                   type="number"
                                   placeholder="e.g., 5"
-                                  aria-label={`Years of Experience for Skill ${index + 1
-                                    }`}
+                                  aria-label={`Years of Experience for Skill ${
+                                    index + 1
+                                  }`}
                                   {...register(
                                     `skills.${index}.yearsOfExperience` as const
                                   )}
@@ -1146,7 +1165,8 @@ export default function ConsultantRegistrationForm() {
                               </div>
                               <div className="space-y-2">
                                 <Label className="text-sm font-medium">
-                                  Proficiency Level <span className="text-red-500">*</span>
+                                  Proficiency Level{" "}
+                                  <span className="text-red-500">*</span>
                                 </Label>
                                 <Select
                                   onValueChange={(value) =>
@@ -1157,8 +1177,9 @@ export default function ConsultantRegistrationForm() {
                                   }
                                 >
                                   <SelectTrigger
-                                    aria-label={`Proficiency Level for Skill ${index + 1
-                                      }`}
+                                    aria-label={`Proficiency Level for Skill ${
+                                      index + 1
+                                    }`}
                                     className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50"
                                   >
                                     <SelectValue placeholder="Select level" />
@@ -1215,49 +1236,112 @@ export default function ConsultantRegistrationForm() {
                             <SelectValue placeholder="Select department" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="software">Software Engineering</SelectItem>
+                            <SelectItem value="software">
+                              Software Engineering
+                            </SelectItem>
                             <SelectItem value="data">Data Science</SelectItem>
-                            <SelectItem value="business">Business Analysis</SelectItem>
-                            <SelectItem value="project">Project Management</SelectItem>
-                            <SelectItem value="accounting">Accounting, Auditing & Finance</SelectItem>
-                            <SelectItem value="building_architecture">Building & Architecture</SelectItem>
-                            <SelectItem value="business_development">Business Development</SelectItem>
-                            <SelectItem value="business_processes_engineering">Business Processes Engineering</SelectItem>
-                            <SelectItem value="communications_pr">Communications and Public Relations</SelectItem>
-                            <SelectItem value="community_social_services">Community & Social Services</SelectItem>
-                            <SelectItem value="creative_design">Creative & Design</SelectItem>
-                            <SelectItem value="customer_service_support">Customer Service & Support</SelectItem>
-                            <SelectItem value="data_analytics">Data Analytics</SelectItem>
-                            <SelectItem value="engineering_technology">Engineering & Technology</SelectItem>
-                            <SelectItem value="farming_agriculture">Farming, Agriculture & Agribusiness</SelectItem>
-                            <SelectItem value="health_safety">Health & Safety</SelectItem>
-                            <SelectItem value="hospitality">Hospitality, Leisure, Food Services & Catering</SelectItem>
-                            <SelectItem value="human_resources">Human Resources</SelectItem>
-                            <SelectItem value="legal_services">Legal Services</SelectItem>
-                            <SelectItem value="logistics_transport">Logistics & Transport Services</SelectItem>
-                            <SelectItem value="medical_pharmaceutical">Medical & Pharmaceutical</SelectItem>
-                            <SelectItem value="monitoring_evaluation_learning">Monitoring, Evaluation and Learning</SelectItem>
-                            <SelectItem value="policy_trade_economic_advisory">Policy, Trade and Economic Advisory</SelectItem>
-                            <SelectItem value="product_project_management">Product & Project Management</SelectItem>
-                            <SelectItem value="quality_control_assurance">Quality Control & Assurance</SelectItem>
-                            <SelectItem value="real_estate_property_management">Real Estate & Property Management</SelectItem>
-                            <SelectItem value="sales_marketing">Sales & Marketing</SelectItem>
-                            <SelectItem value="security_safety">Security and Safety</SelectItem>
-                            <SelectItem value="software_development">Software Development</SelectItem>
+                            <SelectItem value="business">
+                              Business Analysis
+                            </SelectItem>
+                            <SelectItem value="project">
+                              Project Management
+                            </SelectItem>
+                            <SelectItem value="accounting">
+                              Accounting, Auditing & Finance
+                            </SelectItem>
+                            <SelectItem value="building_architecture">
+                              Building & Architecture
+                            </SelectItem>
+                            <SelectItem value="business_development">
+                              Business Development
+                            </SelectItem>
+                            <SelectItem value="business_processes_engineering">
+                              Business Processes Engineering
+                            </SelectItem>
+                            <SelectItem value="communications_pr">
+                              Communications and Public Relations
+                            </SelectItem>
+                            <SelectItem value="community_social_services">
+                              Community & Social Services
+                            </SelectItem>
+                            <SelectItem value="creative_design">
+                              Creative & Design
+                            </SelectItem>
+                            <SelectItem value="customer_service_support">
+                              Customer Service & Support
+                            </SelectItem>
+                            <SelectItem value="data_analytics">
+                              Data Analytics
+                            </SelectItem>
+                            <SelectItem value="engineering_technology">
+                              Engineering & Technology
+                            </SelectItem>
+                            <SelectItem value="farming_agriculture">
+                              Farming, Agriculture & Agribusiness
+                            </SelectItem>
+                            <SelectItem value="health_safety">
+                              Health & Safety
+                            </SelectItem>
+                            <SelectItem value="hospitality">
+                              Hospitality, Leisure, Food Services & Catering
+                            </SelectItem>
+                            <SelectItem value="human_resources">
+                              Human Resources
+                            </SelectItem>
+                            <SelectItem value="legal_services">
+                              Legal Services
+                            </SelectItem>
+                            <SelectItem value="logistics_transport">
+                              Logistics & Transport Services
+                            </SelectItem>
+                            <SelectItem value="medical_pharmaceutical">
+                              Medical & Pharmaceutical
+                            </SelectItem>
+                            <SelectItem value="monitoring_evaluation_learning">
+                              Monitoring, Evaluation and Learning
+                            </SelectItem>
+                            <SelectItem value="policy_trade_economic_advisory">
+                              Policy, Trade and Economic Advisory
+                            </SelectItem>
+                            <SelectItem value="product_project_management">
+                              Product & Project Management
+                            </SelectItem>
+                            <SelectItem value="quality_control_assurance">
+                              Quality Control & Assurance
+                            </SelectItem>
+                            <SelectItem value="real_estate_property_management">
+                              Real Estate & Property Management
+                            </SelectItem>
+                            <SelectItem value="sales_marketing">
+                              Sales & Marketing
+                            </SelectItem>
+                            <SelectItem value="security_safety">
+                              Security and Safety
+                            </SelectItem>
+                            <SelectItem value="software_development">
+                              Software Development
+                            </SelectItem>
                             <SelectItem value="strategy">Strategy</SelectItem>
-                            <SelectItem value="supply_chain_procurement">Supply Chain & Procurement</SelectItem>
+                            <SelectItem value="supply_chain_procurement">
+                              Supply Chain & Procurement
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">
-                          Preferred Work Type <span className="text-red-500">*</span>
+                          Preferred Work Type{" "}
+                          <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           onValueChange={(value) => {
-                            const currentTypes = getValues("preferredWorkTypes") || [];
+                            const currentTypes =
+                              getValues("preferredWorkTypes") || [];
                             if (!currentTypes.includes(value)) {
-                              setValue("preferredWorkTypes", [...currentTypes, value]);
+                              setValue("preferredWorkTypes", [
+                                ...currentTypes,
+                                value,
+                              ]);
                             }
                           }}
                         >
@@ -1315,42 +1399,48 @@ export default function ConsultantRegistrationForm() {
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">
-                                Institution <span className="text-red-500">*</span>
+                                Institution{" "}
+                                <span className="text-red-500">*</span>
                               </Label>
                               <Input
                                 {...register(
                                   `education.${index}.institution` as const
                                 )}
-                                aria-label={`Institution for Education ${index + 1
-                                  }`}
+                                aria-label={`Institution for Education ${
+                                  index + 1
+                                }`}
                                 className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
                               />
                             </div>
                             <div className="space-y-2">
                               <Label className="text-sm font-medium">
-                                Year of Completion <span className="text-red-500">*</span>
+                                Year of Completion{" "}
+                                <span className="text-red-500">*</span>
                               </Label>
                               <Input
                                 type="number"
                                 {...register(
                                   `education.${index}.yearOfCompletion` as const
                                 )}
-                                aria-label={`Year of Completion for Education ${index + 1
-                                  }`}
+                                aria-label={`Year of Completion for Education ${
+                                  index + 1
+                                }`}
                                 className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
                               />
                             </div>
                           </div>
                           <div className="space-y-2">
                             <Label className="text-sm font-medium">
-                              Qualification <span className="text-red-500">*</span>
+                              Qualification{" "}
+                              <span className="text-red-500">*</span>
                             </Label>
                             <Input
                               {...register(
                                 `education.${index}.qualification` as const
                               )}
-                              aria-label={`Qualification for Education ${index + 1
-                                }`}
+                              aria-label={`Qualification for Education ${
+                                index + 1
+                              }`}
                               className="border-gray-300 focus:border-[#31876d] focus:ring focus:ring-[#31876d] focus:ring-opacity-50 "
                             />
                           </div>
@@ -1388,12 +1478,16 @@ export default function ConsultantRegistrationForm() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-sm font-medium">
-                            Academic Certificates <span className="text-red-500">*</span>
+                            Academic Certificates{" "}
+                            <span className="text-red-500">*</span>
                           </Label>
                           <FileUpload2
                             value={certificatesCopy}
                             onChange={(files: File[]) => {
-                              console.log("Academic Certificates updated:", files);
+                              console.log(
+                                "Academic Certificates updated:",
+                                files
+                              );
                               setCertificatesCopy(files);
                             }}
                           />
@@ -1410,8 +1504,9 @@ export default function ConsultantRegistrationForm() {
                         <Button
                           type="button"
                           variant="outline"
-                          className={`flex-1 ${paymentMethod === "bank" ? "bg-[#31876d] " : ""
-                            }`}
+                          className={`flex-1 ${
+                            paymentMethod === "bank" ? "bg-[#31876d] " : ""
+                          }`}
                           onClick={() => setPaymentMethod("bank")}
                         >
                           Bank Transfer
@@ -1419,8 +1514,9 @@ export default function ConsultantRegistrationForm() {
                         <Button
                           type="button"
                           variant="outline"
-                          className={`flex-1 ${paymentMethod === "mpesa" ? "bg-[#31876d] " : ""
-                            }`}
+                          className={`flex-1 ${
+                            paymentMethod === "mpesa" ? "bg-[#31876d] " : ""
+                          }`}
                           onClick={() => setPaymentMethod("mpesa")}
                         >
                           M-Pesa

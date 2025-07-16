@@ -9,7 +9,7 @@ const handler = NextAuth({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text" },
-        pin: { label: "Pin", type: "password" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         try {
@@ -17,11 +17,12 @@ const handler = NextAuth({
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
               email: credentials?.email,
-              pin: credentials?.pin,
+              password: credentials?.password,
             }
           );
 
           const data = res.data;
+          console.log(data);
 
           if (res.status === 200 && data.user) {
             // Store token in cookie
@@ -53,6 +54,9 @@ const handler = NextAuth({
               employeeId: data.user.employeeId,
               department: data.user.department,
               position: data.user.position,
+              registrationStatus: data.user.registrationStatus,
+              phoneNumber: data.user.phoneNumber,
+              nationalId: data.user.nationalId,
               token: data.user.accessToken,
             };
           }
@@ -89,6 +93,9 @@ const handler = NextAuth({
         token.employeeId = user.employeeId;
         token.department = user.department;
         token.position = user.position;
+        token.registrationStatus = user.registrationStatus;
+        token.phoneNumber = user.phoneNumber;
+        token.nationalId = user.nationalId;
         token.accessToken = user.token;
       }
 
@@ -104,6 +111,9 @@ const handler = NextAuth({
         session.user.employeeId = token.employeeId as string;
         session.user.department = token.department as string;
         session.user.position = token.position as string;
+        session.user.registrationStatus = token.registrationStatus as string;
+        session.user.phoneNumber = token.phoneNumber as string;
+        session.user.nationalId = token.nationalId as string;
         session.user.token = token.accessToken as string;
       }
       return session;
