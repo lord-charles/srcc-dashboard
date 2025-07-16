@@ -36,7 +36,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Spinner } from "../ui/spinner";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 
 interface SkillField {
@@ -340,7 +340,8 @@ export default function ConsultantRegistrationForm() {
       reset();
       setIsLoading(false);
       setTimeout(() => {
-        redirect("/analytics");
+        signOut({ redirect: false });
+        redirect("/login");
       }, 1000);
     } catch (error: any) {
       setIsLoading(false);
