@@ -340,8 +340,7 @@ export default function ConsultantRegistrationForm() {
       reset();
       setIsLoading(false);
       setTimeout(() => {
-        signOut({ redirect: false });
-        redirect("/login");
+        signOut();
       }, 1000);
     } catch (error: any) {
       setIsLoading(false);
