@@ -1,28 +1,52 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Mail, Phone, Loader2, ArrowLeft } from 'lucide-react';
-import { getVerificationStatus } from '@/services/consultant.service';
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CheckCircle, Mail, Phone, Loader2, ArrowLeft } from "lucide-react";
+import {
+  getVerificationStatus,
+  getCompanyVerificationStatus,
+} from "@/services/consultant.service";
 
 interface VerificationHubProps {
   email: string;
+  userType: "user" | "organization";
   onVerifyEmail: () => void;
   onVerifyPhone: () => void;
   onBackToLogin: () => void;
   onBothVerified: () => void;
 }
 
-export function VerificationHub({ email, onVerifyEmail, onVerifyPhone, onBackToLogin, onBothVerified }: VerificationHubProps) {
-  const [status, setStatus] = useState<{ isEmailVerified: boolean; isPhoneVerified: boolean } | null>(null);
+export function VerificationHub({
+  email,
+  userType,
+  onVerifyEmail,
+  onVerifyPhone,
+  onBackToLogin,
+  onBothVerified,
+}: VerificationHubProps) {
+  const [status, setStatus] = useState<{
+    isEmailVerified: boolean;
+    isPhoneVerified: boolean;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchStatus = async () => {
       try {
         setIsLoading(true);
-        const newStatus = await getVerificationStatus(email);
+        const newStatus =
+          userType === "user"
+            ? await getVerificationStatus(email)
+            : await getCompanyVerificationStatus(email);
         setStatus(newStatus);
         if (newStatus.isEmailVerified && newStatus.isPhoneVerified) {
           onBothVerified();
@@ -34,7 +58,7 @@ export function VerificationHub({ email, onVerifyEmail, onVerifyPhone, onBackToL
       }
     };
     fetchStatus();
-  }, [email, onBothVerified]);
+  }, [email, userType, onBothVerified]);
 
   if (isLoading) {
     return (
@@ -53,7 +77,9 @@ export function VerificationHub({ email, onVerifyEmail, onVerifyPhone, onBackToL
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Complete Your Registration</CardTitle>
-        <CardDescription>Please verify your email and phone number to continue.</CardDescription>
+        <CardDescription>
+          Please verify your email and phone number to continue.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between rounded-lg border p-4">
@@ -64,7 +90,9 @@ export function VerificationHub({ email, onVerifyEmail, onVerifyPhone, onBackToL
           {status?.isEmailVerified ? (
             <CheckCircle className="h-6 w-6 text-green-500" />
           ) : (
-            <Button onClick={onVerifyEmail} size="sm">Verify</Button>
+            <Button onClick={onVerifyEmail} size="sm">
+              Verify
+            </Button>
           )}
         </div>
         <div className="flex items-center justify-between rounded-lg border p-4">
@@ -75,7 +103,9 @@ export function VerificationHub({ email, onVerifyEmail, onVerifyPhone, onBackToL
           {status?.isPhoneVerified ? (
             <CheckCircle className="h-6 w-6 text-green-500" />
           ) : (
-            <Button onClick={onVerifyPhone} size="sm">Verify</Button>
+            <Button onClick={onVerifyPhone} size="sm">
+              Verify
+            </Button>
           )}
         </div>
       </CardContent>

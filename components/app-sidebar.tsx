@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import Image from "next/image";
+import { AccountStatusNotice } from "./account-status-notice";
 
 const data = {
   navMain: [
@@ -140,93 +141,104 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 src="/srcc-logo.webp"
                 alt="Logo"
                 fill
-                className="object-contain" // or object-stretch
+                className="object-contain"
               />
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarMenu className="gap-2">
-            {data.navMain.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  className={`rounded-lg p-3.5 transition-all duration-200 hover:bg-accent/50 ${
-                    isActive(item.url)
-                      ? "bg-accent font-medium shadow-sm"
-                      : "text-white hover:text-foreground"
-                  }`}
-                >
-                  <a href={item.url} className="text-base">
-                    {item.icon && (
-                      <span
-                        className={`mr-4 inline-flex ${
-                          isActive(item.url) ? "text-yellow-500" : "text-white "
-                        }`}
-                      >
-                        {(() => {
-                          const iconProps = {
-                            className: "h-5 w-5 transition-colors duration-200",
-                          };
-                          switch (item.icon) {
-                            case "LayoutDashboard":
-                              return <LayoutDashboard {...iconProps} />;
-                            case "Users":
-                              return <Users {...iconProps} />;
-                            case "Briefcase":
-                              return <Briefcase {...iconProps} />;
-                            case "Wallet":
-                              return <Wallet {...iconProps} />;
-                            case "ClipboardList":
-                              return <ClipboardList {...iconProps} />;
-                            case "CalendarCheck":
-                              return <CalendarCheck {...iconProps} />;
-                            case "List":
-                              return <List {...iconProps} />;
-                            case "FileText":
-                              return <FileText {...iconProps} />;
-                            case "Briefcase":
-                              return <Briefcase {...iconProps} />;
-                            case "BarChart2":
-                              return <BarChart2 {...iconProps} />;
-                            case "Settings":
-                              return <Settings {...iconProps} />;
-                            default:
-                              return null;
-                          }
-                        })()}
-                      </span>
-                    )}
-                    {item.title}
-                  </a>
-                </SidebarMenuButton>
-                {item.items?.length ? (
-                  <SidebarMenuSub className="ml-9 space-y-1 border-l border-muted pl-4">
-                    {item.items.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton
-                          asChild
-                          className={`rounded-md p-2.5 transition-all duration-200 hover:bg-accent/50 ${
-                            isActive(subItem.url)
-                              ? "bg-accent font-medium text-foreground"
-                              : "text-white hover:text-foreground"
+        {session?.user?.status === "active" ? (
+          <SidebarGroup>
+            <SidebarMenu className="gap-2">
+              {data.navMain.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    className={`rounded-lg p-3.5 transition-all duration-200 hover:bg-accent/50 ${
+                      isActive(item.url)
+                        ? "bg-accent font-medium shadow-sm"
+                        : "text-white hover:text-foreground"
+                    }`}
+                  >
+                    <a href={item.url} className="text-base">
+                      {item.icon && (
+                        <span
+                          className={`mr-4 inline-flex ${
+                            isActive(item.url)
+                              ? "text-yellow-500"
+                              : "text-white "
                           }`}
                         >
-                          <a href={subItem.url} className="text-sm">
-                            {subItem.title}
-                          </a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                ) : null}
-              </SidebarMenuItem>
-            ))}
-            <div className="h-5" />
-          </SidebarMenu>
-        </SidebarGroup>
+                          {(() => {
+                            const iconProps = {
+                              className:
+                                "h-5 w-5 transition-colors duration-200",
+                            };
+                            switch (item.icon) {
+                              case "LayoutDashboard":
+                                return <LayoutDashboard {...iconProps} />;
+                              case "Users":
+                                return <Users {...iconProps} />;
+                              case "Briefcase":
+                                return <Briefcase {...iconProps} />;
+                              case "Wallet":
+                                return <Wallet {...iconProps} />;
+                              case "ClipboardList":
+                                return <ClipboardList {...iconProps} />;
+                              case "CalendarCheck":
+                                return <CalendarCheck {...iconProps} />;
+                              case "List":
+                                return <List {...iconProps} />;
+                              case "FileText":
+                                return <FileText {...iconProps} />;
+                              case "Briefcase":
+                                return <Briefcase {...iconProps} />;
+                              case "BarChart2":
+                                return <BarChart2 {...iconProps} />;
+                              case "Settings":
+                                return <Settings {...iconProps} />;
+                              default:
+                                return null;
+                            }
+                          })()}
+                        </span>
+                      )}
+                      {item.title}
+                    </a>
+                  </SidebarMenuButton>
+                  {item.items?.length ? (
+                    <SidebarMenuSub className="ml-9 space-y-1 border-l border-muted pl-4">
+                      {item.items.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            className={`rounded-md p-2.5 transition-all duration-200 hover:bg-accent/50 ${
+                              isActive(subItem.url)
+                                ? "bg-accent font-medium text-foreground"
+                                : "text-white hover:text-foreground"
+                            }`}
+                          >
+                            <a href={subItem.url} className="text-sm">
+                              {subItem.title}
+                            </a>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  ) : null}
+                </SidebarMenuItem>
+              ))}
+              <div className="h-5" />
+            </SidebarMenu>
+          </SidebarGroup>
+        ) : (
+          <div className="p-4">
+            <AccountStatusNotice
+              status={session?.user?.status as "pending" | "suspended"}
+            />
+          </div>
+        )}
       </SidebarContent>
       <SidebarFooter className="bg-accent rounded-md relative top-[-20px]">
         {session?.user && <NavUser user={session.user} />}

@@ -9,15 +9,6 @@ export default withAuth(
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    // Check user roles
-    const roles = token.roles as string[];
-    const isEmployeeOnly = roles.length === 1 && roles.includes("employee");
-
-    // If user is only an employee, deny access
-    if (isEmployeeOnly) {
-      return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
-
     return NextResponse.next();
   },
   {
@@ -25,11 +16,7 @@ export default withAuth(
       authorized: ({ token }) => {
         if (!token) return false;
 
-        const roles = token.roles as string[];
-        const isEmployeeOnly = roles.length === 1 && roles.includes("employee");
-
-        // Allow access if user has admin, hr, or multiple roles (not just employee)
-        return !isEmployeeOnly;
+        return true;
       },
     },
   }
@@ -38,7 +25,6 @@ export default withAuth(
 export const config = {
   matcher: [
     // Match all paths except explicitly excluded ones
-    "/((?!api/auth|_next/static|_next/image|_next/data|favicon.ico|login|consultant).*)"
+    "/((?!api/auth|_next/static|_next/image|_next/data|favicon.ico|login|consultant).*)",
   ],
 };
-

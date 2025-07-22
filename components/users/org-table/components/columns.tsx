@@ -11,15 +11,19 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { format } from "date-fns";
+import { formatDate } from "@/lib/utils";
+import { formatDateForInput } from "@/lib/date-utils";
 
 const customIncludesStringFilter = (
   row: Row<Organization>,
   columnId: string,
   filterValue: string
 ) => {
-  const value = row.getValue(columnId) as string;
-  return value?.toLowerCase().includes((filterValue as string).toLowerCase());
+  const value = row.getValue(columnId) as string | undefined;
+  return (
+    value?.toLowerCase().includes((filterValue as string).toLowerCase()) ??
+    false
+  );
 };
 
 export const columns: ColumnDef<Organization>[] = [
@@ -27,8 +31,8 @@ export const columns: ColumnDef<Organization>[] = [
     id: "combinedName",
     header: "Name",
     accessorFn: (row) => {
-      const services = row.servicesOffered.join(" ");
-      const industries = row.industries.join(" ");
+      const services = row.servicesOffered?.join(" ") ?? "N/A";
+      const industries = row.industries?.join(" ") ?? "N/A";
       return `${row.companyName} ${row.registrationNumber} ${row.kraPin} ${services} ${industries} ${row.businessEmail} ${row.businessPhone}`;
     },
     filterFn: customIncludesStringFilter,
@@ -52,7 +56,9 @@ export const columns: ColumnDef<Organization>[] = [
           <div className="flex flex-col">
             <HoverCard>
               <HoverCardTrigger asChild>
-                <span className="font-medium cursor-help">{org.companyName}</span>
+                <span className="font-medium cursor-help">
+                  {org.companyName}
+                </span>
               </HoverCardTrigger>
               <HoverCardContent className="w-80">
                 <div className="flex flex-col gap-2">
@@ -63,24 +69,24 @@ export const columns: ColumnDef<Organization>[] = [
                   <div className="text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Mail className="h-3 w-3" />
-                      {org.businessEmail}
+                      {org.businessEmail ?? "N/A"}
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="h-3 w-3" />
-                      {org.businessPhone}
+                      {org.businessPhone ?? "N/A"}
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-3 w-3" />
-                      {org.businessAddress}
+                      {org.businessAddress ?? "N/A"}
                     </div>
                   </div>
                 </div>
               </HoverCardContent>
             </HoverCard>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{org.organizationId}</span>
+              <span>{org.organizationId ?? "N/A"}</span>
               <span>•</span>
-              <span>{org.registrationNumber}</span>
+              <span>{org.registrationNumber ?? "N/A"}</span>
             </div>
           </div>
         </div>
@@ -94,8 +100,8 @@ export const columns: ColumnDef<Organization>[] = [
     ),
     cell: ({ row }) => {
       const org = row.original;
-      const services = org.servicesOffered.map(s => s.trim());
-      const industries = org.industries.map(i => i.trim());
+      const services = org.servicesOffered?.map((s) => s.trim()) ?? [];
+      const industries = org.industries?.map((i) => i.trim()) ?? [];
 
       return (
         <HoverCard>
@@ -108,11 +114,16 @@ export const columns: ColumnDef<Organization>[] = [
                     variant="outline"
                     className="text-xs whitespace-nowrap bg-blue-50 text-blue-700 border-blue-200"
                   >
-                    {service.length > 20 ? `${service.substring(0, 20)}...` : service}
+                    {service.length > 20
+                      ? `${service.substring(0, 20)}...`
+                      : service}
                   </Badge>
                 ))}
                 {services.length > 2 && (
-                  <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600">
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-gray-50 text-gray-600"
+                  >
                     +{services.length - 2}
                   </Badge>
                 )}
@@ -124,7 +135,9 @@ export const columns: ColumnDef<Organization>[] = [
                     variant="secondary"
                     className="text-[10px] bg-purple-50 text-purple-700"
                   >
-                    {industry.length > 15 ? `${industry.substring(0, 15)}...` : industry}
+                    {industry.length > 15
+                      ? `${industry.substring(0, 15)}...`
+                      : industry}
                   </Badge>
                 ))}
                 {industries.length > 2 && (
@@ -190,18 +203,17 @@ export const columns: ColumnDef<Organization>[] = [
       const contact = row.original.contactPerson;
       return (
         <div className="flex flex-col space-y-1">
-          <span className="text-sm font-medium">{contact.name}</span>
-          <span className="text-xs text-muted-foreground capitalize">{contact.position}</span>
+          <span className="text-sm font-medium">{contact?.name ?? "N/A"}</span>
+          <span className="text-xs text-muted-foreground capitalize">
+            {contact?.position ?? "N/A"}
+          </span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Mail className="h-3 w-3" />
-            <span>{contact.email}</span>
+            <span>{contact?.email ?? "N/A"}</span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Phone className="h-3 w-3" />
-            <span>{contact.phoneNumber}</span>
-            {contact.alternativePhoneNumber && (
-              <Badge variant="outline" className="text-[10px]">Alt</Badge>
-            )}
+            <span>{contact?.phoneNumber ?? "N/A"}</span>
           </div>
         </div>
       );
@@ -214,28 +226,35 @@ export const columns: ColumnDef<Organization>[] = [
     ),
     cell: ({ row }) => {
       const org = row.original;
-      const taxExpiryDate = new Date(org.taxComplianceExpiryDate);
-      const isExpiringSoon = taxExpiryDate.getTime() - new Date().getTime() < 30 * 24 * 60 * 60 * 1000; // 30 days
+      const taxExpiryDate = org.taxComplianceExpiryDate
+        ? new Date(org.taxComplianceExpiryDate)
+        : null;
+      const isExpiringSoon =
+        taxExpiryDate &&
+        taxExpiryDate.getTime() - new Date().getTime() <
+          30 * 24 * 60 * 60 * 1000; // 30 days
 
       return (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium">{org.yearsOfOperation} years in operation</span>
+            <span className="font-medium">
+              {org.yearsOfOperation ?? "N/A"} years in operation
+            </span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>KRA PIN: {org.kraPin}</span>
+            <span>KRA PIN: {org.kraPin ?? "N/A"}</span>
             <span>•</span>
           </div>
           <div className="text-xs text-muted-foreground">
-            Tax Compliance Expires: {" "}
+            Tax Compliance Expires:{" "}
             <span className={isExpiringSoon ? "text-red-500 font-medium" : ""}>
-              {format(taxExpiryDate, "MMM d, yyyy")}
+              {formatDateForInput(taxExpiryDate?.toString() ?? "N/A")}
             </span>
           </div>
           <div className="flex gap-2 mt-1">
-            {org.registrationCertificateUrl && (
+            {org?.registrationCertificateUrl && (
               <a
-                href={org.registrationCertificateUrl}
+                href={org?.registrationCertificateUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-primary hover:underline inline-flex items-center gap-1"
@@ -262,8 +281,12 @@ export const columns: ColumnDef<Organization>[] = [
             (status === "active"
               ? "success"
               : status === "pending"
-                ? "warning"
-                : "destructive") as "default" | "secondary" | "destructive" | "outline"
+              ? "warning"
+              : "destructive") as
+              | "default"
+              | "secondary"
+              | "destructive"
+              | "outline"
           }
           className="capitalize"
         >

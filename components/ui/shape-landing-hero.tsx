@@ -5,7 +5,7 @@ import { Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { HeroPillSecond } from "@/app/consultant/announcement";
+import { HeroPillSecond } from "@/app/consultants/announcement";
 
 function ElegantShape({
   className,

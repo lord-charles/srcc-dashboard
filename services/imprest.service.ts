@@ -8,10 +8,7 @@ const API_URL =
 export async function getMyImprest() {
   try {
     const config = await getAxiosConfig();
-    const response = await axios.get(
-      `${API_URL}/imprest/my-imprest`,
-      config
-    );
+    const response = await axios.get(`${API_URL}/imprest/my-imprest`, config);
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -36,16 +33,16 @@ export async function createImprest(data: CreateImprestData): Promise<Imprest> {
 
     // Create FormData for multipart/form-data request
     const formData = new FormData();
-    formData.append('paymentReason', data.paymentReason);
-    formData.append('currency', data.currency);
-    formData.append('amount', data.amount.toString());
-    formData.append('paymentType', data.paymentType);
-    formData.append('explanation', data.explanation);
+    formData.append("paymentReason", data.paymentReason);
+    formData.append("currency", data.currency);
+    formData.append("amount", data.amount.toString());
+    formData.append("paymentType", data.paymentType);
+    formData.append("explanation", data.explanation);
 
     // Add attachments if provided
     if (data.attachments && data.attachments.length > 0) {
       data.attachments.forEach((file) => {
-        formData.append('attachments', file);
+        formData.append("attachments", file);
       });
     }
 
@@ -54,7 +51,7 @@ export async function createImprest(data: CreateImprestData): Promise<Imprest> {
       ...config,
       headers: {
         ...config.headers,
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     };
 
@@ -83,7 +80,10 @@ interface SubmitAccountingData {
   receiptFiles: File[];
 }
 
-export async function submitImprestAccounting(id: string, data: SubmitAccountingData): Promise<Imprest> {
+export async function submitImprestAccounting(
+  id: string,
+  data: SubmitAccountingData
+): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
 
@@ -91,16 +91,16 @@ export async function submitImprestAccounting(id: string, data: SubmitAccounting
     const formData = new FormData();
 
     // Convert receipts array to JSON string
-    formData.append('receipts', JSON.stringify(data.receipts));
+    formData.append("receipts", JSON.stringify(data.receipts));
 
     if (data.comments) {
-      formData.append('comments', data.comments);
+      formData.append("comments", data.comments);
     }
 
     // Add receipt files
     if (data.receiptFiles && data.receiptFiles.length > 0) {
       data.receiptFiles.forEach((file) => {
-        formData.append('receiptFiles', file);
+        formData.append("receiptFiles", file);
       });
     }
 
@@ -109,7 +109,7 @@ export async function submitImprestAccounting(id: string, data: SubmitAccounting
       ...config,
       headers: {
         ...config.headers,
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     };
 
@@ -132,22 +132,28 @@ export async function submitImprestAccounting(id: string, data: SubmitAccounting
 export async function getAllImprests(): Promise<Imprest[]> {
   try {
     const config = await getAxiosConfig();
+    console.log("config", config);
+
     const response = await axios.get<Imprest[]>(`${API_URL}/imprest`, config);
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Error fetching imprests:", error);
+    const config = await getAxiosConfig();
+    console.log("config", config);
+    console.error("Error fetching imprests:", error.response.data);
     throw error?.response?.data?.message || error;
   }
 }
 
-
 export async function getMyImprests(): Promise<Imprest[]> {
   try {
     const config = await getAxiosConfig();
-    const response = await axios.get<Imprest[]>(`${API_URL}/imprest/my-imprest`, config);
+    const response = await axios.get<Imprest[]>(
+      `${API_URL}/imprest/my-imprest`,
+      config
+    );
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -161,7 +167,10 @@ export async function getMyImprests(): Promise<Imprest[]> {
 export async function getImprestById(id: string): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
-    const response = await axios.get<Imprest>(`${API_URL}/imprest/${id}`, config);
+    const response = await axios.get<Imprest>(
+      `${API_URL}/imprest/${id}`,
+      config
+    );
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -172,10 +181,17 @@ export async function getImprestById(id: string): Promise<Imprest> {
   }
 }
 
-export async function approveImprestHOD(id: string, comments: string): Promise<Imprest> {
+export async function approveImprestHOD(
+  id: string,
+  comments: string
+): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
-    const response = await axios.post<Imprest>(`${API_URL}/imprest/${id}/approve/hod`, { comments }, config);
+    const response = await axios.post<Imprest>(
+      `${API_URL}/imprest/${id}/approve/hod`,
+      { comments },
+      config
+    );
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -186,10 +202,17 @@ export async function approveImprestHOD(id: string, comments: string): Promise<I
   }
 }
 
-export async function approveImprestAccountant(id: string, comments: string): Promise<Imprest> {
+export async function approveImprestAccountant(
+  id: string,
+  comments: string
+): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
-    const response = await axios.post<Imprest>(`${API_URL}/imprest/${id}/approve/accountant`, { comments }, config);
+    const response = await axios.post<Imprest>(
+      `${API_URL}/imprest/${id}/approve/accountant`,
+      { comments },
+      config
+    );
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -200,7 +223,10 @@ export async function approveImprestAccountant(id: string, comments: string): Pr
   }
 }
 
-export async function approveImprestAccounting(id: string, comments: string): Promise<Imprest> {
+export async function approveImprestAccounting(
+  id: string,
+  comments: string
+): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -217,10 +243,17 @@ export async function approveImprestAccounting(id: string, comments: string): Pr
   }
 }
 
-export async function rejectImprest(id: string, reason: string): Promise<Imprest> {
+export async function rejectImprest(
+  id: string,
+  reason: string
+): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
-    const response = await axios.post<Imprest>(`${API_URL}/imprest/${id}/reject`, { reason }, config);
+    const response = await axios.post<Imprest>(
+      `${API_URL}/imprest/${id}/reject`,
+      { reason },
+      config
+    );
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -236,7 +269,10 @@ interface DisbursementData {
   comments?: string;
 }
 
-export async function disburseImprest(id: string, data: DisbursementData): Promise<Imprest> {
+export async function disburseImprest(
+  id: string,
+  data: DisbursementData
+): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(
@@ -252,5 +288,3 @@ export async function disburseImprest(id: string, data: DisbursementData): Promi
     throw error?.response?.data?.message || error;
   }
 }
-
-

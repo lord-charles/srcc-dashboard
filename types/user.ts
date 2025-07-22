@@ -77,6 +77,8 @@ export interface User {
   createdAt?: string | Date;
   updatedAt?: string | Date;
   employeeId: string;
+  companyName?: string;
+  businessEmail?: string;
 }
 
 export interface PaginatedUsers {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react"; // Added useRef
+import { useState, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,17 +17,31 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { PasswordResetForm } from "./password-reset-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface LoginFormProps extends React.ComponentPropsWithoutRef<"form"> {
+type LoginType = "user" | "organization";
+
+interface LoginFormProps {
   onSwitchToRegister: () => void;
+  onVerificationRequired: (email: string, loginType: LoginType) => void;
+  setCredentials: (credentials: { email: string; password: string }) => void;
 }
 
 export function LoginForm({
-  className,
   onSwitchToRegister,
-  ...props
+  onVerificationRequired,
+  setCredentials,
 }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [loginType, setLoginType] = useState<LoginType>("user");
   const router = useRouter();
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -40,21 +54,33 @@ export function LoginForm({
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    setCredentials({ email, password });
 
     try {
       const result = await signIn("credentials", {
         email,
         password,
+        type: loginType,
         redirect: false,
       });
 
       console.log(result);
 
       if (result?.error) {
+        try {
+          const errorData = JSON.parse(result.error);
+          if (errorData.code === "VERIFICATION_REQUIRED") {
+            onVerificationRequired(email, loginType);
+            return;
+          }
+        } catch (e) {
+          // Error is not a JSON object, so handle as a plain string.
+        }
+
         toast({
           variant: "destructive",
-          title: "Error",
-          description: "Invalid credentials. Please try again.",
+          title: "Login Failed",
+          description: result.error,
         });
         return;
       }
@@ -74,75 +100,84 @@ export function LoginForm({
 
   return (
     <>
-      <form
-        className={cn("flex flex-col gap-6", className)}
-        {...props}
-        onSubmit={onSubmit}
-      >
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold text-white">
-            Login to your account
-          </h1>
-          <p className="text-balance text-sm text-white/80">
-            Enter your credentials below to access your account
-          </p>
-        </div>
-        <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email" className="text-white">
-              Email
-            </Label>
-            <Input
-              ref={emailInputRef}
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Enter your Email"
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-white">
-                Password
-              </Label>
-              <Button
-                type="button"
-                variant="link"
-                className="px-0 text-sm h-auto text-white hover:text-white/80"
-                onClick={() => setShowPasswordReset(true)}
-              >
-                Forgot password?
+      <Card className="w-full max-w-md shadow-lg rounded-lg">
+        <Tabs
+          value={loginType}
+          onValueChange={(value) => setLoginType(value as LoginType)}
+          className="w-full"
+        >
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+            <CardDescription className="text-sm mt-2">
+              Select your login type and enter your credentials.
+            </CardDescription>
+            <TabsList className="grid w-full grid-cols-2 mx-auto mt-4 max-w-xs">
+              <TabsTrigger value="user">User</TabsTrigger>
+              <TabsTrigger value="organization">Organization</TabsTrigger>
+            </TabsList>
+          </CardHeader>
+          <form onSubmit={onSubmit}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  {loginType === "user" ? "Email" : "Business Email"}
+                </Label>
+                <Input
+                  ref={emailInputRef}
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder={
+                    loginType === "user"
+                      ? "your@email.com"
+                      : "contact@company.com"
+                  }
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="px-0 text-sm h-auto"
+                    onClick={() => setShowPasswordReset(true)}
+                  >
+                    Forgot password?
+                  </Button>
+                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your Password"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading && <Spinner className="mr-2 h-4 w-4 animate-spin" />}
+                Sign In
               </Button>
-            </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="Enter your Password"
-              required
-              disabled={isLoading}
-            />
-          </div>
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading && <Spinner className="mr-2 h-4 w-4 animate-spin" />}
-            Sign In
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onSwitchToRegister}
-          >
-            Register
-          </Button>
-        </div>
-      </form>
+              <Button type="button" variant="link" onClick={onSwitchToRegister}>
+                Don&apos;t have an account? Register
+              </Button>
+            </CardFooter>
+          </form>
+        </Tabs>
+      </Card>
 
       <Dialog open={showPasswordReset} onOpenChange={setShowPasswordReset}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Reset Your Password</DialogTitle>
+            <DialogDescription>
+              Enter your email to receive a password reset link.
+            </DialogDescription>
           </DialogHeader>
           <PasswordResetForm
             onClose={() => setShowPasswordReset(false)}

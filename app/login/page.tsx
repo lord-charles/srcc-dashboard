@@ -9,12 +9,19 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { VerificationHub } from "./verification-hub";
-import { verifyOtp } from "@/services/consultant.service";
+import { verifyOtp, verifyCompanyOtp } from "@/services/consultant.service";
 
-type View = "login" | "register" | "verification-hub" | "verify-email" | "verify-phone";
+type View =
+  | "login"
+  | "register"
+  | "verification-hub"
+  | "verify-email"
+  | "verify-phone";
+type UserType = "user" | "organization";
 
 export default function LoginPage() {
   const [view, setView] = useState<View>("login");
+  const [userType, setUserType] = useState<UserType>("user");
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const router = useRouter();
   const { toast } = useToast();
@@ -22,11 +29,19 @@ export default function LoginPage() {
   const handleSwitchToRegister = () => setView("register");
   const handleSwitchToLogin = () => setView("login");
 
+  const handleVerificationRequired = (email: string, type: UserType) => {
+    setUserType(type);
+    setView("verification-hub");
+  };
+
   const handleRegistrationSuccess = (data: {
     email: string;
     password?: string;
+    type: UserType;
   }) => {
+    // console.log(data);
     setCredentials({ email: data.email, password: data.password || "" });
+    setUserType(data.type);
     setView("verification-hub");
   };
 
@@ -43,6 +58,7 @@ export default function LoginPage() {
       const result = await signIn("credentials", {
         email: credentials.email,
         password: credentials.password,
+        type: userType,
         redirect: false,
       });
 
@@ -72,11 +88,17 @@ export default function LoginPage() {
   const renderForm = () => {
     switch (view) {
       case "register":
-        return <RegisterForm onSwitchToLogin={handleSwitchToLogin} onRegistrationSuccess={handleRegistrationSuccess} />;
+        return (
+          <RegisterForm
+            onSwitchToLogin={handleSwitchToLogin}
+            onRegistrationSuccess={handleRegistrationSuccess}
+          />
+        );
       case "verification-hub":
         return (
           <VerificationHub
             email={credentials.email}
+            userType={userType}
             onVerifyEmail={() => setView("verify-email")}
             onVerifyPhone={() => setView("verify-phone")}
             onBackToLogin={handleSwitchToLogin}
@@ -88,7 +110,19 @@ export default function LoginPage() {
           <OTPVerificationForm
             title="Verify Your Email"
             description={`We sent a 4-digit code to ${credentials.email}.`}
-            onVerify={(pin) => verifyOtp({ email: credentials.email, pin, verificationType: "email" })}
+            onVerify={(pin) =>
+              userType === "user"
+                ? verifyOtp({
+                    email: credentials.email,
+                    pin,
+                    verificationType: "email",
+                  })
+                : verifyCompanyOtp({
+                    businessEmail: credentials.email,
+                    pin,
+                    verificationType: "email",
+                  })
+            }
             onSuccess={handleVerificationSuccess}
             onBack={() => setView("verification-hub")}
           />
@@ -98,27 +132,45 @@ export default function LoginPage() {
           <OTPVerificationForm
             title="Verify Your Phone Number"
             description="We sent a 4-digit code to your phone."
-            onVerify={(pin) => verifyOtp({ email: credentials.email, pin, verificationType: "phone" })}
+            onVerify={(pin) =>
+              userType === "user"
+                ? verifyOtp({
+                    email: credentials.email,
+                    pin,
+                    verificationType: "phone",
+                  })
+                : verifyCompanyOtp({
+                    businessEmail: credentials.email,
+                    pin,
+                    verificationType: "phone",
+                  })
+            }
             onSuccess={handleVerificationSuccess}
             onBack={() => setView("verification-hub")}
           />
         );
       case "login":
       default:
-        return <LoginForm onSwitchToRegister={handleSwitchToRegister} />;
+        return (
+          <LoginForm
+            onSwitchToRegister={handleSwitchToRegister}
+            onVerificationRequired={handleVerificationRequired}
+            setCredentials={setCredentials}
+          />
+        );
     }
   };
 
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10 bg-[#2e5650]">
+      <div className="flex flex-col gap-0 p-6 md:p-10 bg-[#2e5650]">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center justify-center ">
             <Image
               src="https://i0.wp.com/srcc.strathmore.edu/wp-content/uploads/2024/05/SRCC-White-Logo-White-01.png"
               alt="SRCC Logo"
-              width={500}
-              height={500}
+              width={400}
+              height={400}
               className="object-stretch"
             />
           </a>

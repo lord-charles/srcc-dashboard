@@ -15,6 +15,12 @@ declare module "next-auth" {
       phoneNumber?: string;
       nationalId?: string;
       token?: string;
+      type?: "user" | "organization";
+      organizationId?: string;
+      status?: string;
+      companyName?: string;
+      businessEmail?: string;
+      businessPhone?: string;
     } & DefaultSession["user"];
   }
 
@@ -23,13 +29,19 @@ declare module "next-auth" {
     firstName?: string;
     lastName?: string;
     employeeId?: string;
-
     department?: string;
     position?: string;
     registrationStatus?: string;
     phoneNumber?: string;
     nationalId?: string;
     token: string;
+    email?: string;
+    type?: "user" | "organization";
+    organizationId?: string;
+    status?: string;
+    companyName?: string;
+    businessEmail?: string;
+    businessPhone?: string;
   }
 }
 
@@ -46,5 +58,11 @@ declare module "next-auth/jwt" {
     phoneNumber?: string;
     nationalId?: string;
     accessToken?: string;
+    type?: "user" | "organization";
+    organizationId?: string;
+    status?: string;
+    companyName?: string;
+    businessEmail?: string;
+    businessPhone?: string;
   }
 }

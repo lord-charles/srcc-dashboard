@@ -132,6 +132,8 @@ export async function registerOrganization(formData: FormData): Promise<any> {
 
 export async function quickRegister(data: {
   email: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
   nationalId: string;
   password: string;
@@ -150,6 +152,33 @@ export async function quickRegister(data: {
     }
     console.error(
       "Quick registration error:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data.message || "An unexpected error occurred.";
+  }
+}
+
+export async function quickCompanyRegister(data: {
+  businessEmail: string;
+  businessPhone: string;
+  registrationNumber: string;
+  kraPin: string;
+  password: string;
+}): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/quick-company-register`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      "Quick company registration error:",
       error.response?.data || error.message
     );
     throw error.response?.data.message || "An unexpected error occurred.";
@@ -181,8 +210,34 @@ export async function verifyOtp(data: {
   }
 }
 
+export async function verifyCompanyOtp(data: {
+  businessEmail: string;
+  pin: string;
+  verificationType: "email" | "phone";
+}): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/company/verify-otp`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      "Company OTP verification error:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data.message || "An unexpected error occurred.";
+  }
+}
+
 export const verifyEmailOtp = async (email: string, pin: string) =>
   verifyOtp({ email, pin, verificationType: "email" });
+
 export const verifyPhoneOtp = async (email: string, pin: string) =>
   verifyOtp({ email, pin, verificationType: "phone" });
 
@@ -208,5 +263,148 @@ export async function getVerificationStatus(
       error.response?.data || error.message
     );
     throw error.response?.data.message || "An unexpected error occurred.";
+  }
+}
+
+export async function getCompanyVerificationStatus(
+  businessEmail: string
+): Promise<{ isEmailVerified: boolean; isPhoneVerified: boolean }> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/company/verification-status`,
+      {
+        ...config,
+        params: { businessEmail },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      "Get company verification status error:",
+      error.response?.data || error.message
+    );
+    throw error.response?.data.message || "An unexpected error occurred.";
+  }
+}
+
+export async function getOrganization(id: string): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${id}`,
+      config
+    );
+    console.log("Organization response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    const errorMsg = error.response?.data?.message || error.message;
+    console.error(`Failed to fetch organization:`, errorMsg);
+    throw errorMsg;
+  }
+}
+
+export async function updateOrganization(id: string, data: any): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/update/${id}`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    const errorMsg = error.response?.data?.message || error.message;
+    console.error(`Failed to update organization:`, errorMsg);
+    throw errorMsg;
+  }
+}
+
+export async function getConsultant(id: string): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/user/${id}`,
+      config
+    );
+    console.log("Consultant response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    const errorText = error.response?.data?.message || error.message;
+    console.error(`Failed to fetch consultant:`, errorText);
+    throw new Error(errorText);
+  }
+}
+
+export async function updateConsultant(id: string, data: any): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/consultant/update/${id}`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    const errorText = error.response?.data?.message || error.message;
+    console.error(`Failed to update consultant:`, errorText);
+    throw new Error(errorText);
+  }
+}
+
+export async function completeConsultantRegistration(
+  consultantId: string
+): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/${consultantId}/complete-registration`,
+      {},
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    const errorText = error.response?.data?.message || error.message;
+    console.error(`Failed to complete consultant registration:`, errorText);
+    throw new Error(errorText);
+  }
+}
+
+export async function completeOrganizationRegistration(
+  organizationId: string
+): Promise<any> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${organizationId}/complete-registration`,
+      {},
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    const errorMsg = error.response?.data?.message || error.message;
+    console.error(`Failed to complete organization registration:`, errorMsg);
+    throw errorMsg;
   }
 }

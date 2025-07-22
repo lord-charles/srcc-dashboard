@@ -39,20 +39,19 @@ export function Header() {
   const initials = user
     ? (user.firstName && user.lastName
         ? `${user.firstName[0]}${user.lastName[0]}`
-        : user.email?.substring(0, 2) ?? ''
+        : user.email?.substring(0, 2) ?? ""
       ).toUpperCase()
     : "";
 
   const displayName = user
     ? user.firstName
-      ? `${user.firstName} ${user.lastName || ''}`.trim()
-      : user.email || ''
-    : '';
+      ? `${user.firstName} ${user.lastName || ""}`.trim()
+      : user.companyName || ""
+    : "";
 
   const welcomeMessage = user?.firstName
     ? `Welcome back, ${user?.firstName}`
     : "Welcome!";
-  console.log(session);
   return (
     <>
       {user?.registrationStatus === "quick" && (
@@ -60,7 +59,9 @@ export function Header() {
           <AlertTriangle className="h-5 w-5" />
           <span className="font-medium">Your profile is incomplete.</span>
           <Link
-            href="/consultant/register/individual"
+            href={`/${user?.type === "user" ? "consultant" : "organization"}/${
+              user?.id
+            }`}
             className="font-semibold underline hover:text-amber-900 dark:hover:text-amber-100 transition-colors"
           >
             Complete your registration
@@ -100,27 +101,37 @@ export function Header() {
           </TooltipProvider>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src="/avatars/01.png"
-                    alt={user?.firstName || user?.email || "User"}
-                  />
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-              </Button>
+              <Avatar className="h-8 w-8 rounded-md">
+                <AvatarImage
+                  src={`https://avatar.vercel.sh/${user?.email}`}
+                  alt={`N/A`}
+                />
+                <AvatarFallback className="rounded-md bg-emerald-100 text-emerald-800">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuItem className="flex flex-col items-start">
                 <div className="text-sm font-medium">{displayName}</div>
-                <div className="text-xs text-muted-foreground">
-                  {user?.email}
-                </div>
               </DropdownMenuItem>
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link
+                  href={`/${
+                    user?.type === "user" ? "consultant" : "organization"
+                  }/${user?.id}`}
+                  className="w-full"
+                >
+                  Profile
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => signOut()}>
+              <DropdownMenuItem
+                onClick={() =>
+                  signOut({ redirect: true, callbackUrl: "/login" })
+                }
+              >
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
