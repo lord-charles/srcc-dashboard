@@ -76,20 +76,7 @@ export function ConsultantHeader() {
     .filter(Boolean)
     .join("");
 
-  const getStatusVariant = (status?: string) => {
-    switch (status) {
-      case "active":
-        return "default";
-      case "pending":
-        return "secondary";
-      case "inactive":
-        return "outline";
-      case "suspended":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
+
 
   const getAvailabilityVariant = (availability?: string) => {
     switch (availability) {
