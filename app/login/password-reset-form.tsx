@@ -6,12 +6,13 @@ import { Mail, Lock, ArrowRight, KeyRound, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
-
 interface PasswordResetFormProps {
   onClose: () => void;
   initialEmail?: string;
+  type?: "user" | "organization";
 }
 
 interface ApiResponse {
@@ -22,8 +23,10 @@ interface ApiResponse {
 export function PasswordResetForm({
   onClose,
   initialEmail = "",
+  type: initialType = "user",
 }: PasswordResetFormProps) {
   const [email, setEmail] = useState(initialEmail);
+  const [type, setType] = useState<"user" | "organization">(initialType);
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -64,7 +67,7 @@ export function PasswordResetForm({
             "Content-Type": "application/json",
             accept: "application/json",
           },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email, type }),
         }
       );
 
@@ -141,7 +144,7 @@ export function PasswordResetForm({
             "Content-Type": "application/json",
             accept: "application/json",
           },
-          body: JSON.stringify({ email, resetToken, newPassword }),
+          body: JSON.stringify({ email, resetToken, newPassword, type }),
         }
       );
       const data: ApiResponse = await response.json().catch(() => ({}));
@@ -198,6 +201,41 @@ export function PasswordResetForm({
             Enter your email to receive a password reset code. If the email is
             valid, instructions will be sent.
           </p>
+          <div className="grid gap-2">
+            <Label>Account Type</Label>
+            <RadioGroup
+              defaultValue={type}
+              onValueChange={(value: "user" | "organization") => setType(value)}
+              className="grid grid-cols-2 gap-4"
+            >
+              <div>
+                <RadioGroupItem
+                  value="user"
+                  id="user"
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor="user"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                >
+                  Individual
+                </Label>
+              </div>
+              <div>
+                <RadioGroupItem
+                  value="organization"
+                  id="organization"
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor="organization"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
+                >
+                  Organization
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="email-reset">Email Address</Label>
             <div className="relative">
