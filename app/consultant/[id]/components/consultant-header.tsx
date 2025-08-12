@@ -242,9 +242,11 @@ export function ConsultantHeader() {
                   Complete Registration
                 </Button>
               ) : (
-                <Button disabled>
-                  <CheckCircle className="mr-2 h-4 w-4" /> Completed
-                  Registration
+                <Button
+                onClick={handleCompleteRegistration}
+                disabled={completing}>
+                  <CheckCircle className="mr-2 h-4 w-4" /> Update
+                  Details
                 </Button>
               )}
             </div>

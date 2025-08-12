@@ -54,6 +54,7 @@ export async function approveBudget(budgetId: string, comments: string): Promise
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
+    console.error("Failed to approve budget:", error.response?.data?.message);
     throw error?.response?.data?.message || error;
   }
 }
@@ -237,7 +238,7 @@ export async function submitBudget(budgetId: string): Promise<Budget | null> {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to submit budget:", error);
+    console.error("Failed to submit budget:", error.response);
     throw error?.response?.data?.message || error;
   }
 }

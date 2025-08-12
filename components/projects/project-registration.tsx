@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Textarea } from "@/components/ui/textarea";
 import { createProject } from "@/services/projects-service";
+import { cloudinaryService } from "@/lib/cloudinary-service";
 
 // Define the validation schema
 const projectSchema = z.object({
@@ -71,10 +72,11 @@ export function NewProjectComponent() {
   const router = useRouter();
 
   // State for file uploads
-  const [projectProposal, setProjectProposal] = useState<File[]>([]);
-  const [signedContract, setSignedContract] = useState<File[]>([]);
-  const [executionMemo, setExecutionMemo] = useState<File[]>([]);
-  const [signedBudget, setSignedBudget] = useState<File[]>([]);
+  const [projectProposalUrl, setProjectProposalUrl] = useState<string>("");
+  const [signedContractUrl, setSignedContractUrl] = useState<string>("");
+  const [executionMemoUrl, setExecutionMemoUrl] = useState<string>("");
+  const [signedBudgetUrl, setSignedBudgetUrl] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
 
   const {
@@ -149,39 +151,10 @@ export function NewProjectComponent() {
         return;
       }
 
-      // Validate files
-      if (!projectProposal[0]) {
-        console.log('Missing project proposal file');
+      if (!projectProposalUrl || !signedContractUrl || !executionMemoUrl || !signedBudgetUrl) {
         toast({
-          title: "Missing File",
-          description: "Project proposal is required",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!signedContract[0]) {
-        console.log('Missing signed contract file');
-        toast({
-          title: "Missing File",
-          description: "Signed contract is required",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!executionMemo[0]) {
-        console.log('Missing execution memo file');
-        toast({
-          title: "Missing File",
-          description: "Execution memo is required",
-          variant: "destructive",
-        });
-        return;
-      }
-      if (!signedBudget[0]) {
-        console.log('Missing signed budget file');
-        toast({
-          title: "Missing File",
-          description: "Signed budget is required",
+          title: "Missing Files",
+          description: "Please upload all required project documents.",
           variant: "destructive",
         });
         return;
@@ -192,19 +165,15 @@ export function NewProjectComponent() {
         description: "Please wait while we process your request...",
       });
 
-      // Prepare files object
-      const files = {
-        projectProposal,
-        signedContract,
-        executionMemo,
-        signedBudget
+      const projectData = {
+        ...data,
+        projectProposalUrl,
+        signedContractUrl,
+        executionMemoUrl,
+        signedBudgetUrl,
       };
 
-      console.log('Files prepared:', files);
-
-      // Submit the data
-      console.log('Calling createProject with data:', data);
-      const result = await createProject(data, files);
+      const result = await createProject(projectData);
       console.log('API Response:', result);
 
       toast({
@@ -260,9 +229,9 @@ export function NewProjectComponent() {
               type="submit"
               size="sm"
               className="font-bold bg-primary"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
             >
-              {isSubmitting ? "Creating..." : "Create Project"}
+              {isSubmitting ? "Creating..." : isUploading ? "Uploading..." : "Create Project"}
             </Button>
           </div>
         </div>
@@ -532,57 +501,97 @@ export function NewProjectComponent() {
               <div className="space-y-2">
                 <Label>Project Proposal *</Label>
                 <FileUpload
-                  onChange={(files) => {
-                    console.log('Project proposal updated:', files);
-                    setProjectProposal(files);
+                  onChange={async (files) => {
+                    if (files.length > 0) {
+                      setIsUploading(true);
+                      try {
+                        const url = await cloudinaryService.uploadFile(files[0]);
+                        setProjectProposalUrl(url);
+                        toast({ title: "Success", description: "Project proposal uploaded." });
+                      } catch (error) {
+                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }
                   }}
                 />
-                {projectProposal[0] && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {projectProposal[0].name}
-                  </p>
+                {projectProposalUrl && (
+                  <a href={projectProposalUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                    View Uploaded Proposal
+                  </a>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>Signed Contract *</Label>
                 <FileUpload
-                  onChange={(files) => {
-                    console.log('Signed contract updated:', files);
-                    setSignedContract(files);
+                  onChange={async (files) => {
+                    if (files.length > 0) {
+                      setIsUploading(true);
+                      try {
+                        const url = await cloudinaryService.uploadFile(files[0]);
+                        setSignedContractUrl(url);
+                        toast({ title: "Success", description: "Signed contract uploaded." });
+                      } catch (error) {
+                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }
                   }}
                 />
-                {signedContract[0] && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {signedContract[0].name}
-                  </p>
+                {signedContractUrl && (
+                  <a href={signedContractUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                    View Uploaded Contract
+                  </a>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>Execution Memo *</Label>
                 <FileUpload
-                  onChange={(files) => {
-                    console.log('Execution memo updated:', files);
-                    setExecutionMemo(files);
+                  onChange={async (files) => {
+                    if (files.length > 0) {
+                      setIsUploading(true);
+                      try {
+                        const url = await cloudinaryService.uploadFile(files[0]);
+                        setExecutionMemoUrl(url);
+                        toast({ title: "Success", description: "Execution memo uploaded." });
+                      } catch (error) {
+                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }
                   }}
                 />
-                {executionMemo[0] && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {executionMemo[0].name}
-                  </p>
+                {executionMemoUrl && (
+                  <a href={executionMemoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                    View Uploaded Memo
+                  </a>
                 )}
               </div>
               <div className="space-y-2">
                 <Label>Signed Budget *</Label>
                 <FileUpload
-                  onChange={(files) => {
-                    console.log('Signed budget updated:', files);
-                    setSignedBudget(files);
+                  onChange={async (files) => {
+                    if (files.length > 0) {
+                      setIsUploading(true);
+                      try {
+                        const url = await cloudinaryService.uploadFile(files[0]);
+                        setSignedBudgetUrl(url);
+                        toast({ title: "Success", description: "Signed budget uploaded." });
+                      } catch (error) {
+                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }
                   }}
                 />
-                {signedBudget[0] && (
-                  <p className="text-xs text-muted-foreground">
-                    Selected: {signedBudget[0].name}
-                  </p>
+                {signedBudgetUrl && (
+                  <a href={signedBudgetUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                    View Uploaded Budget
+                  </a>
                 )}
               </div>
             </div>
@@ -599,7 +608,16 @@ export function NewProjectComponent() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {milestoneFields.map((field, index) => (
-                  <div key={field.id} className="p-4 border rounded-md relative">
+                  <div key={field.id} className="p-4 border rounded-
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  md relative">
                     <Button
                       type="button"
                       variant="ghost"
@@ -853,9 +871,9 @@ export function NewProjectComponent() {
             type="submit"
             size="lg"
             className="w-full font-bold text-lg"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploading}
           >
-            {isSubmitting ? "Creating..." : "Create Project"}
+            {isSubmitting ? "Creating..." : isUploading ? "Uploading..." : "Create Project"}
           </Button>
         </div>
       </form>

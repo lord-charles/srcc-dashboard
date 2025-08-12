@@ -242,6 +242,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                 <h2 className="text-2xl font-bold ">
                   {[employee?.firstName, employee?.middleName, employee?.lastName].filter(Boolean).join(" ")}
                 </h2>
+                <p className="text-sm text-muted-foreground">{employee?.position || "No Position"}</p>
                 <p >{employee?.employeeId || "No ID"}</p>
               </div>
               <Badge
@@ -334,10 +335,20 @@ export default function EmployeeDetailsPage({ employee }: any) {
               <div className="flex items-center text-sm">
                 <Mail className="mr-3 h-4 w-4 " />
                 <span >{employee?.email || "No email"}</span>
+                {employee?.isEmailVerified ? (
+                  <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                ) : (
+                  <XCircle className="ml-2 h-4 w-4 text-red-500" />
+                )}
               </div>
               <div className="flex items-center text-sm">
                 <Phone className="mr-3 h-4 w-4 " />
                 <span >{employee?.phoneNumber || "No phone"}</span>
+                {employee?.isPhoneVerified ? (
+                  <CheckCircle2 className="ml-2 h-4 w-4 text-green-500" />
+                ) : (
+                  <XCircle className="ml-2 h-4 w-4 text-red-500" />
+                )}
                 {employee?.alternativePhoneNumber && (
                   <span className="ml-2 ">(Alt: {employee.alternativePhoneNumber})</span>
                 )}
@@ -388,6 +399,18 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       </p>
                     </div>
                     <div className=" p-4 rounded-lg">
+                      <p className="text-sm font-medium ">Preferred Work Types</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {employee?.preferredWorkTypes?.length > 0 ? (
+                          employee.preferredWorkTypes.map((type: string, index: number) => (
+                            <Badge key={index} variant="secondary" className="capitalize">{type}</Badge>
+                          ))
+                        ) : (
+                          <p className="font-medium ">Not specified</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className=" p-4 rounded-lg">
                       <p className="text-sm font-medium ">Experience (Years)</p>
                       <p className="font-medium  mt-1">{employee?.yearsOfExperience || 0}</p>
                     </div>
@@ -431,6 +454,24 @@ export default function EmployeeDetailsPage({ employee }: any) {
                         ))
                       ) : (
                         <p >No education history listed</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold  mb-4">Professional Certifications</h3>
+                    <div className="space-y-4">
+                      {employee?.certifications?.length > 0 ? (
+                        employee.certifications.map((cert: any, index: number) => (
+                          <div key={index} className="p-4 border border-gray-100 rounded-lg  shadow-sm">
+                            <p className="font-medium ">{cert.name}</p>
+                            <p className="text-sm  mt-1">Issued by: {cert.issuingOrganization}</p>
+                            <p className="text-sm ">Date Issued: {format(new Date(cert.dateIssued), "dd MMM yyyy")}</p>
+                            {cert.expiryDate && <p className="text-sm ">Expires: {format(new Date(cert.expiryDate), "dd MMM yyyy")}</p>}
+                          </div>
+                        ))
+                      ) : (
+                        <p >No certifications listed</p>
                       )}
                     </div>
                   </div>
@@ -857,6 +898,12 @@ export default function EmployeeDetailsPage({ employee }: any) {
                   <p className="text-sm font-medium ">Last Updated</p>
                   <p className="font-medium  mt-1">
                     {employee?.updatedAt ? format(new Date(employee.updatedAt), "dd MMM yyyy HH:mm") : "N/A"}
+                  </p>
+                </div>
+                <div className=" p-4 rounded-lg">
+                  <p className="text-sm font-medium ">Registration Status</p>
+                  <p className="font-medium  mt-1 capitalize">
+                    {employee?.registrationStatus || "N/A"}
                   </p>
                 </div>
                 <div className=" p-4 rounded-lg">
