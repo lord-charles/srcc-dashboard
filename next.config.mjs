@@ -1,4 +1,3 @@
-
 import withPWA from "@ducanh2912/next-pwa";
 
 /** @type {import('next').NextConfig} */
@@ -13,13 +12,20 @@ const nextConfig = {
     ];
   },
   images: {
-    domains: ['i0.wp.com'], 
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "i0.wp.com",
+        port: "",
+        pathname: "**",
+      },
+    ],
   },
   serverActions: {
-    allowedOrigins: ['fatala.strathmore.edu'],
+    allowedOrigins: ["fatala.strathmore.edu"],
+    allowedForwardedHosts: ["localhost:3000"],
   },
 };
-
 
 const withPWAConfig = withPWA({
   dest: "public",
