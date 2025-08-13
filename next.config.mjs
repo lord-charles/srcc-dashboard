@@ -15,6 +15,9 @@ const nextConfig = {
   images: {
     domains: ['i0.wp.com'], 
   },
+  serverActions: {
+    allowedOrigins: ['fatala.strathmore.edu'],
+  },
 };
 
 
