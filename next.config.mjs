@@ -21,10 +21,6 @@ const nextConfig = {
       },
     ],
   },
-  serverActions: {
-    allowedOrigins: ["fatala.strathmore.edu"],
-    allowedForwardedHosts: ["localhost:3000"],
-  },
 };
 
 const withPWAConfig = withPWA({

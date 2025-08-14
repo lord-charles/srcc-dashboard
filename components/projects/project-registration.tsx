@@ -181,9 +181,9 @@ export function NewProjectComponent() {
         description: "Project has been created successfully.",
       });
 
-      setTimeout(() => {
-        router.push("/projects");
-      }, 2000);
+      // setTimeout(() => {
+      //   router.push("/projects");
+      // }, 2000);
     } catch (error) {
       console.error('Error in onSubmit:', error);
       toast({
@@ -198,6 +198,7 @@ export function NewProjectComponent() {
     <>
       <Header />
       <form
+        action="#"
         onSubmit={(e) => {
           e.preventDefault();
           console.log('Form submit event triggered');
