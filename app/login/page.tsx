@@ -9,7 +9,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { VerificationHub } from "./verification-hub";
-import { verifyOtp, verifyCompanyOtp } from "@/services/consultant.service";
+import { verifyOtp, verifyCompanyOtp } from "@/services/consultant.client";
 
 type View =
   | "login"
