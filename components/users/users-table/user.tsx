@@ -26,7 +26,7 @@ import {
 
 import { DataTablePagination } from "./components/data-table-pagination";
 import { DataTableToolbar } from "./components/data-table-toolbar";
-import { columns } from "./components/columns";
+import { getColumns } from "./components/columns";
 import { User } from "@/types/user";
 import { useSearchParams } from "next/navigation";
 
@@ -35,7 +35,10 @@ interface DataTableProps {
   onUserSelect?: (user: User) => void;
 }
 
-export default function EmployeeTable({ employees, onUserSelect }: DataTableProps) {
+export default function EmployeeTable({
+  employees,
+  onUserSelect,
+}: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -48,7 +51,7 @@ export default function EmployeeTable({ employees, onUserSelect }: DataTableProp
 
   const table = useReactTable({
     data: employees,
-    columns,
+    columns: getColumns(isAddingToProject),
     state: {
       sorting,
       columnVisibility,
@@ -82,9 +85,9 @@ export default function EmployeeTable({ employees, onUserSelect }: DataTableProp
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   );
                 })}
@@ -97,7 +100,11 @@ export default function EmployeeTable({ employees, onUserSelect }: DataTableProp
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className={isAddingToProject ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800" : ""}
+                  className={
+                    isAddingToProject
+                      ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                      : ""
+                  }
                   onClick={() => {
                     if (isAddingToProject && onUserSelect) {
                       onUserSelect(row.original as User);
@@ -117,7 +124,7 @@ export default function EmployeeTable({ employees, onUserSelect }: DataTableProp
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={getColumns(isAddingToProject).length}
                   className="h-24 text-center"
                 >
                   No results.

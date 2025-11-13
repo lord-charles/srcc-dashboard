@@ -24,41 +24,17 @@ interface CreateImprestData {
   amount: number;
   paymentType: string;
   explanation: string;
-  attachments?: File[];
+  attachmentUrls?: string[];
 }
 
 export async function createImprest(data: CreateImprestData): Promise<Imprest> {
   try {
     const config = await getAxiosConfig();
 
-    // Create FormData for multipart/form-data request
-    const formData = new FormData();
-    formData.append("paymentReason", data.paymentReason);
-    formData.append("currency", data.currency);
-    formData.append("amount", data.amount.toString());
-    formData.append("paymentType", data.paymentType);
-    formData.append("explanation", data.explanation);
-
-    // Add attachments if provided
-    if (data.attachments && data.attachments.length > 0) {
-      data.attachments.forEach((file) => {
-        formData.append("attachments", file);
-      });
-    }
-
-    // Update config headers for multipart/form-data
-    const multipartConfig = {
-      ...config,
-      headers: {
-        ...config.headers,
-        "Content-Type": "multipart/form-data",
-      },
-    };
-
     const response = await axios.post<Imprest>(
       `${API_URL}/imprest`,
-      formData,
-      multipartConfig
+      data,
+      config
     );
     return response.data;
   } catch (error: any) {

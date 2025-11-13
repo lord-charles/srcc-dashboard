@@ -3,7 +3,6 @@ import { Header } from "@/components/header";
 import ProjectDetails from "@/components/projects/project-details";
 import { handleUnauthorized } from "@/services/dashboard.service";
 import { getProjectById } from "@/services/projects-service";
-import { redirect } from "next/navigation";
 import React from "react";
 
 

@@ -5,7 +5,11 @@ import { User, Skill } from "@/types/user";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { Badge } from "@/components/ui/badge";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import {
+  HoverCard,
+  HoverCardTrigger,
+  HoverCardContent,
+} from "@/components/ui/hover-card";
 
 const customIncludesStringFilter = (
   row: Row<User>,
@@ -31,15 +35,40 @@ const getProficiencyColor = (level: string) => {
   }
 };
 
-export const columns: ColumnDef<User>[] = [
+const maskEmail = (email: string) => {
+  const [username, domain] = email.split("@");
+  if (!username || !domain) return "***@***.***";
+  const maskedUsername =
+    username.length > 2
+      ? username[0] +
+        "*".repeat(username.length - 2) +
+        username[username.length - 1]
+      : "***";
+  return `${maskedUsername}@${domain}`;
+};
+
+const maskPhone = (phone: string) => {
+  if (!phone) return "***";
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length < 4) return "***";
+  return "*".repeat(cleaned.length - 3) + cleaned.slice(-3);
+};
+
+export const getColumns = (
+  isAddingToProject: boolean = false
+): ColumnDef<User>[] => [
   {
     id: "combinedName",
     header: "Name",
     accessorFn: (row) => {
       const skillsText = (row.skills || [])
-        .map(skill => skill.name)
+        .map((skill) => skill.name)
         .join(" ");
-      return `${row.firstName || ""} ${row.middleName || ""} ${row.lastName || ""} ${row.phoneNumber || ""} ${row.email || ""} ${row.employeeId || ""} ${row.nationalId || ""} ${row.kraPinNumber || ""} ${skillsText}`;
+      return `${row.firstName || ""} ${row.middleName || ""} ${
+        row.lastName || ""
+      } ${row.phoneNumber || ""} ${row.email || ""} ${row.employeeId || ""} ${
+        row.nationalId || ""
+      } ${row.kraPinNumber || ""} ${skillsText}`;
     },
     filterFn: customIncludesStringFilter,
     enableHiding: true,
@@ -79,7 +108,10 @@ export const columns: ColumnDef<User>[] = [
                         {row.original.roles[0]}
                       </Badge>
                       {row.original.roles.length > 1 && (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0"
+                        >
                           +{row.original.roles.length - 1}
                         </Badge>
                       )}
@@ -90,8 +122,8 @@ export const columns: ColumnDef<User>[] = [
                       <p className="text-sm font-medium">User Roles</p>
                       <div className="flex flex-wrap gap-1">
                         {row.original.roles.map((role, index) => (
-                          <Badge 
-                            key={index} 
+                          <Badge
+                            key={index}
                             variant={index === 0 ? "secondary" : "outline"}
                             className="text-xs capitalize"
                           >
@@ -125,18 +157,22 @@ export const columns: ColumnDef<User>[] = [
           advanced: 3,
           intermediate: 2,
           beginner: 1,
-          default: 0
+          default: 0,
         };
 
         // Convert years to number, default to 0 if invalid
         const getYears = (years: string | number | undefined): number => {
-          if (typeof years === 'number') return years;
-          if (typeof years === 'string') return parseInt(years) || 0;
+          if (typeof years === "number") return years;
+          if (typeof years === "string") return parseInt(years) || 0;
           return 0;
         };
 
-        const weightA = (proficiencyWeight[a.proficiencyLevel || 'default'] || 0) * getYears(a.yearsOfExperience);
-        const weightB = (proficiencyWeight[b.proficiencyLevel || 'default'] || 0) * getYears(b.yearsOfExperience);
+        const weightA =
+          (proficiencyWeight[a.proficiencyLevel || "default"] || 0) *
+          getYears(a.yearsOfExperience);
+        const weightB =
+          (proficiencyWeight[b.proficiencyLevel || "default"] || 0) *
+          getYears(b.yearsOfExperience);
         return weightB - weightA;
       });
 
@@ -149,9 +185,13 @@ export const columns: ColumnDef<User>[] = [
                   <Badge
                     key={index}
                     variant="outline"
-                    className={`text-xs whitespace-nowrap ${getProficiencyColor(skill.proficiencyLevel)}`}
+                    className={`text-xs whitespace-nowrap ${getProficiencyColor(
+                      skill.proficiencyLevel
+                    )}`}
                   >
-                    {skill.name.length > 15 ? `${skill.name.substring(0, 15)}...` : skill.name}
+                    {skill.name.length > 15
+                      ? `${skill.name.substring(0, 15)}...`
+                      : skill.name}
                     <span className="ml-1 opacity-75">
                       ({skill.yearsOfExperience}y)
                     </span>
@@ -189,7 +229,9 @@ export const columns: ColumnDef<User>[] = [
                     }, {} as Record<string, Skill[]>)
                   ).map(([level, levelSkills]) => (
                     <div key={level} className="space-y-1.5">
-                      <h5 className="text-xs font-medium capitalize">{level}</h5>
+                      <h5 className="text-xs font-medium capitalize">
+                        {level}
+                      </h5>
                       <div className="flex flex-wrap gap-1">
                         {levelSkills.map((skill, index) => (
                           <Badge
@@ -231,11 +273,18 @@ export const columns: ColumnDef<User>[] = [
       <DataTableColumnHeader column={column} title="Contact" />
     ),
     cell: ({ row }) => {
+      const email = isAddingToProject
+        ? maskEmail(row.original.email)
+        : row.original.email;
+      const phone = isAddingToProject
+        ? maskPhone(row.original.phoneNumber)
+        : row.original.phoneNumber;
+
       return (
         <div className="flex flex-col space-y-1">
-          <span className="text-sm font-medium">{row.original.email}</span>
+          <span className="text-sm font-medium">{email}</span>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>{row.original.phoneNumber}</span>
+            <span>{phone}</span>
             {row.original.alternativePhoneNumber && (
               <Badge variant="secondary" className="text-[10px]">
                 +Alt
@@ -259,13 +308,15 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex flex-col">
-          <span className="font-medium capitalize">{row.original.department}</span>
+          <span className="font-medium capitalize">
+            {row.original.department}
+          </span>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{row.original.yearsOfExperience}y exp.</span>
             <span>•</span>
             <span className="capitalize">{row.original.availability}</span>
           </div>
-          {row.original.cvUrl && (
+          {row.original.cvUrl && !isAddingToProject && (
             <a
               href={row.original.cvUrl}
               target="_blank"
@@ -292,8 +343,12 @@ export const columns: ColumnDef<User>[] = [
             (status === "active"
               ? "success"
               : status === "pending"
-                ? "warning"
-                : "destructive") as "default" | "secondary" | "destructive" | "outline"
+              ? "warning"
+              : "destructive") as
+              | "default"
+              | "secondary"
+              | "destructive"
+              | "outline"
           }
           className="capitalize"
         >
@@ -307,3 +362,5 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => <DataTableRowActions row={row} />,
   },
 ];
+
+export const columns = getColumns();
