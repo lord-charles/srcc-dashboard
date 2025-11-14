@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -16,12 +16,24 @@ import {
   ReceiptText,
   Shield,
   Users,
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   calculateDaysRemaining,
   formatCurrency,
@@ -30,117 +42,121 @@ import {
   getReadableStatus,
   getStatusBadgeVariant,
   getStatusColor,
-} from "@/lib/utils"
-import { ScrollArea } from "../ui/scroll-area"
+} from "@/lib/utils";
+import { ScrollArea } from "../ui/scroll-area";
 
-type ImprestStatus = "accounted" | "pending_accountant" | "pending_hod" | "rejected" | "disbursed"
+type ImprestStatus =
+  | "accounted"
+  | "pending_accountant"
+  | "pending_hod"
+  | "rejected"
+  | "disbursed";
 
 interface Imprest {
-  _id: string
-  employeeName: string
-  department: string
-  requestDate: string
-  dueDate: string
-  paymentReason: string
-  currency: string
-  amount: number
-  paymentType: string
-  explanation: string
-  status: ImprestStatus
+  _id: string;
+  employeeName: string;
+  department: string;
+  requestDate: string;
+  dueDate: string;
+  paymentReason: string;
+  currency: string;
+  amount: number;
+  paymentType: string;
+  explanation: string;
+  status: ImprestStatus;
   requestedBy: {
-    _id: string
-    firstName: string
-    lastName: string
-    email: string
-    department: string
-  }
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    department: string;
+  };
   attachments: Array<{
-    fileName: string
-    fileUrl: string
-    uploadedAt: string
-    _id: string
-  }>
+    fileName: string;
+    fileUrl: string;
+    uploadedAt: string;
+    _id: string;
+  }>;
   hodApproval?: {
     approvedBy: {
-      _id: string
-      firstName: string
-      lastName: string
-      email: string
-    }
-    approvedAt: string
-    comments: string
-  }
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    approvedAt: string;
+    comments: string;
+  };
   accountantApproval?: {
     approvedBy: {
-      _id: string
-      firstName: string
-      lastName: string
-      email: string
-    }
-    approvedAt: string
-    comments: string
-  }
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    approvedAt: string;
+    comments: string;
+  };
   disbursement?: {
     disbursedBy: {
-      _id: string
-      firstName: string
-      lastName: string
-      email: string
-    }
-    disbursedAt: string
-    amount: number
-    comments: string
-  }
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    disbursedAt: string;
+    amount: number;
+    comments: string;
+  };
   accounting?: {
     verifiedBy: {
-      _id: string
-      firstName: string
-      lastName: string
-      email: string
-    }
-    verifiedAt: string
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    verifiedAt: string;
     receipts: Array<{
-      description: string
-      amount: number
-      receiptUrl: string
-      uploadedAt: string
-      _id: string
-    }>
-    totalAmount: number
-    balance: number
-    comments: string
-  }
+      description: string;
+      amount: number;
+      receiptUrl: string;
+      uploadedAt: string;
+      _id: string;
+    }>;
+    totalAmount: number;
+    balance: number;
+    comments: string;
+  };
   rejection?: {
-    rejectedBy: string
-    rejectedAt: string
-    reason: string
-  }
-  createdAt: string
-  updatedAt: string
+    rejectedBy: string;
+    rejectedAt: string;
+    reason: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ImprestStats {
-  totalImprests: number
-  totalAmount: number
-  totalAccountedAmount: number
-  totalPendingAmount: number
-  averageProcessingTime: number
-  statusCounts: Record<ImprestStatus, number>
-  departmentCounts: Record<string, number>
-  departmentAmounts: Record<string, number>
-  currencyCounts: Record<string, number>
-  paymentTypeCounts: Record<string, number>
-  overdueCounts: number
-  dueSoonCounts: number
+  totalImprests: number;
+  totalAmount: number;
+  totalAccountedAmount: number;
+  totalPendingAmount: number;
+  averageProcessingTime: number;
+  statusCounts: Record<ImprestStatus, number>;
+  departmentCounts: Record<string, number>;
+  departmentAmounts: Record<string, number>;
+  currencyCounts: Record<string, number>;
+  paymentTypeCounts: Record<string, number>;
+  overdueCounts: number;
+  dueSoonCounts: number;
   recentActivity: {
-    type: string
-    date: string
-    details: string
-  }[]
+    type: string;
+    date: string;
+    details: string;
+  }[];
 }
 
 export function ImprestStats({ imprests }: { imprests: any }) {
-
   const stats = useMemo(() => {
     if (!imprests || !imprests.length) {
       return {
@@ -163,7 +179,7 @@ export function ImprestStats({ imprests }: { imprests: any }) {
         overdueCounts: 0,
         dueSoonCounts: 0,
         recentActivity: [],
-      } as ImprestStats
+      } as ImprestStats;
     }
 
     const statusCounts: Record<ImprestStatus, number> = {
@@ -172,70 +188,82 @@ export function ImprestStats({ imprests }: { imprests: any }) {
       pending_hod: 0,
       rejected: 0,
       disbursed: 0,
-    }
+    };
 
-    const departmentCounts: Record<string, number> = {}
-    const departmentAmounts: Record<string, number> = {}
-    const currencyCounts: Record<string, number> = {}
-    const paymentTypeCounts: Record<string, number> = {}
+    const departmentCounts: Record<string, number> = {};
+    const departmentAmounts: Record<string, number> = {};
+    const currencyCounts: Record<string, number> = {};
+    const paymentTypeCounts: Record<string, number> = {};
 
-    let totalAmount = 0
-    let totalAccountedAmount = 0
-    let totalPendingAmount = 0
-    let overdueCounts = 0
-    let dueSoonCounts = 0
+    let totalAmount = 0;
+    let totalAccountedAmount = 0;
+    let totalPendingAmount = 0;
+    let overdueCounts = 0;
+    let dueSoonCounts = 0;
 
     // Processing times in hours
-    const processingTimes: number[] = []
+    const processingTimes: number[] = [];
 
     // Recent activity
     const recentActivity: {
-      type: string
-      date: string
-      details: string
-    }[] = []
+      type: string;
+      date: string;
+      details: string;
+    }[] = [];
 
     try {
       imprests.forEach((imprest: Imprest) => {
-        if (!imprest) return
+        if (!imprest) return;
 
         // Status counts - handle null/undefined status
-        const status = imprest.status || "pending_hod"
-        statusCounts[status as ImprestStatus] = (statusCounts[status as ImprestStatus] || 0) + 1
+        const status = imprest.status || "pending_hod";
+        statusCounts[status as ImprestStatus] =
+          (statusCounts[status as ImprestStatus] || 0) + 1;
 
         // Department counts - handle null/undefined department
-        const department = imprest.department || "unknown"
-        departmentCounts[department] = (departmentCounts[department] || 0) + 1
+        const department = imprest.department || "unknown";
+        departmentCounts[department] = (departmentCounts[department] || 0) + 1;
 
         // Department amounts - handle null/undefined department or amount
-        const amount = imprest.amount || 0
-        departmentAmounts[department] = (departmentAmounts[department] || 0) + amount
+        const amount = imprest.amount || 0;
+        departmentAmounts[department] =
+          (departmentAmounts[department] || 0) + amount;
 
         // Currency counts - handle null/undefined currency
-        const currency = imprest.currency || "USD"
-        currencyCounts[currency] = (currencyCounts[currency] || 0) + 1
+        const currency = imprest.currency || "USD";
+        currencyCounts[currency] = (currencyCounts[currency] || 0) + 1;
 
         // Payment type counts - handle null/undefined payment type
-        const paymentType = imprest.paymentType || "Unknown"
-        paymentTypeCounts[paymentType] = (paymentTypeCounts[paymentType] || 0) + 1
+        const paymentType = imprest.paymentType || "Unknown";
+        paymentTypeCounts[paymentType] =
+          (paymentTypeCounts[paymentType] || 0) + 1;
 
         // Total amount - handle null/undefined amount
-        totalAmount += amount
+        totalAmount += amount;
 
         // Accounted vs pending amounts - handle null/undefined status or amount
         if (status === "accounted") {
-          totalAccountedAmount += amount
+          totalAccountedAmount += amount;
         } else if (status.includes("pending")) {
-          totalPendingAmount += amount
+          totalPendingAmount += amount;
         }
 
         // Overdue and due soon counts - handle null/undefined dueDate or status
         if (imprest.dueDate) {
-          const daysRemaining = calculateDaysRemaining(imprest.dueDate)
-          if (daysRemaining < 0 && status !== "accounted" && status !== "rejected") {
-            overdueCounts++
-          } else if (daysRemaining <= 2 && daysRemaining >= 0 && status !== "accounted" && status !== "rejected") {
-            dueSoonCounts++
+          const daysRemaining = calculateDaysRemaining(imprest.dueDate);
+          if (
+            daysRemaining < 0 &&
+            status !== "accounted" &&
+            status !== "rejected"
+          ) {
+            overdueCounts++;
+          } else if (
+            daysRemaining <= 2 &&
+            daysRemaining >= 0 &&
+            status !== "accounted" &&
+            status !== "rejected"
+          ) {
+            dueSoonCounts++;
           }
         }
 
@@ -248,11 +276,13 @@ export function ImprestStats({ imprests }: { imprests: any }) {
           imprest.accounting.verifiedAt
         ) {
           try {
-            const requestDate = new Date(imprest.createdAt)
-            const accountedDate = new Date(imprest.accounting.verifiedAt)
-            const processingTime = (accountedDate.getTime() - requestDate.getTime()) / (1000 * 60 * 60) // hours
+            const requestDate = new Date(imprest.createdAt);
+            const accountedDate = new Date(imprest.accounting.verifiedAt);
+            const processingTime =
+              (accountedDate.getTime() - requestDate.getTime()) /
+              (1000 * 60 * 60); // hours
             if (!isNaN(processingTime) && processingTime >= 0) {
-              processingTimes.push(processingTime)
+              processingTimes.push(processingTime);
             }
           } catch (e) {
             // Skip this processing time calculation if dates are invalid
@@ -264,58 +294,72 @@ export function ImprestStats({ imprests }: { imprests: any }) {
           recentActivity.push({
             type: "accounting",
             date: imprest.accounting.verifiedAt,
-            details: `${imprest.employeeName || "Employee"} accounted for ${formatCurrency(amount, currency)}`,
-          })
+            details: `${
+              imprest.employeeName || "Employee"
+            } accounted for ${formatCurrency(amount, currency)}`,
+          });
         }
 
         if (imprest.disbursement && imprest.disbursement.disbursedAt) {
           recentActivity.push({
             type: "disbursement",
             date: imprest.disbursement.disbursedAt,
-            details: `${formatCurrency(amount, currency)} disbursed to ${imprest.employeeName || "Employee"}`,
-          })
+            details: `${formatCurrency(amount, currency)} disbursed to ${
+              imprest.employeeName || "Employee"
+            }`,
+          });
         }
 
-        if (imprest.accountantApproval && imprest.accountantApproval.approvedAt) {
+        if (
+          imprest.accountantApproval &&
+          imprest.accountantApproval.approvedAt
+        ) {
           recentActivity.push({
             type: "approval",
             date: imprest.accountantApproval.approvedAt,
-            details: `Accountant approved ${imprest.employeeName || "Employee"}'s imprest`,
-          })
+            details: `Accountant approved ${
+              imprest.employeeName || "Employee"
+            }'s imprest`,
+          });
         }
 
         if (imprest.hodApproval && imprest.hodApproval.approvedAt) {
           recentActivity.push({
             type: "approval",
             date: imprest.hodApproval.approvedAt,
-            details: `HOD approved ${imprest.employeeName || "Employee"}'s imprest`,
-          })
+            details: `HOD approved ${
+              imprest.employeeName || "Employee"
+            }'s imprest`,
+          });
         }
 
         if (imprest.rejection && imprest.rejection.rejectedAt) {
           recentActivity.push({
             type: "rejection",
             date: imprest.rejection.rejectedAt,
-            details: `${imprest.employeeName || "Employee"}'s imprest was rejected: ${
+            details: `${
+              imprest.employeeName || "Employee"
+            }'s imprest was rejected: ${
               imprest.rejection.reason || "No reason provided"
             }`,
-          })
+          });
         }
-      })
+      });
 
       // Sort recent activity by date (newest first)
       recentActivity.sort((a, b) => {
         try {
-          return new Date(b.date).getTime() - new Date(a.date).getTime()
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
         } catch (e) {
-          return 0
+          return 0;
         }
-      })
+      });
 
       // Calculate average processing time
       const averageProcessingTime = processingTimes.length
-        ? processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length
-        : 0
+        ? processingTimes.reduce((sum, time) => sum + time, 0) /
+          processingTimes.length
+        : 0;
 
       return {
         totalImprests: imprests.length,
@@ -331,9 +375,9 @@ export function ImprestStats({ imprests }: { imprests: any }) {
         overdueCounts,
         dueSoonCounts,
         recentActivity: recentActivity.slice(0, 5), // Only keep the 5 most recent activities
-      } as ImprestStats
+      } as ImprestStats;
     } catch (error) {
-      console.error("Error calculating stats:", error)
+      console.error("Error calculating stats:", error);
       return {
         totalImprests: imprests.length,
         totalAmount,
@@ -348,66 +392,69 @@ export function ImprestStats({ imprests }: { imprests: any }) {
         overdueCounts,
         dueSoonCounts,
         recentActivity: [],
-      } as ImprestStats
+      } as ImprestStats;
     }
-  }, [imprests])
+  }, [imprests]);
 
   const statusDistribution = useMemo(() => {
     try {
-      return Object.entries(stats.statusCounts || {}).filter(([_, count]) => count > 0)
+      return Object.entries(stats.statusCounts || {}).filter(
+        ([_, count]) => count > 0
+      );
     } catch (e) {
-      return []
+      return [];
     }
-  }, [stats.statusCounts])
+  }, [stats.statusCounts]);
 
   const departmentDistribution = useMemo(() => {
     try {
       return Object.entries(stats.departmentCounts || {})
         .sort((a, b) => b[1] - a[1])
-        .filter(([_, count]) => count > 0)
+        .filter(([_, count]) => count > 0);
     } catch (e) {
-      return []
+      return [];
     }
-  }, [stats.departmentCounts])
+  }, [stats.departmentCounts]);
 
   const departmentAmountDistribution = useMemo(() => {
     try {
       return Object.entries(stats.departmentAmounts || {})
         .sort((a, b) => b[1] - a[1])
-        .filter(([_, amount]) => amount > 0)
+        .filter(([_, amount]) => amount > 0);
     } catch (e) {
-      return []
+      return [];
     }
-  }, [stats.departmentAmounts])
+  }, [stats.departmentAmounts]);
 
   const currencyDistribution = useMemo(() => {
     try {
       return Object.entries(stats.currencyCounts || {})
         .sort((a, b) => b[1] - a[1])
-        .filter(([_, count]) => count > 0)
+        .filter(([_, count]) => count > 0);
     } catch (e) {
-      return []
+      return [];
     }
-  }, [stats.currencyCounts])
+  }, [stats.currencyCounts]);
 
   const paymentTypeDistribution = useMemo(() => {
     try {
       return Object.entries(stats.paymentTypeCounts || {})
         .sort((a, b) => b[1] - a[1])
-        .filter(([_, count]) => count > 0)
+        .filter(([_, count]) => count > 0);
     } catch (e) {
-      return []
+      return [];
     }
-  }, [stats.paymentTypeCounts])
+  }, [stats.paymentTypeCounts]);
 
   const defaultCurrency = useMemo(() => {
     try {
-      return currencyDistribution.length > 0 ? currencyDistribution[0][0] : "USD"
+      return currencyDistribution.length > 0
+        ? currencyDistribution[0][0]
+        : "USD";
     } catch (e) {
-      return "USD"
+      return "USD";
     }
-  }, [currencyDistribution])
-
+  }, [currencyDistribution]);
 
   if (!imprests || imprests.length === 0) {
     return (
@@ -420,12 +467,12 @@ export function ImprestStats({ imprests }: { imprests: any }) {
           There are no imprest records to display at this time.
         </p>
       </div>
-    )
+    );
   }
 
   return (
     <TooltipProvider>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Financial Overview Card */}
         <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="pb-2 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50">
@@ -433,13 +480,17 @@ export function ImprestStats({ imprests }: { imprests: any }) {
               <DollarSign className="mr-2 h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               Financial Overview
             </CardTitle>
-            <CardDescription>Imprest funds allocation and usage</CardDescription>
+            <CardDescription>
+              Imprest funds allocation and usage
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Amount</span>
+                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Total Amount
+                  </span>
                   <span className="text-2xl font-bold">
                     {stats.totalAmount > 0
                       ? formatCurrency(stats.totalAmount, defaultCurrency)
@@ -447,7 +498,8 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                   </span>
                 </div>
                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Across {stats.totalImprests} imprest {stats.totalImprests === 1 ? "request" : "requests"}
+                  Across {stats.totalImprests} imprest{" "}
+                  {stats.totalImprests === 1 ? "request" : "requests"}
                 </div>
               </div>
 
@@ -457,13 +509,22 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                   <div
                     className="bg-emerald-500 transition-all duration-300"
                     style={{
-                      width: `${stats.totalAmount > 0 ? (stats.totalAccountedAmount / stats.totalAmount) * 100 : 0}%`,
+                      width: `${
+                        stats.totalAmount > 0
+                          ? (stats.totalAccountedAmount / stats.totalAmount) *
+                            100
+                          : 0
+                      }%`,
                     }}
                   />
                   <div
                     className="bg-amber-500 transition-all duration-300"
                     style={{
-                      width: `${stats.totalAmount > 0 ? (stats.totalPendingAmount / stats.totalAmount) * 100 : 0}%`,
+                      width: `${
+                        stats.totalAmount > 0
+                          ? (stats.totalPendingAmount / stats.totalAmount) * 100
+                          : 0
+                      }%`,
                     }}
                   />
                 </div>
@@ -474,13 +535,20 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                         variant="outline"
                         className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
                       >
-                        Accounted: {formatCurrency(stats.totalAccountedAmount, defaultCurrency)}
+                        Accounted:{" "}
+                        {formatCurrency(
+                          stats.totalAccountedAmount,
+                          defaultCurrency
+                        )}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
                         {formatPercentage(
-                          stats.totalAmount > 0 ? (stats.totalAccountedAmount / stats.totalAmount) * 100 : 0,
+                          stats.totalAmount > 0
+                            ? (stats.totalAccountedAmount / stats.totalAmount) *
+                                100
+                            : 0
                         )}{" "}
                         of total amount
                       </p>
@@ -492,13 +560,20 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                         variant="outline"
                         className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
                       >
-                        Pending: {formatCurrency(stats.totalPendingAmount, defaultCurrency)}
+                        Pending:{" "}
+                        {formatCurrency(
+                          stats.totalPendingAmount,
+                          defaultCurrency
+                        )}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
                         {formatPercentage(
-                          stats.totalAmount > 0 ? (stats.totalPendingAmount / stats.totalAmount) * 100 : 0,
+                          stats.totalAmount > 0
+                            ? (stats.totalPendingAmount / stats.totalAmount) *
+                                100
+                            : 0
                         )}{" "}
                         of total amount
                       </p>
@@ -506,7 +581,6 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                   </Tooltip>
                 </div>
               </div>
-
             </div>
           </CardContent>
           <CardFooter className="border-t bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
@@ -536,23 +610,34 @@ export function ImprestStats({ imprests }: { imprests: any }) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Approval Rate</div>
+                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Approval Rate
+                  </div>
                   <div className="text-2xl font-bold">
-                    {stats.statusCounts.accounted || 0}/{stats.totalImprests || 0}
+                    {stats.statusCounts.accounted || 0}/
+                    {stats.totalImprests || 0}
                     <span className="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">
                       (
                       {formatPercentage(
-                        stats.totalImprests > 0 ? ((stats.statusCounts.accounted || 0) / stats.totalImprests) * 100 : 0,
+                        stats.totalImprests > 0
+                          ? ((stats.statusCounts.accounted || 0) /
+                              stats.totalImprests) *
+                              100
+                          : 0
                       )}
                       )
                     </span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Avg. Processing</div>
+                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Avg. Processing
+                  </div>
                   <div className="text-2xl font-bold">
                     {Math.round(stats.averageProcessingTime || 0)}
-                    <span className="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">hours</span>
+                    <span className="ml-1 text-sm font-normal text-slate-500 dark:text-slate-400">
+                      hours
+                    </span>
                   </div>
                 </div>
               </div>
@@ -564,9 +649,15 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                     statusDistribution.map(([status, count], i) => (
                       <div
                         key={i}
-                        className={`${getStatusColor(status as ImprestStatus)} transition-all duration-300`}
+                        className={`${getStatusColor(
+                          status as ImprestStatus
+                        )} transition-all duration-300`}
                         style={{
-                          width: `${stats.totalImprests > 0 ? (count / stats.totalImprests) * 100 : 0}%`,
+                          width: `${
+                            stats.totalImprests > 0
+                              ? (count / stats.totalImprests) * 100
+                              : 0
+                          }%`,
                         }}
                       />
                     ))
@@ -579,17 +670,27 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                     statusDistribution.map(([status, count], i) => (
                       <Tooltip key={i}>
                         <TooltipTrigger asChild>
-                          <Badge variant="outline" className={`${getStatusBadgeVariant(status as ImprestStatus)}`}>
+                          <Badge
+                            variant="outline"
+                            className={`${getStatusBadgeVariant(
+                              status as ImprestStatus
+                            )}`}
+                          >
                             {getReadableStatus(status as string)}: {count}
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>{Math.round((count / stats.totalImprests) * 100)}% of total imprests</p>
+                          <p>
+                            {Math.round((count / stats.totalImprests) * 100)}%
+                            of total imprests
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     ))
                   ) : (
-                    <span className="text-xs text-slate-400">No status data available</span>
+                    <span className="text-xs text-slate-400">
+                      No status data available
+                    </span>
                   )}
                 </div>
               </div>
@@ -598,25 +699,32 @@ export function ImprestStats({ imprests }: { imprests: any }) {
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/50">
                   <div className="flex items-center">
                     <AlertTriangle className="mr-1 h-3 w-3 text-amber-500" />
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Due Soon</div>
+                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Due Soon
+                    </div>
                   </div>
-                  <div className="mt-1 text-lg font-semibold">{stats.dueSoonCounts || 0}</div>
+                  <div className="mt-1 text-lg font-semibold">
+                    {stats.dueSoonCounts || 0}
+                  </div>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/50">
                   <div className="flex items-center">
                     <AlertTriangle className="mr-1 h-3 w-3 text-rose-500" />
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">Overdue</div>
+                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      Overdue
+                    </div>
                   </div>
-                  <div className="mt-1 text-lg font-semibold">{stats.overdueCounts || 0}</div>
+                  <div className="mt-1 text-lg font-semibold">
+                    {stats.overdueCounts || 0}
+                  </div>
                 </div>
               </div>
             </div>
           </CardContent>
-     
         </Card>
 
         {/* Department Card */}
-        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
+        {/* <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="pb-2 bg-gradient-to-r from-violet-50 to-violet-100 dark:from-violet-950/50 dark:to-violet-900/50">
             <CardTitle className="flex items-center text-lg font-semibold">
               <Users className="mr-2 h-5 w-5 text-violet-600 dark:text-violet-400" />
@@ -696,7 +804,7 @@ export function ImprestStats({ imprests }: { imprests: any }) {
             </div>
           </CardContent>
        
-        </Card>
+        </Card> */}
 
         {/* Activity Card */}
         <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
@@ -705,19 +813,26 @@ export function ImprestStats({ imprests }: { imprests: any }) {
               <FileCheck className="mr-2 h-5 w-5 text-amber-600 dark:text-amber-400" />
               Recent Activity
             </CardTitle>
-            <CardDescription>Latest imprest transactions and approvals</CardDescription>
+            <CardDescription>
+              Latest imprest transactions and approvals
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Pending Approvals</div>
+                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Pending Approvals
+                  </div>
                   <div className="text-2xl font-bold">
-                    {(stats.statusCounts.pending_accountant || 0) + (stats.statusCounts.pending_hod || 0) || 0}
+                    {(stats.statusCounts.pending_accountant || 0) +
+                      (stats.statusCounts.pending_hod || 0) || 0}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Needs Attention</div>
+                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                    Needs Attention
+                  </div>
                   <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     {(stats.overdueCounts || 0) + (stats.dueSoonCounts || 0)}
                   </div>
@@ -727,43 +842,55 @@ export function ImprestStats({ imprests }: { imprests: any }) {
               <div>
                 <p className="text-sm font-medium mb-2">Recent Activity</p>
                 <ScrollArea className="h-[150px]">
-                <div className="space-y-2">
-                  {stats.recentActivity && stats.recentActivity.length > 0 ? (
-                    stats.recentActivity.map((activity, i) => (
-                      <div
-                        key={i}
-                        className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
-                      >
-                        <div className="flex items-start gap-2">
-                          {activity.type === "accounting" && (
-                            <ReceiptText className="h-4 w-4 text-emerald-500 mt-0.5" />
-                          )}
-                          {activity.type === "disbursement" && <Landmark className="h-4 w-4 text-blue-500 mt-0.5" />}
-                          {activity.type === "approval" && <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5" />}
-                          {activity.type === "rejection" && <AlertTriangle className="h-4 w-4 text-rose-500 mt-0.5" />}
-                          <div className="flex-1">
-                            <p className="text-xs">{activity.details || "Activity details unavailable"}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                              {activity.date ? formatDate(activity.date) : "Date unavailable"}
-                            </p>
+                  <div className="space-y-2">
+                    {stats.recentActivity && stats.recentActivity.length > 0 ? (
+                      stats.recentActivity.map((activity, i) => (
+                        <div
+                          key={i}
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
+                        >
+                          <div className="flex items-start gap-2">
+                            {activity.type === "accounting" && (
+                              <ReceiptText className="h-4 w-4 text-emerald-500 mt-0.5" />
+                            )}
+                            {activity.type === "disbursement" && (
+                              <Landmark className="h-4 w-4 text-blue-500 mt-0.5" />
+                            )}
+                            {activity.type === "approval" && (
+                              <CheckCircle2 className="h-4 w-4 text-amber-500 mt-0.5" />
+                            )}
+                            {activity.type === "rejection" && (
+                              <AlertTriangle className="h-4 w-4 text-rose-500 mt-0.5" />
+                            )}
+                            <div className="flex-1">
+                              <p className="text-xs">
+                                {activity.details ||
+                                  "Activity details unavailable"}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                {activity.date
+                                  ? formatDate(activity.date)
+                                  : "Date unavailable"}
+                              </p>
+                            </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+                        <Shield className="h-8 w-8 mx-auto text-slate-400 mb-2" />
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                          No recent activity
+                        </p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
-                      <Shield className="h-8 w-8 mx-auto text-slate-400 mb-2" />
-                      <p className="text-sm text-slate-500 dark:text-slate-400">No recent activity</p>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
                 </ScrollArea>
               </div>
             </div>
           </CardContent>
-       
         </Card>
       </div>
     </TooltipProvider>
-  )
+  );
 }

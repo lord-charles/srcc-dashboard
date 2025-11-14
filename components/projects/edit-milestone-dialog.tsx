@@ -217,7 +217,7 @@ export function EditMilestoneDialog({
                         type="number"
                         {...field}
                         min={0}
-                        step="1000"
+                        step="10"
                         placeholder="Enter budget amount"
                       />
                     </FormControl>
@@ -287,7 +287,7 @@ export function EditMilestoneDialog({
                           )
                         }
                         min={0}
-                        step="1000"
+                        step="10"
                         placeholder="Enter actual cost"
                         disabled={!isCompleted}
                       />

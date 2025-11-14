@@ -1,3 +1,5 @@
+import withPWA from "@ducanh2912/next-pwa";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   redirects: async () => {
@@ -10,8 +12,34 @@ const nextConfig = {
     ];
   },
   images: {
-    domains: ['i0.wp.com'], 
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "i0.wp.com",
+        port: "",
+        pathname: "**",
+      },
+    ],
   },
 };
 
-export default nextConfig;
+const withPWAConfig = withPWA({
+  dest: "public",
+  register: true,
+  skipWaiting: true,
+  buildExcludes: ["app-build-manifest.json"],
+  runtimeCaching: [
+    {
+      urlPattern: /^https?.*/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "offlineCache",
+        expiration: {
+          maxEntries: 200,
+        },
+      },
+    },
+  ],
+});
+
+export default withPWAConfig(nextConfig);

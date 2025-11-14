@@ -30,7 +30,6 @@ export const authOptions: NextAuthOptions = {
           );
 
           const data = res.data;
-          console.log("Login response:", data, res.status);
 
           // Store token in cookie
           const cookieStore = await cookies();
@@ -57,6 +56,7 @@ export const authOptions: NextAuthOptions = {
                 companyName: data.user?.companyName,
                 businessEmail: data.user?.businessEmail,
                 businessPhone: data.user?.businessPhone,
+                permissions: data.user?.permissions,
               };
             }
 
@@ -75,6 +75,7 @@ export const authOptions: NextAuthOptions = {
               status: data.user?.status,
               nationalId: data.user?.nationalId,
               type: data.type,
+              permissions: data.user?.permissions,
             };
           }
           console.log("Login failed: Invalid response", {
@@ -127,6 +128,7 @@ export const authOptions: NextAuthOptions = {
           token.companyName = user?.companyName;
           token.businessEmail = user?.businessEmail;
           token.businessPhone = user?.businessPhone;
+          token.permissions = user?.permissions;
           token.status = user?.status;
           token.registrationStatus = user?.registrationStatus;
         } else {
@@ -159,6 +161,7 @@ export const authOptions: NextAuthOptions = {
           session.user.companyName = token?.companyName;
           session.user.businessEmail = token?.businessEmail;
           session.user.businessPhone = token?.businessPhone;
+          session.user.permissions = token?.permissions;
           session.user.status = token?.status;
           session.user.registrationStatus = token?.registrationStatus;
         } else {
@@ -168,6 +171,7 @@ export const authOptions: NextAuthOptions = {
           session.user.department = token?.department;
           session.user.position = token?.position;
           session.user.nationalId = token?.nationalId;
+          session.user.permissions = token?.permissions;
           session.user.status = token?.status;
           session.user.registrationStatus = token?.registrationStatus;
         }

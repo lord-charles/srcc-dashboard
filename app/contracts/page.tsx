@@ -1,6 +1,3 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import DashboardProvider from "../dashboard-provider";
 import { Header } from "@/components/header";
 import { getAllContracts } from "@/services/contracts.service";
