@@ -2,5 +2,5 @@ import ComingSoonPage from "@/components/coming-soon";
 
 
 export default async function SettingsProfilePage() {
-  return <ComingSoonPage />;
+  return <div></div>
 }

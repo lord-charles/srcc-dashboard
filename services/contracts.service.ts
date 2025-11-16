@@ -321,3 +321,92 @@ export async function fetchClaimsByContract(contractId: string) {
     throw error?.response?.data.message || "Failed to fetch claims by contract";
   }
 }
+
+export async function getContractTemplates(params?: { active?: boolean; category?: string }) {
+  try {
+    const config = await getAxiosConfig();
+    const search = new URLSearchParams();
+    if (params?.active !== undefined) search.set('active', String(params.active));
+    if (params?.category) search.set('category', params.category);
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/contract-templates${search.toString() ? `?${search.toString()}` : ''}`,
+      config
+    );
+    return response.data as Array<{ _id: string; name: string; version?: string }>;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error('Failed to fetch contract templates:', error);
+    throw error?.response?.data?.message || 'Failed to fetch contract templates';
+  }
+}
+
+export async function createContractTemplate(data: {
+  name: string;
+  category?: string;
+  version?: string;
+  contentType?: string;
+  content: string;
+  variablesCsv?: string;
+  active?: boolean;
+}) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/contract-templates`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error('Failed to create contract template:', error);
+    throw error?.response?.data?.message || 'Failed to create contract template';
+  }
+}
+
+export async function updateContractTemplate(id: string, data: Partial<{
+  name: string;
+  category?: string;
+  version?: string;
+  contentType?: string;
+  content: string;
+  variablesCsv?: string;
+  active?: boolean;
+}>) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/contract-templates/${id}`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error('Failed to update contract template:', error);
+    throw error?.response?.data?.message || 'Failed to update contract template';
+  }
+}
+
+export async function deleteContractTemplate(id: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/contract-templates/${id}`,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error('Failed to delete contract template:', error);
+    throw error?.response?.data?.message || 'Failed to delete contract template';
+  }
+}

@@ -108,6 +108,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         projectId: projectData._id,
         contractedUserId: contractMemberId,
         status: values.status,
+        ...(values.templateId ? { templateId: values.templateId } : {}),
       };
 
       const result = await createContract(contractData);

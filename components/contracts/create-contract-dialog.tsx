@@ -53,6 +53,7 @@ const formSchema = z.object({
   status: z.string().min(1, {
     message: "Please select a status.",
   }),
+  templateId: z.string().optional(),
 });
 
 export type ContractFormValues = z.infer<typeof formSchema>;
@@ -66,6 +67,7 @@ interface CreateContractDialogProps {
   teamMemberEmail: string;
   internalCategories: any[];
   isSubmitting: boolean;
+  templates?: Array<{ _id: string; name: string; version?: string }>; // optional list of templates
 }
 
 export function CreateContractDialog({
@@ -77,6 +79,7 @@ export function CreateContractDialog({
   teamMemberEmail,
   internalCategories,
   isSubmitting,
+  templates = [],
 }: CreateContractDialogProps) {
 
 
@@ -101,6 +104,7 @@ export function CreateContractDialog({
     startDate: budgetStartDate,
     endDate: budgetEndDate,
     status: "draft",
+    templateId: templates?.[0]?._id || undefined,
   };
 
   const form = useForm<ContractFormValues>({
@@ -116,11 +120,12 @@ export function CreateContractDialog({
       currency: "KES",
       startDate: formatDateForInput(budgetStartDate),
       endDate: formatDateForInput(budgetEndDate),
-      status: form.getValues("status") // Preserve current status
+      status: form.getValues("status"), // Preserve current status
+      templateId: form.getValues("templateId") || templates?.[0]?._id
     };
     
     form.reset(newValues);
-  }, [teamMemberEmail, projectName, userBudgetItem, budgetStartDate, budgetEndDate]);
+  }, [teamMemberEmail, projectName, userBudgetItem, budgetStartDate, budgetEndDate, templates]);
 
   const handleSubmit = async (values: ContractFormValues) => {
     await onSubmit(values);
@@ -249,6 +254,35 @@ export function CreateContractDialog({
               />
               
             </div>
+            {templates && templates.length > 0 && (
+              <FormField
+                control={form.control}
+                name="templateId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contract Template</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a template" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {templates.map((t) => (
+                          <SelectItem key={t._id} value={t._id}>
+                            {t.name}{t.version ? ` (v${t.version})` : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      The selected template will be embedded in the contract.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="status"
