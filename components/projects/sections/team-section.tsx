@@ -2,17 +2,12 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EditTeamMemberDialog } from "@/components/users/edit-team-member-dialog";
 import {
   AlertDialog,
@@ -33,7 +28,10 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { deleteTeamMember, createContract } from "@/services/projects-service";
-import { updateContract } from "@/services/contracts.service";
+import {
+  updateContract,
+  getContractTemplates,
+} from "@/services/contracts.service";
 import type { Project, TeamMember, Contract } from "@/types/project";
 import {
   CalendarDays,
@@ -73,14 +71,38 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     null
   );
   const [isUpdatingContract, setIsUpdatingContract] = useState(false);
+  const [templates, setTemplates] = useState<
+    Array<{
+      _id: string;
+      name: string;
+      version?: string;
+      contentType: string;
+      content: string;
+      variables?: string[];
+    }>
+  >([]);
+
+  // Fetch contract templates on mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const data = await getContractTemplates({ active: true });
+        setTemplates(data || []);
+      } catch (error) {
+        console.error("Failed to fetch contract templates:", error);
+      }
+    };
+    fetchTemplates();
+  }, []);
   const isUserInInternalBudget = (email?: string): boolean => {
     if (!email) return false;
     const salaryCategory = projectData.budgetId.internalCategories?.find(
-      (cat: any) => cat.name === '2237'
+      (cat: any) => cat.name === "2237"
     );
-    return salaryCategory?.items?.some(
-      (item: any) => item.name.includes(email)
-    ) ?? false;
+    return (
+      salaryCategory?.items?.some((item: any) => item.name.includes(email)) ??
+      false
+    );
   };
   const getMemberContract = (memberId: string) => {
     if (
@@ -109,6 +131,9 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         contractedUserId: contractMemberId,
         status: values.status,
         ...(values.templateId ? { templateId: values.templateId } : {}),
+        ...(values.editedTemplateContent
+          ? { editedTemplateContent: values.editedTemplateContent }
+          : {}),
       };
 
       const result = await createContract(contractData);
@@ -288,7 +313,10 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                       >
                         <FileSignature className="h-3 w-3" />
                         <div className="text-[8px]">
-                          {getMemberContract(member.userId?._id)?.contractNumber}
+                          {
+                            getMemberContract(member.userId?._id)
+                              ?.contractNumber
+                          }
                         </div>
                       </Badge>
                       <Badge
@@ -297,55 +325,55 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                         style={{
                           backgroundColor:
                             getMemberContract(member.userId?._id)?.status ===
-                              "active"
+                            "active"
                               ? "rgb(240, 253, 244)"
                               : getMemberContract(member.userId?._id)
-                                ?.status === "draft"
-                                ? "rgb(240, 249, 255)"
-                                : getMemberContract(member.userId?._id)
+                                  ?.status === "draft"
+                              ? "rgb(240, 249, 255)"
+                              : getMemberContract(member.userId?._id)
                                   ?.status === "pending_signature"
-                                  ? "rgb(254, 249, 195)"
-                                  : getMemberContract(member.userId?._id)
-                                    ?.status === "suspended"
-                                    ? "rgb(254, 242, 242)"
-                                    : getMemberContract(member.userId?._id)
-                                      ?.status === "terminated"
-                                      ? "rgb(249, 250, 251)"
-                                      : "rgb(249, 250, 251)",
+                              ? "rgb(254, 249, 195)"
+                              : getMemberContract(member.userId?._id)
+                                  ?.status === "suspended"
+                              ? "rgb(254, 242, 242)"
+                              : getMemberContract(member.userId?._id)
+                                  ?.status === "terminated"
+                              ? "rgb(249, 250, 251)"
+                              : "rgb(249, 250, 251)",
                           color:
                             getMemberContract(member.userId?._id)?.status ===
-                              "active"
+                            "active"
                               ? "rgb(22, 101, 52)"
                               : getMemberContract(member.userId?._id)
-                                ?.status === "draft"
-                                ? "rgb(3, 105, 161)"
-                                : getMemberContract(member.userId?._id)
+                                  ?.status === "draft"
+                              ? "rgb(3, 105, 161)"
+                              : getMemberContract(member.userId?._id)
                                   ?.status === "pending_signature"
-                                  ? "rgb(161, 98, 7)"
-                                  : getMemberContract(member.userId?._id)
-                                    ?.status === "suspended"
-                                    ? "rgb(185, 28, 28)"
-                                    : getMemberContract(member.userId?._id)
-                                      ?.status === "terminated"
-                                      ? "rgb(107, 114, 128)"
-                                      : "rgb(107, 114, 128)",
+                              ? "rgb(161, 98, 7)"
+                              : getMemberContract(member.userId?._id)
+                                  ?.status === "suspended"
+                              ? "rgb(185, 28, 28)"
+                              : getMemberContract(member.userId?._id)
+                                  ?.status === "terminated"
+                              ? "rgb(107, 114, 128)"
+                              : "rgb(107, 114, 128)",
                           borderColor:
                             getMemberContract(member.userId?._id)?.status ===
-                              "active"
+                            "active"
                               ? "rgb(187, 247, 208)"
                               : getMemberContract(member.userId?._id)
-                                ?.status === "draft"
-                                ? "rgb(186, 230, 253)"
-                                : getMemberContract(member.userId?._id)
+                                  ?.status === "draft"
+                              ? "rgb(186, 230, 253)"
+                              : getMemberContract(member.userId?._id)
                                   ?.status === "pending_signature"
-                                  ? "rgb(254, 240, 138)"
-                                  : getMemberContract(member.userId?._id)
-                                    ?.status === "suspended"
-                                    ? "rgb(254, 202, 202)"
-                                    : getMemberContract(member.userId?._id)
-                                      ?.status === "terminated"
-                                      ? "rgb(229, 231, 235)"
-                                      : "rgb(229, 231, 235)",
+                              ? "rgb(254, 240, 138)"
+                              : getMemberContract(member.userId?._id)
+                                  ?.status === "suspended"
+                              ? "rgb(254, 202, 202)"
+                              : getMemberContract(member.userId?._id)
+                                  ?.status === "terminated"
+                              ? "rgb(229, 231, 235)"
+                              : "rgb(229, 231, 235)",
                         }}
                         onClick={() =>
                           handleEditContract(
@@ -467,14 +495,18 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         teamMemberName={
           teamMembers.find((member) => member.userId?._id === contractMemberId)
             ?.userId?.firstName +
-          " " +
-          teamMembers.find(
-            (member) => member.userId?._id === contractMemberId
-          )?.userId?.lastName || ""
+            " " +
+            teamMembers.find(
+              (member) => member.userId?._id === contractMemberId
+            )?.userId?.lastName || ""
         }
-        teamMemberEmail={teamMembers.find((member) => member.userId?._id === contractMemberId)?.userId?.email || ""}
+        teamMemberEmail={
+          teamMembers.find((member) => member.userId?._id === contractMemberId)
+            ?.userId?.email || ""
+        }
         internalCategories={projectData?.budgetId?.internalCategories || []}
         isSubmitting={isCreatingContract}
+        templates={templates}
       />
       {selectedContract && (
         <EditContractDialog

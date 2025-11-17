@@ -31,8 +31,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { Spinner } from "../ui/spinner";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatDateForInput } from "@/lib/date-utils";
+import { TemplateEditorDialog } from "./template-editor-dialog";
+import { Eye } from "lucide-react";
 
 const formSchema = z.object({
   description: z.string().min(5, {
@@ -54,6 +56,7 @@ const formSchema = z.object({
     message: "Please select a status.",
   }),
   templateId: z.string().optional(),
+  editedTemplateContent: z.string().optional(),
 });
 
 export type ContractFormValues = z.infer<typeof formSchema>;
@@ -67,7 +70,14 @@ interface CreateContractDialogProps {
   teamMemberEmail: string;
   internalCategories: any[];
   isSubmitting: boolean;
-  templates?: Array<{ _id: string; name: string; version?: string }>; // optional list of templates
+  templates?: Array<{
+    _id: string;
+    name: string;
+    version?: string;
+    contentType: string;
+    content: string;
+    variables?: string[];
+  }>; // optional list of templates
 }
 
 export function CreateContractDialog({
@@ -81,31 +91,53 @@ export function CreateContractDialog({
   isSubmitting,
   templates = [],
 }: CreateContractDialogProps) {
-
-
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    (typeof templates)[0] | null
+  >(null);
 
   // Find user in internal budget (code 2237)
-  const salaryCategory = internalCategories?.find(cat => cat.name === '2237');
-  const userBudgetItem = salaryCategory?.items?.find(
-    (item: any) => item.name.includes(teamMemberEmail)
+  const salaryCategory = internalCategories?.find((cat) => cat.name === "2237");
+  const userBudgetItem = salaryCategory?.items?.find((item: any) =>
+    item.name.includes(teamMemberEmail)
   );
 
+  // Extract budget details if user is found - memoize to prevent recalculation
+  const budgetStartDate = useMemo(
+    () => userBudgetItem?.startDate || new Date().toISOString().split("T")[0],
+    [userBudgetItem?.startDate]
+  );
 
+  const budgetEndDate = useMemo(
+    () =>
+      userBudgetItem?.endDate ||
+      new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+        .toISOString()
+        .split("T")[0],
+    [userBudgetItem?.endDate]
+  );
 
-  // Extract budget details if user is found
-  const budgetStartDate = userBudgetItem?.startDate || new Date().toISOString().split('T')[0];
-  const budgetEndDate = userBudgetItem?.endDate || new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
+  const firstTemplateId = templates?.[0]?._id;
 
   // Create form with initial values
-  const defaultValues = {
-    description: `Team Member Contract for ${projectName}`,
-    contractValue: userBudgetItem?.estimatedAmount || 0,
-    currency: "KES",
-    startDate: budgetStartDate,
-    endDate: budgetEndDate,
-    status: "draft",
-    templateId: templates?.[0]?._id || undefined,
-  };
+  const defaultValues = useMemo(
+    () => ({
+      description: `Team Member Contract for ${projectName}`,
+      contractValue: userBudgetItem?.estimatedAmount || 0,
+      currency: "KES",
+      startDate: formatDateForInput(budgetStartDate),
+      endDate: formatDateForInput(budgetEndDate),
+      status: "draft",
+      templateId: firstTemplateId || undefined,
+    }),
+    [
+      projectName,
+      userBudgetItem?.estimatedAmount,
+      budgetStartDate,
+      budgetEndDate,
+      firstTemplateId,
+    ]
+  );
 
   const form = useForm<ContractFormValues>({
     resolver: zodResolver(formSchema),
@@ -114,37 +146,59 @@ export function CreateContractDialog({
 
   // Update form values when team member or budget changes
   useEffect(() => {
-    const newValues = {
-      description: `Team Member Contract for ${projectName}`,
-      contractValue: userBudgetItem?.estimatedAmount || 0,
-      currency: "KES",
-      startDate: formatDateForInput(budgetStartDate),
-      endDate: formatDateForInput(budgetEndDate),
-      status: form.getValues("status"), // Preserve current status
-      templateId: form.getValues("templateId") || templates?.[0]?._id
-    };
-    
-    form.reset(newValues);
-  }, [teamMemberEmail, projectName, userBudgetItem, budgetStartDate, budgetEndDate, templates]);
+    form.reset(defaultValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultValues]);
 
   const handleSubmit = async (values: ContractFormValues) => {
     await onSubmit(values);
+  };
+
+  const handleViewTemplate = () => {
+    const templateId = form.getValues("templateId");
+    if (templateId) {
+      const template = templates.find((t) => t._id === templateId);
+      if (template) {
+        setSelectedTemplate(template);
+        setTemplateEditorOpen(true);
+      }
+    }
+  };
+
+  const handleSaveEditedTemplate = (editedContent: string) => {
+    form.setValue("editedTemplateContent", editedContent);
+    setTemplateEditorOpen(false);
+  };
+
+  // Prepare contract data for template population
+  const contractDataForTemplate = {
+    projectName,
+    teamMemberName,
+    teamMemberEmail,
+    contractValue: form.watch("contractValue") || 0,
+    currency: form.watch("currency") || "KES",
+    startDate: form.watch("startDate") || "",
+    endDate: form.watch("endDate") || "",
+    description: form.watch("description") || "",
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{userBudgetItem ? 'Create New Contract' : 'Cannot Create Contract'}</DialogTitle>
+          <DialogTitle>
+            {userBudgetItem ? "Create New Contract" : "Cannot Create Contract"}
+          </DialogTitle>
           <DialogDescription>
-            {userBudgetItem ? 
+            {userBudgetItem ? (
               `Create a contract for team member ${teamMemberName} on project ${projectName}.`
-             : 
+            ) : (
               <span className="text-destructive">
-                Cannot create contract - {teamMemberName} is not allocated in the internal budget (code 2237).
-                Please add them to the budget first.
+                Cannot create contract - {teamMemberName} is not allocated in
+                the internal budget (code 2237). Please add them to the budget
+                first.
               </span>
-            }
+            )}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -177,7 +231,12 @@ export function CreateContractDialog({
                   <FormItem>
                     <FormLabel>Contract Value</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="0" {...field} disabled/>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        {...field}
+                        disabled
+                      />
                     </FormControl>
                     <FormDescription>
                       Fixed as per budget allocation
@@ -252,7 +311,6 @@ export function CreateContractDialog({
                   </FormItem>
                 )}
               />
-              
             </div>
             {templates && templates.length > 0 && (
               <FormField
@@ -261,22 +319,39 @@ export function CreateContractDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Contract Template</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a template" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {templates.map((t) => (
-                          <SelectItem key={t._id} value={t._id}>
-                            {t.name}{t.version ? ` (v${t.version})` : ''}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-2">
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Select a template" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {templates.map((t) => (
+                            <SelectItem key={t._id} value={t._id}>
+                              {t.name}
+                              {t.version ? ` (v${t.version})` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleViewTemplate}
+                        disabled={!field.value}
+                        title="View and edit template"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <FormDescription>
                       The selected template will be embedded in the contract.
+                      Click the eye icon to preview and edit.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -321,11 +396,13 @@ export function CreateContractDialog({
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isSubmitting || !userBudgetItem}
-                className={!userBudgetItem ? 'cursor-not-allowed opacity-50' : ''}>
-
+                className={
+                  !userBudgetItem ? "cursor-not-allowed opacity-50" : ""
+                }
+              >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
                     <Spinner />
@@ -339,6 +416,14 @@ export function CreateContractDialog({
           </form>
         </Form>
       </DialogContent>
+
+      <TemplateEditorDialog
+        open={templateEditorOpen}
+        onOpenChange={setTemplateEditorOpen}
+        template={selectedTemplate}
+        onSave={handleSaveEditedTemplate}
+        contractData={contractDataForTemplate}
+      />
     </Dialog>
   );
 }
