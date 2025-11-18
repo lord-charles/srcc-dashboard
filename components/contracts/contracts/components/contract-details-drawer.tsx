@@ -2,14 +2,37 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Contract, ContractStatus, Amendment, ApprovalEntry } from "@/types/contract";
+import {
+  Contract,
+  ContractStatus,
+  Amendment,
+  ApprovalEntry,
+} from "@/types/contract";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { approveContract, rejectContract } from "@/services/contracts.service";
-import { AlertCircle, FileText, Calendar, DollarSign, User, CheckCircle2, XCircle, Clock, FileSignature, History, Info, Receipt, ClipboardList, FileEdit, Loader2 } from 'lucide-react';
+import {
+  AlertCircle,
+  FileText,
+  Calendar,
+  DollarSign,
+  User,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  FileSignature,
+  History,
+  Info,
+  Receipt,
+  ClipboardList,
+  FileEdit,
+  Loader2,
+  Download,
+  FileCheck,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Drawer,
@@ -22,7 +45,6 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
@@ -62,9 +84,10 @@ const getStatusColor = (status: ContractStatus) => {
 };
 
 const formatStatus = (status: ContractStatus) => {
-  return status.split("_").map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(" ");
+  return status
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 const formatDate = (dateString: string | undefined): string => {
@@ -90,10 +113,12 @@ export function ContractDetailsDrawer({
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const { toast } = useToast();
-
+  console.log("contract", contract);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
-  const onOpenChange = isControlled ? controlledOnOpenChange : setUncontrolledOpen;
+  const onOpenChange = isControlled
+    ? controlledOnOpenChange
+    : setUncontrolledOpen;
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange?.(isOpen);
@@ -135,7 +160,6 @@ export function ContractDetailsDrawer({
     } finally {
       setIsApproving(false);
       window.location.reload();
-
     }
   };
 
@@ -171,14 +195,197 @@ export function ContractDetailsDrawer({
   };
 
   // Determine which tabs to show
-  const hasApprovalFlow = contract.approvalFlow && (
-    (contract.approvalFlow.financeApprovals && contract.approvalFlow.financeApprovals.length > 0) ||
-    (contract.approvalFlow.mdApprovals && contract.approvalFlow.mdApprovals.length > 0) ||
-    contract.finalApproval ||
-    contract.rejectionDetails
-  );
-  
+  const hasApprovalFlow =
+    contract.approvalFlow &&
+    ((contract.approvalFlow.financeApprovals &&
+      contract.approvalFlow.financeApprovals.length > 0) ||
+      (contract.approvalFlow.mdApprovals &&
+        contract.approvalFlow.mdApprovals.length > 0) ||
+      contract.finalApproval ||
+      contract.rejectionDetails);
+
   const hasAmendments = contract.amendments && contract.amendments.length > 0;
+  const hasContractDetails =
+    contract.templateSnapshot &&
+    contract.templateSnapshot.content &&
+    contract.templateSnapshot.content.trim().length > 0;
+  const handleDownloadPDF = async () => {
+    if (!hasContractDetails || !contract.templateSnapshot?.content) return;
+
+    try {
+      // Create a printable HTML document
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups to download the PDF",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Contract ${contract.contractNumber}</title>
+            <style>
+              @page {
+                size: A4;
+                margin: 2.5cm 2cm 2cm 2cm;
+              }
+              body {
+                font-family: 'Times New Roman', Times, serif;
+                line-height: 1.6;
+                color: #000;
+                font-size: 12pt;
+                margin: 0;
+                padding: 0;
+              }
+              .page-container {
+                position: relative;
+                min-height: 100vh;
+                padding-bottom: 180px;
+              }
+              .contract-header {
+                text-align: right;
+                margin-bottom: 30px;
+                padding-bottom: 15px;
+                border-bottom: 2px solid #003366;
+              }
+              .contract-ref {
+                font-weight: bold;
+                font-size: 11pt;
+                color: #003366;
+              }
+              .contract-content {
+                white-space: pre-line;
+                text-align: justify;
+                margin-bottom: 60px;
+              }
+              .signature-section {
+                margin-top: 60px;
+                page-break-inside: avoid;
+              }
+              .signature-block {
+                margin-top: 40px;
+              }
+              .signature-label {
+                font-weight: bold;
+                margin-bottom: 5px;
+              }
+              .signature-line {
+                border-bottom: 1px solid #000;
+                width: 300px;
+                height: 40px;
+                margin-bottom: 5px;
+              }
+              .footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                top:10;
+                padding: 15px 30px;
+                font-size: 9pt;
+                line-height: 1.4;
+              }
+              .footer-content {
+                max-width: 800px;
+                margin: 0 auto;
+              }
+              .footer-title {
+                font-weight: bold;
+                font-size: 10pt;
+                margin-bottom: 8px;
+                letter-spacing: 0.5px;
+              }
+              .footer-details {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+              }
+              .footer-item {
+                flex: 1;
+                min-width: 200px;
+              }
+              .footer-label {
+                font-weight: bold;
+                display: inline;
+              }
+              @media print {
+                body {
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                .footer {
+                  position: fixed;
+                  bottom: 0;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="page-container">
+              <div class="contract-header">
+                <div class="contract-ref">Contract Ref. No: ${
+                  contract.contractNumber
+                }</div>
+                <div style="font-size: 10pt; color: #666; margin-top: 5px;">
+                  Date: ${formatDate(contract.createdAt || contract.startDate)}
+                </div>
+              </div>
+              
+              <div class="contract-content">
+                ${contract.templateSnapshot.content}
+              </div>
+
+              <div class="signature-section">
+                <div style="margin-bottom: 30px;">
+                  <strong>I accept the offer:</strong>
+                </div>
+
+                <div class="signature-block">
+                  <div class="signature-label">Signature of Recipient:</div>
+                  <div class="signature-line"></div>
+                </div>
+
+                <div class="signature-block">
+                  <div class="signature-label">Date of Signing:</div>
+                  <div class="signature-line"></div>
+                </div>
+              </div>
+            </div>
+
+           
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+
+      // Wait for content to load then trigger print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      };
+
+      toast({
+        title: "PDF Ready",
+        description: "Print dialog opened. Save as PDF to download.",
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to generate PDF",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
@@ -191,9 +398,12 @@ export function ContractDetailsDrawer({
                 <FileText className="mr-3 h-6 w-6 text-primary" />
                 Contract Details
               </DrawerTitle>
-              <Badge 
-                variant="outline" 
-                className={cn("border px-3 py-1", getStatusColor(contract.status))}
+              <Badge
+                variant="outline"
+                className={cn(
+                  "border px-3 py-1",
+                  getStatusColor(contract.status)
+                )}
               >
                 {formatStatus(contract.status)}
               </Badge>
@@ -204,38 +414,45 @@ export function ContractDetailsDrawer({
           </DrawerHeader>
 
           <div className="flex-1 overflow-hidden">
-            <Tabs 
-              defaultValue="overview" 
-              value={activeTab} 
+            <Tabs
+              defaultValue="overview"
+              value={activeTab}
               onValueChange={setActiveTab}
               className="h-full flex flex-col"
             >
               <div className="px-6">
                 <TabsList className="h-14 w-full justify-start gap-2 bg-transparent">
-                  <TabsTrigger 
-                    value="overview" 
+                  <TabsTrigger
+                    value="overview"
                     className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                   >
                     <Info className="h-4 w-4 mr-2" />
                     Overview
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="financial" 
+                  <TabsTrigger
+                    value="document"
+                    className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
+                  >
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    Contract Document
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="financial"
                     className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                   >
                     <Receipt className="h-4 w-4 mr-2" />
                     Financial
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="contractor" 
+                  <TabsTrigger
+                    value="contractor"
                     className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                   >
                     <User className="h-4 w-4 mr-2" />
                     Consultant
                   </TabsTrigger>
                   {isApprovalPending && (
-                    <TabsTrigger 
-                      value="approval" 
+                    <TabsTrigger
+                      value="approval"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <ClipboardList className="h-4 w-4 mr-2" />
@@ -243,8 +460,8 @@ export function ContractDetailsDrawer({
                     </TabsTrigger>
                   )}
                   {hasApprovalFlow && (
-                    <TabsTrigger 
-                      value="history" 
+                    <TabsTrigger
+                      value="history"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <History className="h-4 w-4 mr-2" />
@@ -252,8 +469,8 @@ export function ContractDetailsDrawer({
                     </TabsTrigger>
                   )}
                   {hasAmendments && (
-                    <TabsTrigger 
-                      value="amendments" 
+                    <TabsTrigger
+                      value="amendments"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <FileEdit className="h-4 w-4 mr-2" />
@@ -271,7 +488,9 @@ export function ContractDetailsDrawer({
                       <Card className="overflow-hidden border shadow-sm">
                         <div className="bg-primary/5 px-6 py-4 flex items-center">
                           <FileSignature className="h-5 w-5 mr-2 text-primary" />
-                          <h3 className="text-lg font-semibold">Contract Information</h3>
+                          <h3 className="text-lg font-semibold">
+                            Contract Information
+                          </h3>
                         </div>
                         <CardContent className="p-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -279,10 +498,14 @@ export function ContractDetailsDrawer({
                               <span className="text-sm font-medium text-muted-foreground">
                                 Contract Number
                               </span>
-                              <p className="font-semibold text-lg">{contract.contractNumber}</p>
+                              <p className="font-semibold text-lg">
+                                {contract.contractNumber}
+                              </p>
                             </div>
                             <div className="space-y-1">
-                              <span className="text-sm font-medium text-muted-foreground">Project</span>
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Project
+                              </span>
                               <p className="font-semibold text-lg">
                                 {contract.projectId?.name || "N/A"}
                               </p>
@@ -291,18 +514,32 @@ export function ContractDetailsDrawer({
                               <span className="text-sm font-medium text-muted-foreground">
                                 Description
                               </span>
-                              <p className="font-medium">{contract.description}</p>
+                              <p className="font-medium">
+                                {contract.description}
+                              </p>
                             </div>
-                            
+
                             {contract.currentLevelDeadline && (
                               <div className="space-y-1">
                                 <span className="text-sm font-medium text-muted-foreground flex items-center">
                                   <Clock className="h-4 w-4 mr-1" />
                                   Approval Deadline
                                 </span>
-                                <p className={cn("font-medium", contract.currentLevelDeadline && new Date(contract.currentLevelDeadline) < new Date() ? "text-red-600 dark:text-red-400" : "")}>
+                                <p
+                                  className={cn(
+                                    "font-medium",
+                                    contract.currentLevelDeadline &&
+                                      new Date(contract.currentLevelDeadline) <
+                                        new Date()
+                                      ? "text-red-600 dark:text-red-400"
+                                      : ""
+                                  )}
+                                >
                                   {formatDate(contract.currentLevelDeadline)}
-                                  {contract.currentLevelDeadline && new Date(contract.currentLevelDeadline) < new Date() && " (Overdue)"}
+                                  {contract.currentLevelDeadline &&
+                                    new Date(contract.currentLevelDeadline) <
+                                      new Date() &&
+                                    " (Overdue)"}
                                 </p>
                               </div>
                             )}
@@ -314,7 +551,9 @@ export function ContractDetailsDrawer({
                         <Card className="overflow-hidden border shadow-sm">
                           <div className="bg-emerald-50 dark:bg-emerald-950/40 px-6 py-4 flex items-center">
                             <DollarSign className="h-5 w-5 mr-2 text-emerald-600 dark:text-emerald-400" />
-                            <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">Financial Summary</h3>
+                            <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                              Financial Summary
+                            </h3>
                           </div>
                           <CardContent className="p-6">
                             <div className="space-y-4">
@@ -323,7 +562,10 @@ export function ContractDetailsDrawer({
                                   Contract Value
                                 </span>
                                 <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
-                                  {formatCurrency(contract.contractValue, contract.currency)}
+                                  {formatCurrency(
+                                    contract.contractValue,
+                                    contract.currency
+                                  )}
                                 </p>
                               </div>
                               <div className="space-y-1">
@@ -331,7 +573,8 @@ export function ContractDetailsDrawer({
                                   Duration
                                 </span>
                                 <p className="font-medium">
-                                  {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                                  {formatDate(contract.startDate)} -{" "}
+                                  {formatDate(contract.endDate)}
                                 </p>
                               </div>
                             </div>
@@ -348,14 +591,18 @@ export function ContractDetailsDrawer({
                           <CardContent className="p-6">
                             <div className="space-y-4">
                               <div className="space-y-1">
-                                <span className="text-sm font-medium text-muted-foreground">Name</span>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  Name
+                                </span>
                                 <p className="font-medium">
                                   {contract.contractedUserId?.firstName}{" "}
                                   {contract.contractedUserId?.lastName}
                                 </p>
                               </div>
                               <div className="space-y-1">
-                                <span className="text-sm font-medium text-muted-foreground">Email</span>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                  Email
+                                </span>
                                 <p className="font-medium">
                                   {contract.contractedUserId?.email}
                                 </p>
@@ -366,12 +613,115 @@ export function ContractDetailsDrawer({
                       </div>
                     </TabsContent>
 
+                    {/* Contract Document Tab */}
+                    <TabsContent value="document" className="mt-0 space-y-6">
+                      <Card className="overflow-hidden border shadow-sm">
+                        <div className="bg-indigo-50 dark:bg-indigo-950/40 px-6 py-4 flex items-center justify-between">
+                          <div className="flex items-center">
+                            <FileCheck className="h-5 w-5 mr-2 text-indigo-600 dark:text-indigo-400" />
+                            <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-400">
+                              Contract Document
+                            </h3>
+                          </div>
+                          {hasContractDetails && (
+                            <Button
+                              onClick={handleDownloadPDF}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                            >
+                              <Download className="h-4 w-4" />
+                              Download PDF
+                            </Button>
+                          )}
+                        </div>
+                        <CardContent className="p-6">
+                          {hasContractDetails ? (
+                            <div className="bg-white dark:bg-gray-950 border rounded-lg p-8 shadow-inner">
+                              <div className="max-w-3xl mx-auto">
+                                {/* Contract Header */}
+                                <div className="mb-6 pb-4 border-b">
+                                  <div className="text-sm font-medium text-muted-foreground mb-2">
+                                    Contract Reference Number
+                                  </div>
+                                  <div className="text-lg font-semibold">
+                                    {contract.contractNumber}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground mt-2">
+                                    Date:{" "}
+                                    {formatDate(
+                                      contract.createdAt || contract.startDate
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Contract Content */}
+                                <div
+                                  className="prose prose-sm dark:prose-invert max-w-none"
+                                  style={{
+                                    whiteSpace: "pre-line",
+                                    lineHeight: "1.8",
+                                    fontFamily: "Georgia, serif",
+                                  }}
+                                >
+                                  {contract.templateSnapshot?.contentType ===
+                                  "html" ? (
+                                    <div
+                                      dangerouslySetInnerHTML={{
+                                        __html:
+                                          contract.templateSnapshot?.content ||
+                                          "",
+                                      }}
+                                    />
+                                  ) : (
+                                    <div>
+                                      {contract.templateSnapshot?.content ||
+                                        "No content available"}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Metadata */}
+                                {contract.templateSnapshot?.version && (
+                                  <div className="mt-8 pt-4 border-t text-xs text-muted-foreground">
+                                    <div>
+                                      Version:{" "}
+                                      {contract.templateSnapshot.version}
+                                    </div>
+                                    {contract.templateSnapshot.contentType && (
+                                      <div>
+                                        Format:{" "}
+                                        {contract.templateSnapshot.contentType}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-12">
+                              <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                              <p className="text-muted-foreground text-lg font-medium mb-2">
+                                No Contract Document Available
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                The contract document has not been generated
+                                yet.
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
                     {/* Financial Tab */}
                     <TabsContent value="financial" className="mt-0 space-y-6">
                       <Card className="overflow-hidden border shadow-sm">
                         <div className="bg-emerald-50 dark:bg-emerald-950/40 px-6 py-4 flex items-center">
                           <DollarSign className="h-5 w-5 mr-2 text-emerald-600 dark:text-emerald-400" />
-                          <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">Financial Details</h3>
+                          <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                            Financial Details
+                          </h3>
                         </div>
                         <CardContent className="p-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -380,14 +730,19 @@ export function ContractDetailsDrawer({
                                 Contract Value
                               </span>
                               <p className="font-semibold text-xl text-emerald-600 dark:text-emerald-400">
-                                {formatCurrency(contract.contractValue, contract.currency)}
+                                {formatCurrency(
+                                  contract.contractValue,
+                                  contract.currency
+                                )}
                               </p>
                             </div>
                             <div className="space-y-1">
                               <span className="text-sm font-medium text-muted-foreground">
                                 Currency
                               </span>
-                              <p className="font-medium text-lg">{contract.currency}</p>
+                              <p className="font-medium text-lg">
+                                {contract.currency}
+                              </p>
                             </div>
                             <div className="space-y-1">
                               <span className="text-sm font-medium text-muted-foreground flex items-center">
@@ -415,11 +770,14 @@ export function ContractDetailsDrawer({
                       <Card className="overflow-hidden border shadow-sm">
                         <div className="bg-emerald-50/50 dark:bg-emerald-950/20 px-6 py-4 flex items-center">
                           <Receipt className="h-5 w-5 mr-2 text-emerald-600 dark:text-emerald-400" />
-                          <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">Payment Schedule</h3>
+                          <h3 className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                            Payment Schedule
+                          </h3>
                         </div>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground py-6">
-                            Payment schedule information will appear here when available.
+                            Payment schedule information will appear here when
+                            available.
                           </div>
                         </CardContent>
                       </Card>
@@ -437,20 +795,26 @@ export function ContractDetailsDrawer({
                         <CardContent className="p-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
-                              <span className="text-sm font-medium text-muted-foreground">Name</span>
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Name
+                              </span>
                               <p className="font-semibold text-lg">
                                 {contract.contractedUserId?.firstName}{" "}
                                 {contract.contractedUserId?.lastName}
                               </p>
                             </div>
                             <div className="space-y-1">
-                              <span className="text-sm font-medium text-muted-foreground">Email</span>
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Email
+                              </span>
                               <p className="font-medium">
                                 {contract.contractedUserId?.email}
                               </p>
                             </div>
                             <div className="space-y-1">
-                              <span className="text-sm font-medium text-muted-foreground">Phone</span>
+                              <span className="text-sm font-medium text-muted-foreground">
+                                Phone
+                              </span>
                               <p className="font-medium">
                                 {contract.contractedUserId?.phoneNumber}
                               </p>
@@ -469,34 +833,42 @@ export function ContractDetailsDrawer({
                         </div>
                         <CardContent className="p-6">
                           <div className="text-center text-muted-foreground py-6">
-                            Consultant documents will appear here when available.
+                            Consultant documents will appear here when
+                            available.
                           </div>
                         </CardContent>
                       </Card>
                     </TabsContent>
 
-                    {/* Approval Tab */}  
+                    {/* Approval Tab */}
                     {isApprovalPending && (
                       <TabsContent value="approval" className="mt-0 space-y-6">
                         <Card className="overflow-hidden border shadow-sm">
                           <div className="bg-purple-50 dark:bg-purple-950/40 px-6 py-4 flex items-center">
                             <ClipboardList className="h-5 w-5 mr-2 text-purple-600 dark:text-purple-400" />
-                            <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-400">Contract Approval</h3>
+                            <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-400">
+                              Contract Approval
+                            </h3>
                           </div>
                           <CardContent className="p-6">
-                            {contract.currentLevelDeadline && new Date(contract.currentLevelDeadline) < new Date() && (
-                              <Alert className="mb-6" variant="destructive">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertDescription>
-                                  This approval is past its deadline of {formatDate(contract.currentLevelDeadline)}
-                                </AlertDescription>
-                              </Alert>
-                            )}
+                            {contract.currentLevelDeadline &&
+                              new Date(contract.currentLevelDeadline) <
+                                new Date() && (
+                                <Alert className="mb-6" variant="destructive">
+                                  <AlertCircle className="h-4 w-4" />
+                                  <AlertDescription>
+                                    This approval is past its deadline of{" "}
+                                    {formatDate(contract.currentLevelDeadline)}
+                                  </AlertDescription>
+                                </Alert>
+                              )}
 
                             <div className="space-y-6">
                               <div>
                                 <label className="text-base font-medium block mb-2">
-                                  {currentLevel === "finance" ? "Finance Approval Comments" : "MD Approval Comments"}
+                                  {currentLevel === "finance"
+                                    ? "Finance Approval Comments"
+                                    : "MD Approval Comments"}
                                 </label>
                                 <Textarea
                                   placeholder="Enter your comments..."
@@ -511,11 +883,15 @@ export function ContractDetailsDrawer({
                                   className="flex-1"
                                   size="lg"
                                   variant="default"
-                                  disabled={isApproving || isRejecting || !comments.trim()}
+                                  disabled={
+                                    isApproving ||
+                                    isRejecting ||
+                                    !comments.trim()
+                                  }
                                 >
                                   {isApproving ? (
                                     <div className="flex items-center space-x-2">
-                                      <Spinner  />
+                                      <Spinner />
                                       <span>Approving...</span>
                                     </div>
                                   ) : (
@@ -530,11 +906,15 @@ export function ContractDetailsDrawer({
                                   className="flex-1"
                                   size="lg"
                                   variant="destructive"
-                                  disabled={isApproving || isRejecting || !comments.trim()}
+                                  disabled={
+                                    isApproving ||
+                                    isRejecting ||
+                                    !comments.trim()
+                                  }
                                 >
                                   {isRejecting ? (
-                                   <div className="flex items-center space-x-2">
-                                      <Spinner  />
+                                    <div className="flex items-center space-x-2">
+                                      <Spinner />
                                       <span>Rejecting...</span>
                                     </div>
                                   ) : (
@@ -557,57 +937,73 @@ export function ContractDetailsDrawer({
                         <Card className="overflow-hidden border shadow-sm">
                           <div className="bg-teal-50 dark:bg-teal-950/40 px-6 py-4 flex items-center">
                             <History className="h-5 w-5 mr-2 text-teal-600 dark:text-teal-400" />
-                            <h3 className="text-lg font-semibold text-teal-700 dark:text-teal-400">Approval History</h3>
+                            <h3 className="text-lg font-semibold text-teal-700 dark:text-teal-400">
+                              Approval History
+                            </h3>
                           </div>
                           <CardContent className="p-6">
                             <div className="space-y-6">
-                              {contract?.approvalFlow?.financeApprovals && 
-                              contract.approvalFlow.financeApprovals.length > 0 && (
-                                <div>
-                                  <h4 className="font-medium mb-3 flex items-center">
-                                    <DollarSign className="h-4 w-4 mr-1" />
-                                    Finance Approvals
-                                  </h4>
-                                  <div className="space-y-3">
-                                    {contract.approvalFlow.financeApprovals.map((approval: ApprovalEntry, index) => (
-                                      <div key={index} className="bg-muted/40 rounded-lg p-3">
-                                        <div className="text-sm font-medium text-muted-foreground mb-2">
-                                          Approved on {formatDate(approval.approvedAt)}
-                                        </div>
-                                        {approval.comments && (
-                                          <div className="bg-background p-3 rounded-md border text-sm">
-                                            {approval.comments}
+                              {contract?.approvalFlow?.financeApprovals &&
+                                contract.approvalFlow.financeApprovals.length >
+                                  0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-3 flex items-center">
+                                      <DollarSign className="h-4 w-4 mr-1" />
+                                      Finance Approvals
+                                    </h4>
+                                    <div className="space-y-3">
+                                      {contract.approvalFlow.financeApprovals.map(
+                                        (approval: ApprovalEntry, index) => (
+                                          <div
+                                            key={index}
+                                            className="bg-muted/40 rounded-lg p-3"
+                                          >
+                                            <div className="text-sm font-medium text-muted-foreground mb-2">
+                                              Approved on{" "}
+                                              {formatDate(approval.approvedAt)}
+                                            </div>
+                                            {approval.comments && (
+                                              <div className="bg-background p-3 rounded-md border text-sm">
+                                                {approval.comments}
+                                              </div>
+                                            )}
                                           </div>
-                                        )}
-                                      </div>
-                                    ))}
+                                        )
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                              
-                            {contract?.approvalFlow?.mdApprovals && 
-                              contract.approvalFlow.mdApprovals.length > 0 && (
-                                <div>
-                                  <h4 className="font-medium mb-3 flex items-center">
-                                    <User className="h-4 w-4 mr-1" />
-                                    MD Approvals
-                                  </h4>
-                                  <div className="space-y-3">
-                                    {contract.approvalFlow.mdApprovals.map((approval: ApprovalEntry, index) => (
-                                      <div key={index} className="bg-muted/40 rounded-lg p-3">
-                                        <div className="text-sm font-medium text-muted-foreground mb-2">
-                                          Approved on {formatDate(approval.approvedAt)}
-                                        </div>
-                                        {approval.comments && (
-                                          <div className="bg-background p-3 rounded-md border text-sm">
-                                            {approval.comments}
+                                )}
+
+                              {contract?.approvalFlow?.mdApprovals &&
+                                contract.approvalFlow.mdApprovals.length >
+                                  0 && (
+                                  <div>
+                                    <h4 className="font-medium mb-3 flex items-center">
+                                      <User className="h-4 w-4 mr-1" />
+                                      MD Approvals
+                                    </h4>
+                                    <div className="space-y-3">
+                                      {contract.approvalFlow.mdApprovals.map(
+                                        (approval: ApprovalEntry, index) => (
+                                          <div
+                                            key={index}
+                                            className="bg-muted/40 rounded-lg p-3"
+                                          >
+                                            <div className="text-sm font-medium text-muted-foreground mb-2">
+                                              Approved on{" "}
+                                              {formatDate(approval.approvedAt)}
+                                            </div>
+                                            {approval.comments && (
+                                              <div className="bg-background p-3 rounded-md border text-sm">
+                                                {approval.comments}
+                                              </div>
+                                            )}
                                           </div>
-                                        )}
-                                      </div>
-                                    ))}
+                                        )
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
                               {contract.finalApproval && (
                                 <div>
@@ -617,7 +1013,10 @@ export function ContractDetailsDrawer({
                                   </h4>
                                   <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg">
                                     <div className="text-sm font-medium">
-                                      Approved on {formatDate(contract.finalApproval.approvedAt)}
+                                      Approved on{" "}
+                                      {formatDate(
+                                        contract.finalApproval.approvedAt
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -631,7 +1030,10 @@ export function ContractDetailsDrawer({
                                   </h4>
                                   <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
                                     <div className="text-sm font-medium mb-2">
-                                      Rejected on {formatDate(contract.rejectionDetails.rejectedAt)}
+                                      Rejected on{" "}
+                                      {formatDate(
+                                        contract.rejectionDetails.rejectedAt
+                                      )}
                                     </div>
                                     <div className="text-sm font-medium mb-2">
                                       Level: {contract.rejectionDetails.level}
@@ -650,50 +1052,66 @@ export function ContractDetailsDrawer({
 
                     {/* Amendments Tab */}
                     {hasAmendments && (
-                      <TabsContent value="amendments" className="mt-0 space-y-6">
+                      <TabsContent
+                        value="amendments"
+                        className="mt-0 space-y-6"
+                      >
                         <Card className="overflow-hidden border shadow-sm">
                           <div className="bg-amber-50 dark:bg-amber-950/40 px-6 py-4 flex items-center">
                             <FileEdit className="h-5 w-5 mr-2 text-amber-600 dark:text-amber-400" />
-                            <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-400">Amendments</h3>
+                            <h3 className="text-lg font-semibold text-amber-700 dark:text-amber-400">
+                              Amendments
+                            </h3>
                           </div>
                           <CardContent className="p-6">
                             <div className="space-y-5">
-                              {contract?.amendments?.map((amendment: Amendment, index) => (
-                                <div
-                                  key={amendment._id || index}
-                                  className={cn(
-                                    "pb-5",
-                                    index !== (contract?.amendments?.length || 2) - 1 && "border-b"
-                                  )}
-                                >
-                                  <div className="flex items-center mb-3">
-                                    <div className="bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold mr-2">
-                                      {index + 1}
-                                    </div>
-                                    <h4 className="font-medium">Amendment {index + 1}</h4>
-                                  </div>
-                                  <p className="text-sm mt-1">
-                                    {amendment.description || "No description"}
-                                  </p>
-                                  <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                                    {amendment.date && (
-                                      <div className="flex items-center">
-                                        <Calendar className="h-3.5 w-3.5 mr-1" />
-                                        {formatDate(amendment.date)}
-                                      </div>
+                              {contract?.amendments?.map(
+                                (amendment: Amendment, index) => (
+                                  <div
+                                    key={amendment._id || index}
+                                    className={cn(
+                                      "pb-5",
+                                      index !==
+                                        (contract?.amendments?.length || 2) -
+                                          1 && "border-b"
                                     )}
-                                    {amendment.changedFields &&
-                                      amendment.changedFields.length > 0 && (
-                                        <div className="flex items-start">
-                                          <span className="mr-1">Changed:</span>
-                                          <span className="font-medium">
-                                            {amendment.changedFields.join(", ")}
-                                          </span>
+                                  >
+                                    <div className="flex items-center mb-3">
+                                      <div className="bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold mr-2">
+                                        {index + 1}
+                                      </div>
+                                      <h4 className="font-medium">
+                                        Amendment {index + 1}
+                                      </h4>
+                                    </div>
+                                    <p className="text-sm mt-1">
+                                      {amendment.description ||
+                                        "No description"}
+                                    </p>
+                                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                                      {amendment.date && (
+                                        <div className="flex items-center">
+                                          <Calendar className="h-3.5 w-3.5 mr-1" />
+                                          {formatDate(amendment.date)}
                                         </div>
                                       )}
+                                      {amendment.changedFields &&
+                                        amendment.changedFields.length > 0 && (
+                                          <div className="flex items-start">
+                                            <span className="mr-1">
+                                              Changed:
+                                            </span>
+                                            <span className="font-medium">
+                                              {amendment.changedFields.join(
+                                                ", "
+                                              )}
+                                            </span>
+                                          </div>
+                                        )}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                )
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -707,7 +1125,9 @@ export function ContractDetailsDrawer({
 
           <DrawerFooter className="flex-none border-t">
             <DrawerClose asChild>
-              <Button variant="outline" size="lg">Close</Button>
+              <Button variant="outline" size="lg">
+                Close
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </div>

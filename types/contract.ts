@@ -19,21 +19,21 @@ export interface PaymentSchedule {
   milestone: string;
   amount: number;
   dueDate: string;
-  paid: boolean; 
+  paid: boolean;
   paymentDate: string;
   _id: string;
 }
 
 export type ContractStatus =
-  | 'draft'
-  | 'pending_finance_approval'
-  | 'pending_md_approval'
-  | 'pending_signature'
-  | 'active'
-  | 'suspended'
-  | 'terminated'
-  | 'completed'
-  | 'rejected';
+  | "draft"
+  | "pending_finance_approval"
+  | "pending_md_approval"
+  | "pending_signature"
+  | "active"
+  | "suspended"
+  | "terminated"
+  | "completed"
+  | "rejected";
 
 export interface ApprovalEntry {
   approverId: string;
@@ -79,6 +79,21 @@ interface ProjectInfo {
   name: string;
   milestones: ProjectMilestone[];
 }
+export interface TemplateVariable {
+  name: string;
+  type: string;
+  required?: boolean;
+  defaultValue?: string | number | boolean | null;
+}
+
+export interface TemplateSnapshot {
+  _id: string;
+  name: string;
+  content: string; // raw HTML or text template
+  contentType: "html" | "text";
+  version: string;
+  variables: TemplateVariable[];
+}
 
 export interface Contract {
   _id: string;
@@ -100,6 +115,7 @@ export interface Contract {
   rejectionDetails?: RejectionDetails;
   createdAt: string;
   updatedAt: string;
+  templateSnapshot?: TemplateSnapshot;
 }
 
 export interface ContractStats {

@@ -93,6 +93,11 @@ export function TemplateEditorDialog({
         "{Name}": contractData.teamMemberName,
         "{{name}}": contractData.teamMemberName,
 
+        "{{Name of Staff}}": contractData.teamMemberName,
+        "{Name of Staff}": contractData.teamMemberName,
+        "{{staffName}}": contractData.teamMemberName,
+        "{staffName}": contractData.teamMemberName,
+
         // Email
         "{{teamMemberEmail}}": contractData.teamMemberEmail,
         "{{team_member_email}}": contractData.teamMemberEmail,
