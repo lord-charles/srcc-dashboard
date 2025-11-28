@@ -27,7 +27,6 @@ import {
 import { DataTablePagination } from "./components/data-table-pagination";
 import { DataTableToolbar } from "./components/data-table-toolbar";
 import { columns } from "./components/columns";
-import { Project } from "@/types/project";
 
 interface DataTableProps {
   projects: any

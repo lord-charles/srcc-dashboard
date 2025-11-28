@@ -34,6 +34,25 @@ export const columns: ColumnDef<Contract>[] = [
     },
   },
   {
+    accessorKey: "attachments",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Attachments" />
+    ),
+    cell: ({ row }) => {
+      const attachments = (row.original as Contract).attachments || [];
+      const count = attachments.length;
+      return (
+        <div className="flex flex-col">
+          <span className="font-medium">{count}</span>
+          <span className="text-xs text-muted-foreground">
+            {count === 1 ? "file" : "files"}
+          </span>
+        </div>
+      );
+    },
+    enableSorting: false,
+  },
+  {
     id: "combinedName",
     header: "Name",
     accessorFn: (row) => {

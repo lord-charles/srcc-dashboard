@@ -134,6 +134,9 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         ...(values.editedTemplateContent
           ? { editedTemplateContent: values.editedTemplateContent }
           : {}),
+        ...(values.attachments && values.attachments.length
+          ? { attachments: values.attachments }
+          : {}),
       };
 
       const result = await createContract(contractData);

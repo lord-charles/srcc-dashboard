@@ -234,6 +234,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
       <TabsContent value="documents">
         <DocumentsSection
+          projectId={projectData._id}
           projectProposalUrl={projectData.projectProposalUrl}
           signedContractUrl={projectData.signedContractUrl}
           executionMemoUrl={projectData.executionMemoUrl}

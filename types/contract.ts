@@ -116,6 +116,11 @@ export interface Contract {
   createdAt: string;
   updatedAt: string;
   templateSnapshot?: TemplateSnapshot;
+  attachments?: Array<{
+    name: string;
+    url: string;
+    type?: string;
+  }>;
 }
 
 export interface ContractStats {

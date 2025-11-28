@@ -712,6 +712,48 @@ export function ContractDetailsDrawer({
                           )}
                         </CardContent>
                       </Card>
+
+                      {contract.attachments && contract.attachments.length > 0 && (
+                        <Card className="overflow-hidden border shadow-sm">
+                          <div className="bg-slate-50 dark:bg-slate-900/40 px-6 py-4 flex items-center">
+                            <FileText className="h-5 w-5 mr-2 text-slate-600 dark:text-slate-300" />
+                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                              Attachments
+                            </h3>
+                          </div>
+                          <CardContent className="p-6">
+                            <div className="space-y-3">
+                              {contract.attachments.map((att, idx) => (
+                                <div key={idx} className="flex items-center justify-between border rounded-md p-3">
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <a
+                                      href={att.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="font-medium truncate hover:underline"
+                                      title={att.name}
+                                    >
+                                      {att.name || att.url}
+                                    </a>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <a href={att.url} target="_blank" rel="noreferrer">
+                                      <Button variant="outline" size="sm">View</Button>
+                                    </a>
+                                    <a href={att.url} download>
+                                      <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                                        <Download className="h-3 w-3" />
+                                        Download
+                                      </Button>
+                                    </a>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
                     </TabsContent>
 
                     {/* Financial Tab */}

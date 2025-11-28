@@ -1,16 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import {
   Form,
   FormControl,
@@ -35,6 +34,15 @@ import { useEffect, useMemo, useState } from "react";
 import { formatDateForInput } from "@/lib/date-utils";
 import { TemplateEditorDialog } from "./template-editor-dialog";
 import { Eye } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
+import { cloudinaryService } from "@/lib/cloudinary-service";
+import { ScrollArea } from "../ui/scroll-area";
+
+const attachmentSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  url: z.string().url({ message: "Valid URL required" }),
+  type: z.string().optional(),
+});
 
 const formSchema = z.object({
   description: z.string().min(5, {
@@ -57,6 +65,7 @@ const formSchema = z.object({
   }),
   templateId: z.string().optional(),
   editedTemplateContent: z.string().optional(),
+  attachments: z.array(attachmentSchema).optional(),
 });
 
 export type ContractFormValues = z.infer<typeof formSchema>;
@@ -144,6 +153,14 @@ export function CreateContractDialog({
     defaultValues,
   });
 
+  const { fields: attachmentFields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "attachments" as const,
+  });
+
+  // Track uploading state for each attachment row
+  const [attachmentUploading, setAttachmentUploading] = useState<Record<number, boolean>>({});
+
   // Update form values when team member or budget changes
   useEffect(() => {
     form.reset(defaultValues);
@@ -178,34 +195,35 @@ export function CreateContractDialog({
     contractValue: form.watch("contractValue") || 0,
     currency: form.watch("currency") || "KES",
     startDate: form.watch("startDate") || "",
-    endDate: form.watch("endDate") || "",
     description: form.watch("description") || "",
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="h-[calc(100vh-3rem)] mx-auto p-0 flex flex-col">
+        <DrawerHeader className="px-6 pt-6">
+          <DrawerTitle>
             {userBudgetItem ? "Create New Contract" : "Cannot Create Contract"}
-          </DialogTitle>
-          <DialogDescription>
-            {userBudgetItem ? (
-              `Create a contract for team member ${teamMemberName} on project ${projectName}.`
-            ) : (
-              <span className="text-destructive">
-                Cannot create contract - {teamMemberName} is not allocated in
-                the internal budget (code 2237). Please add them to the budget
-                first.
-              </span>
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
+          </DrawerTitle>
+          <DrawerDescription>
+          {userBudgetItem ? (
+            `Create a contract for team member ${teamMemberName} on project ${projectName}.`
+          ) : (
+            <span className="text-destructive">
+              Cannot create contract - {teamMemberName} is not allocated in
+              the internal budget (code 2237). Please add them to the budget
+              first.
+            </span>
+          )}
+          </DrawerDescription>
+        </DrawerHeader>
+        <ScrollArea className="flex-1">
+          <Form {...form}>
+            <form
+              id="create-contract-form"
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6 p-6"
+            >
             <FormField
               control={form.control}
               name="description"
@@ -387,35 +405,131 @@ export function CreateContractDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || !userBudgetItem}
-                className={
-                  !userBudgetItem ? "cursor-not-allowed opacity-50" : ""
-                }
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center space-x-2">
-                    <Spinner />
-                    <span>Creating...</span>
-                  </div>
-                ) : (
-                  "Create Contract"
+
+            {/* Attachments */}
+            <div className="space-y-2 border rounded-md p-3">
+              <div className="flex items-center justify-between">
+                <FormLabel>Attachments(optional-attach link or upload file)</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ name: "", url: "", type: "" })}
+                >
+                  Add
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {attachmentFields.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Add supporting document URLs (e.g., offer letters, IDs).
+                  </p>
                 )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
+                {attachmentFields.map((field, index) => (
+                  <div key={field.id} className="grid grid-cols-12 gap-2 items-start">
+                    <FormField
+                      control={form.control}
+                      name={`attachments.${index}.name` as const}
+                      render={({ field }) => (
+                        <FormItem className="col-span-4">
+                          <FormControl>
+                            <Input placeholder="Name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`attachments.${index}.url` as const}
+                      render={({ field }) => (
+                        <FormItem className="col-span-4">
+                          <FormControl>
+                            <Input placeholder="https://..." {...field} />
+                          </FormControl>
+                          {field.value ? (
+                            <p className="text-xs text-muted-foreground mt-1 break-all">Linked: {field.value}</p>
+                          ) : null}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="col-span-4 flex items-center">
+                      <div className="flex flex-col">
+                        <FileUpload
+                          onChange={async (files) => {
+                            if (!files?.length) return;
+                            setAttachmentUploading((prev) => ({ ...prev, [index]: true }));
+                            try {
+                              const url = await cloudinaryService.uploadFile(files[0]);
+                              form.setValue(`attachments.${index}.url` as const, url, { shouldValidate: true });
+                            } catch (e: any) {
+                              // no toast here; parent handles toasts
+                            } finally {
+                              setAttachmentUploading((prev) => ({ ...prev, [index]: false }));
+                            }
+                          }}
+                        />
+                        {attachmentUploading[index] && (
+                          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                            <Spinner />
+                            <span>Uploading...</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-span-1 flex items-center justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => remove(index)}
+                        title="Remove"
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+              {/* Spacer so footer doesn't cover content */}
+              <div className="h-24" />
+            </form>
+          </Form>
+        </ScrollArea>
+
+        {/* Sticky bottom action bar */}
+        <div className="border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 sticky bottom-0">
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="create-contract-form"
+              disabled={isSubmitting || !userBudgetItem}
+              className={!userBudgetItem ? "cursor-not-allowed opacity-50" : ""}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center space-x-2">
+                  <Spinner />
+                  <span>Creating...</span>
+                </div>
+              ) : (
+                "Create Contract"
+              )}
+            </Button>
+          </div>
+        </div>
+
+      </DrawerContent>
 
       <TemplateEditorDialog
         open={templateEditorOpen}
@@ -424,6 +538,6 @@ export function CreateContractDialog({
         onSave={handleSaveEditedTemplate}
         contractData={contractDataForTemplate}
       />
-    </Dialog>
+    </Drawer>
   );
 }

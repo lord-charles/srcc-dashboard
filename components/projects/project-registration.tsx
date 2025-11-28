@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Header } from "../header";
 import * as z from "zod";
 import { Textarea } from "@/components/ui/textarea";
@@ -95,8 +94,14 @@ export function NewProjectComponent() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log('Form Errors:', errors);
-  console.log('Current form values:', formData);
+
+  // Helper to format Date for HTML date input
+  const formatDateInput = (date?: Date): string => {
+    if (!date) return "";
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  };
+
 
   // Handle milestone management
   const addMilestone = () => {
@@ -167,14 +172,10 @@ export function NewProjectComponent() {
 
     setIsSubmitting(true);
     try {
-      console.log('handleSubmit function called with data:', formData);
-
-
-
-      if (!projectProposalUrl || !signedContractUrl || !executionMemoUrl || !signedBudgetUrl) {
+      if (!signedContractUrl || !executionMemoUrl || !signedBudgetUrl) {
         toast({
           title: "Missing Files",
-          description: "Please upload all required project documents.",
+          description: "Please upload all required project documents (Signed Contract, Execution Memo, and Signed Budget).",
           variant: "destructive",
         });
         return;
@@ -194,16 +195,15 @@ export function NewProjectComponent() {
       };
 
       const result = await createProject(projectData);
-      console.log('API Response:', result);
 
       toast({
         title: "Project Created",
         description: "Project has been created successfully.",
       });
 
-      // setTimeout(() => {
-      //   router.push("/projects");
-      // }, 2000);
+      setTimeout(() => {
+        router.push("/projects");
+      }, 2000);
     } catch (error) {
       console.error('Error in handleSubmit:', error);
       toast({
@@ -242,17 +242,6 @@ export function NewProjectComponent() {
           <Badge variant="outline" className="rounded-sm px-1 font-normal">
             New Project Registration
           </Badge>
-          <div className="items-center gap-2 md:ml-auto flex">
-            <Button
-              type="button"
-              size="sm"
-              className="font-bold bg-primary"
-              disabled={isSubmitting || isUploading}
-              onClick={handleSubmit}
-            >
-              {isSubmitting ? "Creating..." : isUploading ? "Uploading..." : "Create Project"}
-            </Button>
-          </div>
         </div>
 
         {/* Main content */}
@@ -356,18 +345,22 @@ export function NewProjectComponent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contractStartDate">Start Date *</Label>
-                    <DatePicker 
-                      date={formData.contractStartDate} 
-                      setDate={(date) => updateFormData('contractStartDate', date)} 
-                    />
+                  <Input
+                    id="contractStartDate"
+                    type="date"
+                    value={formatDateInput(formData.contractStartDate as Date)}
+                    onChange={(e) => updateFormData('contractStartDate', e.target.value ? new Date(e.target.value) : undefined)}
+                  />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="contractEndDate">End Date *</Label>
-                    <DatePicker 
-                      date={formData.contractEndDate} 
-                      setDate={(date) => updateFormData('contractEndDate', date)} 
-                    />
+                  <Input
+                    id="contractEndDate"
+                    type="date"
+                    value={formatDateInput(formData.contractEndDate as Date)}
+                    onChange={(e) => updateFormData('contractEndDate', e.target.value ? new Date(e.target.value) : undefined)}
+                  />
                   </div>
                 </div>
               </div>
@@ -480,7 +473,7 @@ export function NewProjectComponent() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
-                <Label>Project Proposal *</Label>
+                <Label>Project Proposal (Optional)</Label>
                 <FileUpload
                   onChange={async (files) => {
                     if (files.length > 0) {
@@ -619,9 +612,10 @@ export function NewProjectComponent() {
                       <div className="grid grid-cols-1 gap-4">
                         <div>
                           <Label>Due Date *</Label>
-                          <DatePicker 
-                            date={milestone.dueDate} 
-                            setDate={(date) => updateMilestone(index, 'dueDate', date)} 
+                          <Input
+                            type="date"
+                            value={formatDateInput(milestone.dueDate as Date)}
+                            onChange={(e) => updateMilestone(index, 'dueDate', e.target.value ? new Date(e.target.value) : undefined)}
                           />
                         </div>
                         <div>
@@ -810,8 +804,8 @@ export function NewProjectComponent() {
           </Card> */}
         </div>
 
-        {/* Mobile Actions */}
-        <div className="flex items-center justify-center gap-2 md:hidden mt-4 w-full">
+        {/* Actions */}
+        <div className="flex items-center justify-center gap-2 my-4 w-full">
           <Button
             type="button"
             variant="outline"

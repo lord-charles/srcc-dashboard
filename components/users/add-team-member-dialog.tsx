@@ -13,15 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { addTeamMember } from "@/services/projects-service";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "../ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 
 interface AddTeamMemberDialogProps {
   open: boolean;
@@ -53,7 +47,8 @@ export function AddTeamMemberDialog({
   const [endDate, setEndDate] = useState<Date | undefined>(
     new Date(new Date().setFullYear(new Date().getFullYear() + 1))
   );
-  const [responsibilities, setResponsibilities] = useState("");
+  const [responsibilities, setResponsibilities] = useState<string[]>([]);
+  const [respInput, setRespInput] = useState("");
 
   const handleAddMember = async () => {
     if (!startDate || !endDate) {
@@ -76,19 +71,11 @@ export function AddTeamMemberDialog({
 
     setIsLoading(true);
     try {
-      const responsibilitiesList = responsibilities
-        .split("\n")
-        .map((r) => r.trim())
-        .filter(Boolean);
-
       await addTeamMember(projectId, {
         userId: user?._id,
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
-        responsibilities:
-          responsibilitiesList.length > 0
-            ? responsibilitiesList
-            : ["team_member"],
+        responsibilities: responsibilities.length > 0 ? responsibilities : ["team_member"],
       });
 
       toast({
@@ -127,68 +114,76 @@ export function AddTeamMemberDialog({
           </div>
           <div className="grid gap-2">
             <Label htmlFor="start-date">Start Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[280px] justify-start text-left font-normal",
-                    !startDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? (
-                    format(startDate, "PPP")
-                  ) : (
-                    <span>Pick a date</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="start-date"
+              type="date"
+              value={startDate ? startDate.toISOString().split("T")[0] : ""}
+              onChange={(e) =>
+                setStartDate(e.target.value ? new Date(e.target.value) : undefined)
+              }
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="end-date">End Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[280px] justify-start text-left font-normal",
-                    !endDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              id="end-date"
+              type="date"
+              value={endDate ? endDate.toISOString().split("T")[0] : ""}
+              onChange={(e) =>
+                setEndDate(e.target.value ? new Date(e.target.value) : undefined)
+              }
+            />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="responsibilities">
-              Responsibilities (one per line)
-            </Label>
-            <Textarea
-              id="responsibilities"
-              placeholder="Frontend Development&#10;UI/UX Design&#10;Code Review"
-              value={responsibilities}
-              onChange={(e) => setResponsibilities(e.target.value)}
-            />
+            <Label htmlFor="responsibility">Responsibilities</Label>
+            <div className="flex gap-2">
+              <Input
+                id="responsibility"
+                placeholder="Add a responsibility and press Enter"
+                value={respInput}
+                onChange={(e) => setRespInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const v = respInput.trim();
+                    if (v && !responsibilities.includes(v)) {
+                      setResponsibilities((prev) => [...prev, v]);
+                      setRespInput("");
+                    }
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  const v = respInput.trim();
+                  if (v && !responsibilities.includes(v)) {
+                    setResponsibilities((prev) => [...prev, v]);
+                    setRespInput("");
+                  }
+                }}
+              >
+                Add
+              </Button>
+            </div>
+            {responsibilities.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {responsibilities.map((r) => (
+                  <div key={r} className="flex items-center gap-2 rounded border px-2 py-1 text-sm">
+                    <span>{r}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setResponsibilities((prev) => prev.filter((x) => x !== r))}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">Examples: Frontend Development, UI/UX Design, Code Review</p>
           </div>
         </div>
         <DialogFooter>

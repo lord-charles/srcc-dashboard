@@ -123,30 +123,14 @@ export async function submitInvoice(id: string) {
 
 export async function recordPayment(
   invoiceId: string,
-  paymentData: Record<string, any>,
-  receiptFile?: File
+  paymentData: Record<string, any>
 ): Promise<Invoice> {
   try {
     const config = await getAxiosConfig();
-    const formData = new FormData();
-    Object.entries(paymentData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, value);
-      }
-    });
-    if (receiptFile) {
-      formData.append('receiptFile', receiptFile);
-    }
     const response = await axios.post<Invoice>(
       `${API_URL}/invoices/${invoiceId}/payments`,
-      formData,
-      {
-        ...config,
-        headers: {
-          ...config.headers,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      paymentData,
+      config
     );
     return response.data;
   } catch (error: any) {
@@ -163,22 +147,14 @@ export async function recordPayment(
 
 export async function attachActualInvoice(
   invoiceId: string,
-  file: File
+  url: string
 ): Promise<Invoice> {
   try {
     const config = await getAxiosConfig();
-    const formData = new FormData();
-    formData.append('file', file);
     const response = await axios.patch<Invoice>(
       `${API_URL}/invoices/${invoiceId}/actual-invoice`,
-      formData,
-      {
-        ...config,
-        headers: {
-          ...config.headers,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      { url },
+      config
     );
     return response.data;
   } catch (error: any) {
@@ -186,7 +162,7 @@ export async function attachActualInvoice(
       await handleUnauthorized();
     }
     throw new Error(
-      error.response?.data?.message || 'Failed to attach actual invoice file'
+      error.response?.data?.message || 'Failed to attach actual invoice URL'
     );
   }
 }

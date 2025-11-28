@@ -17,6 +17,51 @@ export interface GetAdvancesParams {
   employeeId?: string;
 }
 
+export interface ProjectDocumentPayload {
+  name: string;
+  url: string;
+}
+
+export async function addProjectDocument(
+  projectId: string,
+  document: ProjectDocumentPayload
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/documents`,
+      document,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data.message || error;
+  }
+}
+
+export async function updateProject(
+  projectId: string,
+  data: Partial<Project>
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data.message || error;
+  }
+}
+
 export async function handleUnauthorized() {
   redirect("/unauthorized");
 }

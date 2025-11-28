@@ -7,7 +7,7 @@ import { DataTableRowActions } from "./data-table-row-actions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { AlertTriangle, CheckCircle } from "lucide-react";
+// no icon imports needed for Created By column
 
 const customIncludesStringFilter = (
   row: Row<Project>,
@@ -110,28 +110,24 @@ export const columns: ColumnDef<Project>[] = [
   //   },
   // },
   {
-    accessorKey: "riskLevel",
+    accessorKey: "createdBy",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Risk Level" />
+      <DataTableColumnHeader column={column} title="Created By" />
     ),
     cell: ({ row }) => {
-      const risk = row.getValue("riskLevel") as string;
+      const createdBy = row.original.createdBy as Project["createdBy"];
+      const firstName = (createdBy as any)?.firstName || "";
+      const lastName = (createdBy as any)?.lastName || "";
+      const email = (createdBy as any)?.email || "";
+      const fullName = `${firstName} ${lastName}`.trim() || "-";
       return (
-        <div className="flex items-center gap-2">
-          {risk === "High" ? (
-            <AlertTriangle className="h-4 w-4 text-red-500" />
-          ) : risk === "Medium" ? (
-            <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          ) : (
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          )}
-          <span>{risk}</span>
+        <div className="flex flex-col">
+          <span className="font-medium">{fullName}</span>
+          <span className="text-sm text-muted-foreground">{email || ""}</span>
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
+    enableSorting: false,
   },
   {
     accessorKey: "duration",

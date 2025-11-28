@@ -60,6 +60,8 @@ import {
 import { Invoice, InvoiceFormState } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { FileUpload } from "@/components/ui/file-upload";
+import { cloudinaryService } from "@/lib/cloudinary-service";
 
 interface InvoicesSectionProps {
   invoices: Invoice[];
@@ -86,28 +88,28 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [showPaymentDrawer, setShowPaymentDrawer] = useState<string | null>(null);
   const [showAttachDrawer, setShowAttachDrawer] = useState<string | null>(null);
   const [paymentForm, setPaymentForm] = useState<any>({});
-  const [paymentFile, setPaymentFile] = useState<File | null>(null);
-  const [attachFile, setAttachFile] = useState<File | null>(null);
+  const [attachUrl, setAttachUrl] = useState<string>("");
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [isAttachSubmitting, setIsAttachSubmitting] = useState(false);
+  const [isReceiptUploading, setIsReceiptUploading] = useState(false);
+  const [isAttachUploading, setIsAttachUploading] = useState(false);
   const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({});
 
   const openPaymentDrawer = (invoiceId: string) => {
     setShowPaymentDrawer(invoiceId);
     setPaymentForm({});
-    setPaymentFile(null);
   };
   const closePaymentDrawer = () => setShowPaymentDrawer(null);
   console.log(invoices);
   const openAttachDrawer = (invoiceId: string) => {
     setShowAttachDrawer(invoiceId);
-    setAttachFile(null);
+    setAttachUrl("");
   };
   const closeAttachDrawer = () => setShowAttachDrawer(null);
 
   const handlePaymentSubmit = async () => {
     if (!showPaymentDrawer) return;
-    // Validation: amountPaid, paymentMethod, and receiptFile are required
+    // Validation: amountPaid, method, and receiptUrl are required
     const errors: Record<string, string> = {};
     if (!paymentForm.amountPaid || isNaN(Number(paymentForm.amountPaid)) || Number(paymentForm.amountPaid) <= 0) {
       errors.amountPaid = "Amount paid is required and must be greater than 0.";
@@ -115,14 +117,14 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     if (!paymentForm.method || paymentForm.method.trim() === "") {
       errors.method = "Payment method is required.";
     }
-    if (!paymentFile) {
-      errors.receiptFile = "Receipt file is required.";
+    if (!paymentForm.receiptUrl || typeof paymentForm.receiptUrl !== 'string' || !paymentForm.receiptUrl.startsWith('http')) {
+      errors.receiptUrl = "Receipt URL is required and must be a valid URL.";
     }
     setPaymentErrors(errors);
     if (Object.keys(errors).length > 0) return;
     setIsPaymentSubmitting(true);
     try {
-      await recordPayment(showPaymentDrawer, paymentForm, paymentFile ?? undefined);
+      await recordPayment(showPaymentDrawer, paymentForm);
       toast({ title: "Success", description: "Payment recorded successfully." });
       closePaymentDrawer();
       router.refresh();
@@ -135,15 +137,15 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
 
 
   const handleAttachSubmit = async () => {
-    if (!showAttachDrawer || !attachFile) return;
+    if (!showAttachDrawer || !attachUrl) return;
     setIsAttachSubmitting(true);
     try {
-      await attachActualInvoice(showAttachDrawer, attachFile);
-      toast({ title: "Success", description: "Actual invoice uploaded." });
+      await attachActualInvoice(showAttachDrawer, attachUrl);
+      toast({ title: "Success", description: "Actual invoice URL attached." });
       closeAttachDrawer();
       router.refresh();
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to upload invoice.", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to attach invoice URL.", variant: "destructive" });
     } finally {
       setIsAttachSubmitting(false);
     }
@@ -903,13 +905,13 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       {/* --- Payment Drawer --- */}
       {showPaymentDrawer && (
         <ModalDrawer open={!!showPaymentDrawer} onOpenChange={closePaymentDrawer}>
-          <DrawerContent className="max-w-lg mx-auto">
+          <DrawerContent className="max-w-[500px] mx-auto">
             <DrawerHeader>
               <DrawerTitle>Add Payment Record</DrawerTitle>
-              <DrawerDescription>Record a payment for this invoice. Upload a receipt if available.</DrawerDescription>
+              <DrawerDescription>Record a payment for this invoice. Provide a receipt URL.</DrawerDescription>
             </DrawerHeader>
             <div className="p-4 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label>Amount Paid</Label>
                   <Input
@@ -988,6 +990,40 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     onChange={e => setPaymentForm((f: any) => ({ ...f, paidAt: e.target.value }))}
                   />
                 </div>
+                <div className="col-span-2">
+                  <Label>Receipt Upload</Label>
+                  <FileUpload
+                    onChange={async (files) => {
+                      if (!files?.length) return;
+                      setIsReceiptUploading(true);
+                      try {
+                        const url = await cloudinaryService.uploadFile(files[0]);
+                        setPaymentForm((f: any) => ({ ...f, receiptUrl: url }));
+                        setPaymentErrors((prev) => {
+                          const n = { ...prev };
+                          delete n.receiptUrl;
+                          return n;
+                        });
+                        toast({ title: "Uploaded", description: "Receipt uploaded successfully" });
+                      } catch (e: any) {
+                        toast({ title: "Upload failed", description: e?.message || "Unable to upload", variant: "destructive" });
+                      } finally {
+                        setIsReceiptUploading(false);
+                      }
+                    }}
+                  />
+                  {isReceiptUploading && (
+                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" /> Uploading receipt...
+                    </p>
+                  )}
+                  {paymentForm.receiptUrl && (
+                    <p className="text-xs text-muted-foreground mt-1">Linked: {paymentForm.receiptUrl}</p>
+                  )}
+                  {paymentErrors.receiptUrl && (
+                    <p className="text-sm text-red-500 mt-1">{paymentErrors.receiptUrl}</p>
+                  )}
+                </div>
               </div>
               <div>
                 <Label>Comments</Label>
@@ -996,18 +1032,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                   value={paymentForm.comments || ""}
                   onChange={e => setPaymentForm((f: any) => ({ ...f, comments: e.target.value }))}
                 />
-              </div>
-              <div>
-                <Label>Receipt (PDF, Image)</Label>
-                <Input
-                  type="file"
-                  accept="application/pdf,image/*"
-                  onChange={e => setPaymentFile(e.target.files?.[0] || null)}
-                  className={paymentErrors.receiptFile ? 'border-red-500' : ''}
-                />
-                {paymentErrors.receiptFile && (
-                  <p className="text-sm text-red-500 mt-1">{paymentErrors.receiptFile}</p>
-                )}
               </div>
             </div>
             <DrawerFooter>
@@ -1029,23 +1053,38 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
           <DrawerContent className="max-w-lg mx-auto">
             <DrawerHeader>
               <DrawerTitle>Attach Actual Invoice</DrawerTitle>
-              <DrawerDescription>Upload the signed or final invoice document (PDF only).</DrawerDescription>
+              <DrawerDescription>Provide the URL to the signed or final invoice document (PDF preferred).</DrawerDescription>
             </DrawerHeader>
-            <div className="p-4">
-              <Label>Invoice PDF</Label>
-              <Input
-                type="file"
-                accept="application/pdf"
-                onChange={e => setAttachFile(e.target.files?.[0] || null)}
+            <div className="p-4 space-y-2">
+              <Label>Invoice Upload</Label>
+              <FileUpload
+                onChange={async (files) => {
+                  if (!files?.length) return;
+                  setIsAttachUploading(true);
+                  try {
+                    const url = await cloudinaryService.uploadFile(files[0]);
+                    setAttachUrl(url);
+                    toast({ title: "Uploaded", description: "Invoice uploaded successfully" });
+                  } catch (e: any) {
+                    toast({ title: "Upload failed", description: e?.message || "Unable to upload", variant: "destructive" });
+                  } finally {
+                    setIsAttachUploading(false);
+                  }
+                }}
               />
-              {attachFile ? (
-                <div className="mt-2 text-sm text-muted-foreground">Selected: {attachFile.name}</div>
-              ) : null}
+              {isAttachUploading && (
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Uploading invoice...
+                </p>
+              )}
+              {attachUrl && (
+                <p className="text-xs text-muted-foreground">Linked: {attachUrl}</p>
+              )}
             </div>
             <DrawerFooter>
-              <Button onClick={handleAttachSubmit} disabled={isAttachSubmitting || !attachFile} className="w-full">
+              <Button onClick={handleAttachSubmit} disabled={isAttachSubmitting || isAttachUploading || !attachUrl} className="w-full">
                 {isAttachSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                Upload
+                Attach
               </Button>
               <DrawerClose asChild>
                 <Button variant="outline" className="w-full">Cancel</Button>
