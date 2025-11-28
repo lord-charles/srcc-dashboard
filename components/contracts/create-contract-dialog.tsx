@@ -536,7 +536,7 @@ export function CreateContractDialog({
         onOpenChange={setTemplateEditorOpen}
         template={selectedTemplate}
         onSave={handleSaveEditedTemplate}
-        contractData={contractDataForTemplate}
+        contractData={contractDataForTemplate as any}
       />
     </Drawer>
   );

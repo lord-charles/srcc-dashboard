@@ -125,7 +125,7 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
           {hasPending && (
             <div className="flex items-center gap-2 rounded-md bg-amber-50 p-2 text-amber-700 text-xs border border-amber-200">
               <AlertCircle className="h-3 w-3" />
-              You have pending document changes. Click "Save Changes" to apply.
+              You have pending document changes. Click &quot;Save Changes&quot; to apply.
             </div>
           )}
           <div className="space-y-1">
