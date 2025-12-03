@@ -13,7 +13,8 @@ export default withAuth(
       const url = req.nextUrl;
       const pathname = url.pathname;
       const roles: any[] = (token as any).roles || [];
-      const permissions: Record<string, string[] | undefined> = (token as any).permissions || {};
+      const permissions: Record<string, string[] | undefined> =
+        (token as any).permissions || {};
 
       // Helper: determine if user has access to a given path based on permissions map
       const hasAccess = (path: string) => {
@@ -21,7 +22,11 @@ export default withAuth(
         let allowed: string[] | undefined;
         let longestMatchLen = -1;
         for (const key of Object.keys(permissions)) {
-          if (path === key || path.startsWith(key + "/") || (key !== "/" && path === key)) {
+          if (
+            path === key ||
+            path.startsWith(key + "/") ||
+            (key !== "/" && path === key)
+          ) {
             if (key.length > longestMatchLen) {
               longestMatchLen = key.length;
               allowed = permissions[key];
@@ -31,7 +36,18 @@ export default withAuth(
         return Array.isArray(allowed) && allowed.length > 0;
       };
 
-      const isOnlyConsultant = roles.length > 0 && roles.every((r) => r === "consultant");
+      const isOnlyConsultant =
+        roles.length > 0 && roles.every((r) => r === "consultant");
+
+      // Allow /users when accessed with project context query parameters
+      const isProjectContext =
+        pathname === "/users" &&
+        url.searchParams.has("projectId") &&
+        url.searchParams.has("returnUrl");
+
+      if (isProjectContext) {
+        return NextResponse.next();
+      }
 
       // Enforce consultant restrictions and general permission checks
       const blockedRoots = [
@@ -50,7 +66,12 @@ export default withAuth(
         const permitted = hasAccess(pathname);
         if (!permitted) {
           // As a fallback, for non-matching keys, explicitly block consultant-only users on blocked roots
-          if (isOnlyConsultant && blockedRoots.some((root) => pathname === root || pathname.startsWith(root + "/"))) {
+          if (
+            isOnlyConsultant &&
+            blockedRoots.some(
+              (root) => pathname === root || pathname.startsWith(root + "/")
+            )
+          ) {
             unauthorized = true;
           } else {
             unauthorized = true;
@@ -58,7 +79,11 @@ export default withAuth(
         }
       } else if (isOnlyConsultant) {
         // No permissions map: conservatively block consultant-only users from blocked roots
-        if (blockedRoots.some((root) => pathname === root || pathname.startsWith(root + "/"))) {
+        if (
+          blockedRoots.some(
+            (root) => pathname === root || pathname.startsWith(root + "/")
+          )
+        ) {
           unauthorized = true;
         }
       }
