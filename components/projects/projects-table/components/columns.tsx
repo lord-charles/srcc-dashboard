@@ -19,15 +19,20 @@ const customIncludesStringFilter = (
   return value?.toLowerCase().includes((filterValue as string).toLowerCase());
 };
 
-const shouldShowActions = (roles: string[] | undefined): boolean => {
+const shouldShowActions = (
+  roles: string[] | undefined,
+  hasProject: boolean | undefined
+): boolean => {
   if (!roles || roles.length === 0) return false;
-  // Hide actions if user only has consultant role
-  if (roles.length === 1 && roles[0] === "consultant") return false;
+  // Hide actions if user only has consultant role and doesn't have any projects
+  if (roles.length === 1 && roles[0] === "consultant" && !hasProject)
+    return false;
   return true;
 };
 
 export const getColumns = (
-  roles: string[] | undefined
+  roles: string[] | undefined,
+  hasProject: boolean | undefined
 ): ColumnDef<Project>[] => {
   const baseColumns: ColumnDef<Project>[] = [
     // {
@@ -207,7 +212,7 @@ export const getColumns = (
   ];
 
   // Conditionally add actions column
-  if (shouldShowActions(roles)) {
+  if (shouldShowActions(roles, hasProject)) {
     baseColumns.push({
       accessorKey: "actions",
       cell: ({ row }) => <DataTableRowActions row={row} />,
@@ -218,4 +223,4 @@ export const getColumns = (
 };
 
 // Default export for backward compatibility
-export const columns: ColumnDef<Project>[] = getColumns(undefined);
+export const columns: ColumnDef<Project>[] = getColumns(undefined, undefined);

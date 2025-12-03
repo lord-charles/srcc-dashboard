@@ -76,6 +76,7 @@ export const authOptions: NextAuthOptions = {
               nationalId: data.user?.nationalId,
               type: data.type,
               permissions: data.user?.permissions,
+              hasProject: data.user?.hasProject,
             };
           }
           console.log("Login failed: Invalid response", {
@@ -140,6 +141,7 @@ export const authOptions: NextAuthOptions = {
           token.nationalId = user?.nationalId;
           token.status = user?.status;
           token.registrationStatus = user?.registrationStatus;
+          token.hasProject = user?.hasProject;
         }
       }
       return token;
@@ -174,6 +176,7 @@ export const authOptions: NextAuthOptions = {
           session.user.permissions = token?.permissions;
           session.user.status = token?.status;
           session.user.registrationStatus = token?.registrationStatus;
+          session.user.hasProject = token?.hasProject;
         }
       }
       return session;

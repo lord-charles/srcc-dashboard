@@ -57,6 +57,7 @@ export function TemplateEditorDialog({
 
       const startDate = new Date(contractData.startDate);
       const endDate = new Date(contractData.endDate);
+
       const currentDate = new Date();
 
       // Format dates in different ways
@@ -137,8 +138,8 @@ export function TemplateEditorDialog({
         "{date}": formatLongDate(currentDate),
 
         // Dates - Month Year format
-        "{month, year}": formatMonthYear(startDate),
-        "{{month, year}}": formatMonthYear(startDate),
+        "{month-start, year-start}": formatLongDate(startDate),
+        "{month-end, year-end}": formatLongDate(endDate),
 
         // Description / Title
         "{{description}}": contractData.description,

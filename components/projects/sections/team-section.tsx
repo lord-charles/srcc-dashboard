@@ -179,7 +179,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     try {
       setIsUpdatingContract(true);
 
-      const contractData = {
+      const contractData: any = {
         description: values.description,
         contractValue: values.contractValue,
         currency: values.currency,
@@ -189,6 +189,14 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         contractedUserId: selectedContract.contractedUserId,
         status: values.status,
       };
+
+      // Add template fields if provided (and not "none")
+      if (values.templateId && values.templateId !== "none") {
+        contractData.templateId = values.templateId;
+      }
+      if (values.editedTemplateContent) {
+        contractData.editedTemplateContent = values.editedTemplateContent;
+      }
 
       const result = await updateContract(selectedContract._id, contractData);
 
@@ -521,6 +529,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
           onSubmit={handleUpdateContract}
           contract={selectedContract}
           isSubmitting={isUpdatingContract}
+          templates={templates}
         />
       )}
     </Card>

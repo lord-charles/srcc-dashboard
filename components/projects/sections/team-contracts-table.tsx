@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -44,7 +44,11 @@ import { Contract } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
 import { EditContractDialog } from "@/components/contracts/edit-contract-dialog";
 import { ContractFormValues } from "@/components/contracts/create-contract-dialog";
-import { updateContract, deleteContract } from "@/services/contracts.service";
+import {
+  updateContract,
+  deleteContract,
+  getContractTemplates,
+} from "@/services/contracts.service";
 import { Spinner } from "@/components/ui/spinner";
 
 interface ContractsTableProps {
@@ -57,6 +61,9 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null
   );
+  const [contractToDelete, setContractToDelete] = useState<Contract | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
@@ -64,6 +71,29 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
   const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const itemsPerPage = 10;
+  const [templates, setTemplates] = useState<
+    Array<{
+      _id: string;
+      name: string;
+      version?: string;
+      contentType: string;
+      content: string;
+      variables?: string[];
+    }>
+  >([]);
+
+  // Fetch contract templates on mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const data = await getContractTemplates({ active: true });
+        setTemplates(data || []);
+      } catch (error) {
+        console.error("Failed to fetch contract templates:", error);
+      }
+    };
+    fetchTemplates();
+  }, []);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Not set";
@@ -130,7 +160,7 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
         return new Date(dateString).toISOString();
       };
 
-      const contractData = {
+      const contractData: any = {
         description: values.description,
         contractValue: values.contractValue,
         currency: values.currency,
@@ -140,6 +170,14 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
         contractedUserId: selectedContract.contractedUserId._id,
         status: values.status,
       };
+
+      // Add template fields if provided (and not "none")
+      if (values.templateId && values.templateId !== "none") {
+        contractData.templateId = values.templateId;
+      }
+      if (values.editedTemplateContent) {
+        contractData.editedTemplateContent = values.editedTemplateContent;
+      }
 
       const result = await updateContract(selectedContract._id, contractData);
 
@@ -168,11 +206,13 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
     }
   };
 
-  const handleDeleteContract = async (contractId: string) => {
+  const handleDeleteContract = async () => {
+    if (!contractToDelete) return;
+
     try {
       setIsDeletingContract(true);
 
-      const result = await deleteContract(contractId);
+      const result = await deleteContract(contractToDelete._id);
 
       if (result) {
         toast({
@@ -196,7 +236,13 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
     } finally {
       setIsDeletingContract(false);
       setDeleteDialogOpen(false);
+      setContractToDelete(null);
     }
+  };
+
+  const handleOpenDeleteDialog = (contract: Contract) => {
+    setContractToDelete(contract);
+    setDeleteDialogOpen(true);
   };
 
   return (
@@ -469,72 +515,14 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Dialog
-                          open={deleteDialogOpen}
-                          onOpenChange={setDeleteDialogOpen}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => handleOpenDeleteDialog(contract)}
                         >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => setDeleteDialogOpen(true)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Delete Contract</DialogTitle>
-                              <DialogDescription>
-                                Are you sure you want to delete this contract?
-                                This action cannot be undone.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="border rounded-md p-4">
-                                <h4 className="font-medium">
-                                  {contract.contractNumber}
-                                </h4>
-                                <p className="text-sm mt-1">
-                                  {contract.description}
-                                </p>
-                                <div className="mt-2 flex items-center">
-                                  <span className="text-sm font-medium mr-2">
-                                    Contracted User:
-                                  </span>
-                                  <span className="text-sm">{`${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <DialogFooter className="flex justify-between">
-                              <DialogClose asChild>
-                                <Button
-                                  variant="outline"
-                                  disabled={isDeletingContract}
-                                >
-                                  Cancel
-                                </Button>
-                              </DialogClose>
-                              <Button
-                                variant="destructive"
-                                onClick={() =>
-                                  handleDeleteContract(contract._id)
-                                }
-                                disabled={isDeletingContract}
-                              >
-                                {isDeletingContract ? (
-                                  <div className="flex items-center space-x-2">
-                                    <Spinner />
-                                    <span>Deleting...</span>
-                                  </div>
-                                ) : (
-                                  "Delete Contract"
-                                )}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -600,8 +588,59 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
           onSubmit={handleUpdateContract}
           contract={selectedContract}
           isSubmitting={isUpdatingContract}
+          templates={templates}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Contract</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this contract? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {contractToDelete && (
+            <div className="space-y-4">
+              <div className="border rounded-md p-4">
+                <h4 className="font-medium">
+                  {contractToDelete.contractNumber}
+                </h4>
+                <p className="text-sm mt-1">{contractToDelete.description}</p>
+                <div className="mt-2 flex items-center">
+                  <span className="text-sm font-medium mr-2">
+                    Contracted User:
+                  </span>
+                  <span className="text-sm">{`${contractToDelete.contractedUserId.firstName} ${contractToDelete.contractedUserId.lastName}`}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex justify-between">
+            <DialogClose asChild>
+              <Button variant="outline" disabled={isDeletingContract}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteContract}
+              disabled={isDeletingContract}
+            >
+              {isDeletingContract ? (
+                <div className="flex items-center space-x-2">
+                  <Spinner />
+                  <span>Deleting...</span>
+                </div>
+              ) : (
+                "Delete Contract"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

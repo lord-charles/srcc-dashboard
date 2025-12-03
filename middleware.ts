@@ -39,24 +39,28 @@ export default withAuth(
       const isOnlyConsultant =
         roles.length > 0 && roles.every((r) => r === "consultant");
 
+      const hasAdminRole = roles.some((r) => r === "admin");
+
       // Allow /users when accessed with project context query parameters
       const isProjectContext =
         pathname === "/users" &&
         url.searchParams.has("projectId") &&
         url.searchParams.has("returnUrl");
 
+      // Check if accessing /users without project context - require admin role
+      if (pathname === "/users" && !isProjectContext && !hasAdminRole) {
+        const redirectUrl = new URL("/analytics?unauthorized=1", req.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+
+      // Allow /users with project context regardless of role
       if (isProjectContext) {
         return NextResponse.next();
       }
 
       // Enforce consultant restrictions and general permission checks
-      const blockedRoots = [
-        "/contracts",
-        "/claims",
-        "/imprest",
-        "/users",
-        "/budget",
-      ];
+      // Note: /users is handled separately above
+      const blockedRoots = ["/contracts", "/claims", "/imprest", "/budget"];
 
       let unauthorized = false;
 

@@ -41,8 +41,11 @@ export default function ProjectTable({ projects }: any) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(() => {
-    return getColumns(session?.user?.roles as string[] | undefined);
-  }, [session?.user?.roles]);
+    return getColumns(
+      session?.user?.roles as string[] | undefined,
+      session?.user?.hasProject as boolean | undefined
+    );
+  }, [session?.user?.roles, session?.user?.hasProject]);
 
   const table = useReactTable({
     data: projects,
