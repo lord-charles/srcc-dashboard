@@ -41,8 +41,6 @@ export function DataTableRowActions<TData>({
   const { toast } = useToast();
   const router = useRouter();
 
-
-
   const handleDeleteContract = async () => {
     try {
       setIsDeleting(true);
@@ -104,16 +102,15 @@ export function DataTableRowActions<TData>({
       <ContractDetailsDrawer
         contract={contract}
         trigger={
-          <Button
-            variant="ghost"
-            className="hidden"
-          >
+          <Button variant="ghost" className="hidden">
             Open Details
           </Button>
         }
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
+        onClose={() => {
+          setIsDetailsOpen(false), location.reload();
+        }}
       />
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

@@ -30,7 +30,8 @@ export const FinancialSection: React.FC<FinancialSectionProps> = ({
     }).format(amount);
   };
 
-  const spentPercentage = (amountSpent / totalBudget) * 100;
+  const spentPercentage =
+    totalBudget > 0 ? (amountSpent / totalBudget) * 100 : 0;
 
   return (
     <Card>
@@ -76,10 +77,23 @@ export const FinancialSection: React.FC<FinancialSectionProps> = ({
               <div>Amount Spent</div>
               <div className="font-medium">{formatCurrency2(amountSpent)}</div>
             </div>
-            <Progress value={spentPercentage} className="h-2" />
+            <Progress
+              value={isNaN(spentPercentage) ? 0 : spentPercentage}
+              className="h-2"
+            />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div>{Math.round(spentPercentage)}% of budget spent</div>
-              <div>{formatCurrency2(totalBudget - amountSpent)} remaining</div>
+              <div>
+                {isNaN(spentPercentage) ? 0 : Math.round(spentPercentage)}% of
+                budget spent
+              </div>
+              <div>
+                {formatCurrency2(
+                  isNaN(totalBudget - amountSpent)
+                    ? 0
+                    : totalBudget - amountSpent
+                )}{" "}
+                remaining
+              </div>
             </div>
           </div>
         </div>

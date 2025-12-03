@@ -42,8 +42,12 @@ export function DataTableRowActions<TData>({
     });
   };
 
-  const hasReceipts = imprest.status === "accounted" && imprest.accounting?.receipts && imprest.accounting.receipts.length > 0;
-  const canMarkOverdue = imprest.status === "disbursed" && new Date(imprest.dueDate) < new Date();
+  const hasReceipts =
+    imprest.status === "accounted" &&
+    imprest.accounting?.receipts &&
+    imprest.accounting.receipts.length > 0;
+  const canMarkOverdue =
+    imprest.status === "disbursed" && new Date(imprest.dueDate) < new Date();
 
   return (
     <>
@@ -89,14 +93,15 @@ export function DataTableRowActions<TData>({
         imprest={imprest}
         trigger={
           <Button variant="ghost" className="hidden">
-            Open Details
+            Open Detailsh
           </Button>
         }
         open={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
+        onOpenChange={() => {
+          setIsDetailsOpen(!isDetailsOpen), location.reload();
+        }}
         onClose={() => {
-          setIsDetailsOpen(false);
-          onAction?.();
+          setIsDetailsOpen(false), location.reload();
         }}
       />
     </>

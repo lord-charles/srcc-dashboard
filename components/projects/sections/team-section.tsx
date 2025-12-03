@@ -147,7 +147,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
           description: "Contract has been created successfully",
         });
 
-        router.refresh();
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
       }
     } catch (error) {
       console.error("Failed to create contract:", error);
@@ -197,7 +198,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
           description: "Contract has been updated successfully",
         });
 
-        router.refresh();
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
       }
     } catch (error) {
       console.error("Failed to update contract:", error);
@@ -223,7 +225,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         title: "Team member removed",
         description: "The team member has been removed from the project.",
       });
-      router.refresh();
+      // Delay reload to ensure any dialogs close first
+      setTimeout(() => window.location.reload(), 100);
     } catch (error) {
       console.error("Error deleting team member:", error);
       toast({

@@ -58,7 +58,7 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
     (projectData.amountSpent / projectData?.totalProjectValue) * 100;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
@@ -153,7 +153,7 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Team & Risk</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -187,7 +187,7 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
             <li>Signed Contract</li>
           </ul>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }

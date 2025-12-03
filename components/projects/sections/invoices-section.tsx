@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -85,7 +91,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   currency,
   projectId,
 }) => {
-  const [showPaymentDrawer, setShowPaymentDrawer] = useState<string | null>(null);
+  const [showPaymentDrawer, setShowPaymentDrawer] = useState<string | null>(
+    null
+  );
   const [showAttachDrawer, setShowAttachDrawer] = useState<string | null>(null);
   const [paymentForm, setPaymentForm] = useState<any>({});
   const [attachUrl, setAttachUrl] = useState<string>("");
@@ -93,7 +101,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [isAttachSubmitting, setIsAttachSubmitting] = useState(false);
   const [isReceiptUploading, setIsReceiptUploading] = useState(false);
   const [isAttachUploading, setIsAttachUploading] = useState(false);
-  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>({});
+  const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>(
+    {}
+  );
 
   const openPaymentDrawer = (invoiceId: string) => {
     setShowPaymentDrawer(invoiceId);
@@ -111,13 +121,21 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     if (!showPaymentDrawer) return;
     // Validation: amountPaid, method, and receiptUrl are required
     const errors: Record<string, string> = {};
-    if (!paymentForm.amountPaid || isNaN(Number(paymentForm.amountPaid)) || Number(paymentForm.amountPaid) <= 0) {
+    if (
+      !paymentForm.amountPaid ||
+      isNaN(Number(paymentForm.amountPaid)) ||
+      Number(paymentForm.amountPaid) <= 0
+    ) {
       errors.amountPaid = "Amount paid is required and must be greater than 0.";
     }
     if (!paymentForm.method || paymentForm.method.trim() === "") {
       errors.method = "Payment method is required.";
     }
-    if (!paymentForm.receiptUrl || typeof paymentForm.receiptUrl !== 'string' || !paymentForm.receiptUrl.startsWith('http')) {
+    if (
+      !paymentForm.receiptUrl ||
+      typeof paymentForm.receiptUrl !== "string" ||
+      !paymentForm.receiptUrl.startsWith("http")
+    ) {
       errors.receiptUrl = "Receipt URL is required and must be a valid URL.";
     }
     setPaymentErrors(errors);
@@ -125,16 +143,23 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     setIsPaymentSubmitting(true);
     try {
       await recordPayment(showPaymentDrawer, paymentForm);
-      toast({ title: "Success", description: "Payment recorded successfully." });
+      toast({
+        title: "Success",
+        description: "Payment recorded successfully.",
+      });
       closePaymentDrawer();
-      router.refresh();
+      // Delay reload to ensure drawer closes first
+      setTimeout(() => window.location.reload(), 100);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to record payment.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message || "Failed to record payment.",
+        variant: "destructive",
+      });
     } finally {
       setIsPaymentSubmitting(false);
     }
   };
-
 
   const handleAttachSubmit = async () => {
     if (!showAttachDrawer || !attachUrl) return;
@@ -143,9 +168,14 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       await attachActualInvoice(showAttachDrawer, attachUrl);
       toast({ title: "Success", description: "Actual invoice URL attached." });
       closeAttachDrawer();
-      router.refresh();
+      // Delay reload to ensure drawer closes first
+      setTimeout(() => window.location.reload(), 100);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to attach invoice URL.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message || "Failed to attach invoice URL.",
+        variant: "destructive",
+      });
     } finally {
       setIsAttachSubmitting(false);
     }
@@ -221,9 +251,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       items: prev.items.map((item, i) =>
         i === index
           ? {
-            ...item,
-            [field]: field === "description" ? value : Number(value),
-          }
+              ...item,
+              [field]: field === "description" ? value : Number(value),
+            }
           : item
       ),
     }));
@@ -308,7 +338,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       setFormState(initialFormState);
       setFormErrors({});
       setEditingInvoice(null);
-      router.refresh();
+      // Delay reload to ensure any modals close first
+      setTimeout(() => window.location.reload(), 100);
     } catch (error) {
       toast({
         title: "Error",
@@ -338,7 +369,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       });
     } finally {
       setSubmittingInvoiceId(null);
-      router.refresh();
+      // Delay reload to ensure any modals close first
+      setTimeout(() => window.location.reload(), 100);
     }
   };
 
@@ -544,7 +576,11 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                               type="number"
                               value={item.amount}
                               onChange={(e) =>
-                                handleItemChange(index, "amount", e.target.value)
+                                handleItemChange(
+                                  index,
+                                  "amount",
+                                  e.target.value
+                                )
                               }
                               className={
                                 formErrors[`items.${index}.amount`]
@@ -565,7 +601,11 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                               type="number"
                               value={item.taxRate}
                               onChange={(e) =>
-                                handleItemChange(index, "taxRate", e.target.value)
+                                handleItemChange(
+                                  index,
+                                  "taxRate",
+                                  e.target.value
+                                )
                               }
                               className={
                                 formErrors[`items.${index}.taxRate`]
@@ -601,7 +641,10 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     id="notes"
                     value={formState.notes}
                     onChange={(e) =>
-                      setFormState((prev) => ({ ...prev, notes: e.target.value }))
+                      setFormState((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
                     }
                     placeholder="Add any additional notes..."
                   />
@@ -765,9 +808,13 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         <TableHeader>
                           <TableRow className="">
                             <TableHead>Description</TableHead>
-                            <TableHead className="text-right">Quantity</TableHead>
+                            <TableHead className="text-right">
+                              Quantity
+                            </TableHead>
                             <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="text-right">Tax Rate</TableHead>
+                            <TableHead className="text-right">
+                              Tax Rate
+                            </TableHead>
                             <TableHead className="text-right">
                               Tax Amount
                             </TableHead>
@@ -805,7 +852,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                       </div>
                     )}
                     {invoice.actualInvoice && (
-
                       <div className="mt-6 p-4 bg-blue-50 rounded-lg shadow flex flex-col md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center space-x-3">
                           <FileText className="h-5 w-5 text-blue-600" />
@@ -823,7 +869,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                           </a>
                           <a
                             href={invoice?.actualInvoice}
-                            download={invoice?.actualInvoice || 'invoice.pdf'}
+                            download={invoice?.actualInvoice || "invoice.pdf"}
                           >
                             <Button variant="default">Download</Button>
                           </a>
@@ -857,7 +903,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                       </div>
                     </div>
                     <div className="mt-6 flex justify-end space-x-3">
-
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -872,7 +917,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                             >
                               {({ blob, url, loading, error }) => (
                                 <Button variant="outline">
-                                  {loading ? "Generating PDF..." : "Download PDF"}
+                                  {loading
+                                    ? "Generating PDF..."
+                                    : "Download PDF"}
                                 </Button>
                               )}
                             </PDFDownloadLink>
@@ -882,10 +929,16 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <Button variant="default" onClick={() => openPaymentDrawer(invoice._id)}>
+                      <Button
+                        variant="default"
+                        onClick={() => openPaymentDrawer(invoice._id)}
+                      >
                         Add Payment Record
                       </Button>
-                      <Button variant="default" onClick={() => openAttachDrawer(invoice._id)}>
+                      <Button
+                        variant="default"
+                        onClick={() => openAttachDrawer(invoice._id)}
+                      >
                         Attach Invoice
                       </Button>
                     </div>
@@ -904,11 +957,16 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
 
       {/* --- Payment Drawer --- */}
       {showPaymentDrawer && (
-        <ModalDrawer open={!!showPaymentDrawer} onOpenChange={closePaymentDrawer}>
+        <ModalDrawer
+          open={!!showPaymentDrawer}
+          onOpenChange={closePaymentDrawer}
+        >
           <DrawerContent className="max-w-[500px] mx-auto">
             <DrawerHeader>
               <DrawerTitle>Add Payment Record</DrawerTitle>
-              <DrawerDescription>Record a payment for this invoice. Provide a receipt URL.</DrawerDescription>
+              <DrawerDescription>
+                Record a payment for this invoice. Provide a receipt URL.
+              </DrawerDescription>
             </DrawerHeader>
             <div className="p-4 space-y-4">
               <div className="grid grid-cols-3 gap-4">
@@ -918,32 +976,47 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     type="number"
                     placeholder="Amount Paid"
                     value={paymentForm.amountPaid || ""}
-                    onChange={e => setPaymentForm((f: any) => ({ ...f, amountPaid: e.target.value }))}
+                    onChange={(e) =>
+                      setPaymentForm((f: any) => ({
+                        ...f,
+                        amountPaid: e.target.value,
+                      }))
+                    }
                     min={0}
-                    className={paymentErrors.amountPaid ? 'border-red-500' : ''}
+                    className={paymentErrors.amountPaid ? "border-red-500" : ""}
                   />
                   {paymentErrors.amountPaid && (
-                    <p className="text-sm text-red-500 mt-1">{paymentErrors.amountPaid}</p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {paymentErrors.amountPaid}
+                    </p>
                   )}
                 </div>
                 <div>
                   <Label>Payment Method</Label>
                   <Select
-                    value={paymentForm.method || ''}
-                    onValueChange={val => setPaymentForm((f: any) => ({ ...f, method: val }))}
+                    value={paymentForm.method || ""}
+                    onValueChange={(val) =>
+                      setPaymentForm((f: any) => ({ ...f, method: val }))
+                    }
                   >
-                    <SelectTrigger className={paymentErrors.method ? 'border-red-500' : ''}>
+                    <SelectTrigger
+                      className={paymentErrors.method ? "border-red-500" : ""}
+                    >
                       <SelectValue placeholder="Select Method" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="bank_transfer">
+                        Bank Transfer
+                      </SelectItem>
                       <SelectItem value="cheque">Cheque</SelectItem>
                       <SelectItem value="mpesa">MPESA</SelectItem>
                       <SelectItem value="cash">Cash</SelectItem>
                     </SelectContent>
                   </Select>
                   {paymentErrors.method && (
-                    <p className="text-sm text-red-500 mt-1">{paymentErrors.method}</p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {paymentErrors.method}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -952,7 +1025,12 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     type="text"
                     placeholder="Bank Name"
                     value={paymentForm.bankName || ""}
-                    onChange={e => setPaymentForm((f: any) => ({ ...f, bankName: e.target.value }))}
+                    onChange={(e) =>
+                      setPaymentForm((f: any) => ({
+                        ...f,
+                        bankName: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div>
@@ -961,7 +1039,12 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     type="text"
                     placeholder="Account Number"
                     value={paymentForm.accountNumber || ""}
-                    onChange={e => setPaymentForm((f: any) => ({ ...f, accountNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setPaymentForm((f: any) => ({
+                        ...f,
+                        accountNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div>
@@ -970,7 +1053,12 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     type="text"
                     placeholder="Branch Code"
                     value={paymentForm.branchCode || ""}
-                    onChange={e => setPaymentForm((f: any) => ({ ...f, branchCode: e.target.value }))}
+                    onChange={(e) =>
+                      setPaymentForm((f: any) => ({
+                        ...f,
+                        branchCode: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div>
@@ -979,7 +1067,12 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     type="text"
                     placeholder="Reference Number"
                     value={paymentForm.referenceNumber || ""}
-                    onChange={e => setPaymentForm((f: any) => ({ ...f, referenceNumber: e.target.value }))}
+                    onChange={(e) =>
+                      setPaymentForm((f: any) => ({
+                        ...f,
+                        referenceNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div>
@@ -987,7 +1080,12 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                   <Input
                     type="date"
                     value={paymentForm.paidAt || ""}
-                    onChange={e => setPaymentForm((f: any) => ({ ...f, paidAt: e.target.value }))}
+                    onChange={(e) =>
+                      setPaymentForm((f: any) => ({
+                        ...f,
+                        paidAt: e.target.value,
+                      }))
+                    }
                   />
                 </div>
                 <div className="col-span-2">
@@ -997,16 +1095,25 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                       if (!files?.length) return;
                       setIsReceiptUploading(true);
                       try {
-                        const url = await cloudinaryService.uploadFile(files[0]);
+                        const url = await cloudinaryService.uploadFile(
+                          files[0]
+                        );
                         setPaymentForm((f: any) => ({ ...f, receiptUrl: url }));
                         setPaymentErrors((prev) => {
                           const n = { ...prev };
                           delete n.receiptUrl;
                           return n;
                         });
-                        toast({ title: "Uploaded", description: "Receipt uploaded successfully" });
+                        toast({
+                          title: "Uploaded",
+                          description: "Receipt uploaded successfully",
+                        });
                       } catch (e: any) {
-                        toast({ title: "Upload failed", description: e?.message || "Unable to upload", variant: "destructive" });
+                        toast({
+                          title: "Upload failed",
+                          description: e?.message || "Unable to upload",
+                          variant: "destructive",
+                        });
                       } finally {
                         setIsReceiptUploading(false);
                       }
@@ -1014,14 +1121,19 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                   />
                   {isReceiptUploading && (
                     <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Uploading receipt...
+                      <Loader2 className="h-3 w-3 animate-spin" /> Uploading
+                      receipt...
                     </p>
                   )}
                   {paymentForm.receiptUrl && (
-                    <p className="text-xs text-muted-foreground mt-1">Linked: {paymentForm.receiptUrl}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Linked: {paymentForm.receiptUrl}
+                    </p>
                   )}
                   {paymentErrors.receiptUrl && (
-                    <p className="text-sm text-red-500 mt-1">{paymentErrors.receiptUrl}</p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {paymentErrors.receiptUrl}
+                    </p>
                   )}
                 </div>
               </div>
@@ -1030,17 +1142,30 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                 <Textarea
                   placeholder="Comments (optional)"
                   value={paymentForm.comments || ""}
-                  onChange={e => setPaymentForm((f: any) => ({ ...f, comments: e.target.value }))}
+                  onChange={(e) =>
+                    setPaymentForm((f: any) => ({
+                      ...f,
+                      comments: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
             <DrawerFooter>
-              <Button onClick={handlePaymentSubmit} disabled={isPaymentSubmitting} className="w-full">
-                {isPaymentSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+              <Button
+                onClick={handlePaymentSubmit}
+                disabled={isPaymentSubmitting}
+                className="w-full"
+              >
+                {isPaymentSubmitting ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : null}
                 Submit Payment
               </Button>
               <DrawerClose asChild>
-                <Button variant="outline" className="w-full">Cancel</Button>
+                <Button variant="outline" className="w-full">
+                  Cancel
+                </Button>
               </DrawerClose>
             </DrawerFooter>
           </DrawerContent>
@@ -1053,7 +1178,10 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
           <DrawerContent className="max-w-lg mx-auto">
             <DrawerHeader>
               <DrawerTitle>Attach Actual Invoice</DrawerTitle>
-              <DrawerDescription>Provide the URL to the signed or final invoice document (PDF preferred).</DrawerDescription>
+              <DrawerDescription>
+                Provide the URL to the signed or final invoice document (PDF
+                preferred).
+              </DrawerDescription>
             </DrawerHeader>
             <div className="p-4 space-y-2">
               <Label>Invoice Upload</Label>
@@ -1064,9 +1192,16 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                   try {
                     const url = await cloudinaryService.uploadFile(files[0]);
                     setAttachUrl(url);
-                    toast({ title: "Uploaded", description: "Invoice uploaded successfully" });
+                    toast({
+                      title: "Uploaded",
+                      description: "Invoice uploaded successfully",
+                    });
                   } catch (e: any) {
-                    toast({ title: "Upload failed", description: e?.message || "Unable to upload", variant: "destructive" });
+                    toast({
+                      title: "Upload failed",
+                      description: e?.message || "Unable to upload",
+                      variant: "destructive",
+                    });
                   } finally {
                     setIsAttachUploading(false);
                   }
@@ -1074,20 +1209,31 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
               />
               {isAttachUploading && (
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Uploading invoice...
+                  <Loader2 className="h-3 w-3 animate-spin" /> Uploading
+                  invoice...
                 </p>
               )}
               {attachUrl && (
-                <p className="text-xs text-muted-foreground">Linked: {attachUrl}</p>
+                <p className="text-xs text-muted-foreground">
+                  Linked: {attachUrl}
+                </p>
               )}
             </div>
             <DrawerFooter>
-              <Button onClick={handleAttachSubmit} disabled={isAttachSubmitting || isAttachUploading || !attachUrl} className="w-full">
-                {isAttachSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+              <Button
+                onClick={handleAttachSubmit}
+                disabled={isAttachSubmitting || isAttachUploading || !attachUrl}
+                className="w-full"
+              >
+                {isAttachSubmitting ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : null}
                 Attach
               </Button>
               <DrawerClose asChild>
-                <Button variant="outline" className="w-full">Cancel</Button>
+                <Button variant="outline" className="w-full">
+                  Cancel
+                </Button>
               </DrawerClose>
             </DrawerFooter>
           </DrawerContent>
@@ -1095,7 +1241,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       )}
     </>
   );
-}
+};
 
 export default InvoicesSection;
-

@@ -149,7 +149,8 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
           description: "Contract has been updated successfully",
         });
 
-        router.refresh();
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
       }
     } catch (error) {
       console.error("Failed to update contract:", error);
@@ -179,7 +180,8 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
           description: "Contract has been deleted successfully",
         });
 
-        router.refresh();
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
       }
     } catch (error) {
       console.error("Failed to delete contract:", error);

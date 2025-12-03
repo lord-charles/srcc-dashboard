@@ -394,8 +394,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
 
       // Reset form
       setInternalFormState(initialFormState("internal"));
-      // window.location.reload();
-      router.refresh();
+      // Delay reload to ensure any modals close first
+      setTimeout(() => window.location.reload(), 100);
     } catch (error) {
       console.error("Error updating internal budget:", error);
       toast({
@@ -429,8 +429,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
 
       // Reset form
       setExternalFormState(initialFormState("external"));
-      // window.location.reload();
-      router.refresh();
+      // Delay reload to ensure any modals close first
+      setTimeout(() => window.location.reload(), 100);
     } catch (error) {
       console.error("Error creating external budget:", error);
       toast({

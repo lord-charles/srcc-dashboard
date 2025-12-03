@@ -7,10 +7,9 @@ import { authOptions } from "@/lib/auth";
 export const metadata = {
   manifest: "/manifest.json",
   title: "SRCC ERP",
-  description: "SRCC Dashboard Application",
+  description: "SRCC ERP",
 };
 import { getServerSession } from "next-auth";
-
 
 export default async function RootLayout({
   children,
@@ -30,15 +29,12 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-
             <Toaster />
 
-              {children}
-      
+            {children}
           </ThemeProvider>
         </NextAuthProvider>
       </body>
     </html>
   );
 }
-

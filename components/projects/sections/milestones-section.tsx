@@ -103,7 +103,8 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
         title: "Success",
         description: "Milestone deleted successfully",
       });
-      router.refresh();
+      // Delay reload to ensure dialog closes first
+      setTimeout(() => window.location.reload(), 100);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -114,12 +115,12 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
   };
 
   const totalMilestoneBudget = milestones.reduce(
-    (sum, milestone) => sum + milestone.budget,
+    (sum, milestone) => sum + (milestone.budget || 0),
     0
   );
   const completedMilestones = milestones.filter((m) => m.completed).length;
   const progressPercentage =
-    (completedMilestones / milestones.length) * 100 || 0;
+    milestones.length > 0 ? (completedMilestones / milestones.length) * 100 : 0;
 
   return (
     <>
@@ -137,10 +138,16 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">Overall Progress</span>
               <span className="text-sm font-medium">
-                {progressPercentage.toFixed(0)}%
+                {isNaN(progressPercentage)
+                  ? "0"
+                  : progressPercentage.toFixed(0)}
+                %
               </span>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
+            <Progress
+              value={isNaN(progressPercentage) ? 0 : progressPercentage}
+              className="h-2"
+            />
           </div>
           <div className="flex justify-between items-center mb-4 text-sm">
             <div>
@@ -229,11 +236,17 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
                   <div className="flex items-center space-x-2">
                     <MilestoneIcon className="h-4 w-4 text-muted-foreground" />
                     <span>
-                      {(
-                        (milestone?.budget /
-                          projectData?.budgetId?.totalExternalBudget) *
-                        100
-                      ).toFixed(1)}
+                      {(() => {
+                        const totalBudget =
+                          projectData?.budgetId?.totalExternalBudget || 0;
+                        const percentage =
+                          totalBudget > 0
+                            ? ((milestone?.budget || 0) / totalBudget) * 100
+                            : 0;
+                        return isNaN(percentage)
+                          ? "0.0"
+                          : percentage.toFixed(1);
+                      })()}
                       % of total budget
                     </span>
                   </div>

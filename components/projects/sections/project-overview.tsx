@@ -50,11 +50,15 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
     projectData.contractEndDate
   );
   const budgetUtilization =
-    (projectData.amountSpent / projectData.totalBudget) * 100;
+    projectData.totalBudget > 0
+      ? (projectData.amountSpent / projectData.totalBudget) * 100
+      : 0;
   const milestoneCompletion =
-    (projectData.milestones.filter((m) => m.completed).length /
-      projectData.milestones.length) *
-    100;
+    projectData.milestones.length > 0
+      ? (projectData.milestones.filter((m) => m.completed).length /
+          projectData.milestones.length) *
+        100
+      : 0;
 
   return (
     <div className="space-y-2">
@@ -130,16 +134,24 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
                 <div className="flex justify-between text-sm font-medium mb-1">
                   <span>Overall Progress</span>
                   <span>
-                    {(
-                      (progress + budgetUtilization + milestoneCompletion) /
-                      3
-                    ).toFixed(1)}
+                    {isNaN(
+                      (progress + budgetUtilization + milestoneCompletion) / 3
+                    )
+                      ? "0.0"
+                      : (
+                          (progress + budgetUtilization + milestoneCompletion) /
+                          3
+                        ).toFixed(1)}
                     %
                   </span>
                 </div>
                 <Progress
                   value={
-                    (progress + budgetUtilization + milestoneCompletion) / 3
+                    isNaN(
+                      (progress + budgetUtilization + milestoneCompletion) / 3
+                    )
+                      ? 0
+                      : (progress + budgetUtilization + milestoneCompletion) / 3
                   }
                 />
               </div>
@@ -147,18 +159,26 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <p className="font-medium">Timeline</p>
-                <p className="text-muted-foreground">{progress}% completed</p>
+                <p className="text-muted-foreground">
+                  {isNaN(progress) ? "0" : progress}% completed
+                </p>
               </div>
               <div>
                 <p className="font-medium">Budget</p>
                 <p className="text-muted-foreground">
-                  {budgetUtilization.toFixed(1)}% utilized
+                  {isNaN(budgetUtilization)
+                    ? "0.0"
+                    : budgetUtilization.toFixed(1)}
+                  % utilized
                 </p>
               </div>
               <div>
                 <p className="font-medium">Milestones</p>
                 <p className="text-muted-foreground">
-                  {milestoneCompletion.toFixed(1)}% completed
+                  {isNaN(milestoneCompletion)
+                    ? "0.0"
+                    : milestoneCompletion.toFixed(1)}
+                  % completed
                 </p>
               </div>
             </div>

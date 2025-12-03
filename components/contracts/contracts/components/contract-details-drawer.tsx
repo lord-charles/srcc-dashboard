@@ -32,7 +32,13 @@ import {
   Loader2,
   Download,
   FileCheck,
+  ChevronDown,
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Drawer,
@@ -112,6 +118,7 @@ export function ContractDetailsDrawer({
   const [activeTab, setActiveTab] = useState("overview");
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isDocumentOpen, setIsDocumentOpen] = useState(false);
   const { toast } = useToast();
   console.log("contract", contract);
   const isControlled = controlledOpen !== undefined;
@@ -377,6 +384,9 @@ export function ContractDetailsDrawer({
         title: "PDF Ready",
         description: "Print dialog opened. Save as PDF to download.",
       });
+      setTimeout(() => {
+        location.reload();
+      }, 2500);
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast({
@@ -615,145 +625,182 @@ export function ContractDetailsDrawer({
 
                     {/* Contract Document Tab */}
                     <TabsContent value="document" className="mt-0 space-y-6">
-                      <Card className="overflow-hidden border shadow-sm">
-                        <div className="bg-indigo-50 dark:bg-indigo-950/40 px-6 py-4 flex items-center justify-between">
-                          <div className="flex items-center">
-                            <FileCheck className="h-5 w-5 mr-2 text-indigo-600 dark:text-indigo-400" />
-                            <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-400">
-                              Contract Document
-                            </h3>
-                          </div>
-                          {hasContractDetails && (
-                            <Button
-                              onClick={handleDownloadPDF}
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center gap-2"
-                            >
-                              <Download className="h-4 w-4" />
-                              Download PDF
-                            </Button>
-                          )}
-                        </div>
-                        <CardContent className="p-6">
-                          {hasContractDetails ? (
-                            <div className="bg-white dark:bg-gray-950 border rounded-lg p-8 shadow-inner">
-                              <div className="max-w-3xl mx-auto">
-                                {/* Contract Header */}
-                                <div className="mb-6 pb-4 border-b">
-                                  <div className="text-sm font-medium text-muted-foreground mb-2">
-                                    Contract Reference Number
-                                  </div>
-                                  <div className="text-lg font-semibold">
-                                    {contract.contractNumber}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground mt-2">
-                                    Date:{" "}
-                                    {formatDate(
-                                      contract.createdAt || contract.startDate
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Contract Content */}
-                                <div
-                                  className="prose prose-sm dark:prose-invert max-w-none"
-                                  style={{
-                                    whiteSpace: "pre-line",
-                                    lineHeight: "1.8",
-                                    fontFamily: "Georgia, serif",
-                                  }}
-                                >
-                                  {contract.templateSnapshot?.contentType ===
-                                  "html" ? (
-                                    <div
-                                      dangerouslySetInnerHTML={{
-                                        __html:
-                                          contract.templateSnapshot?.content ||
-                                          "",
-                                      }}
-                                    />
-                                  ) : (
-                                    <div>
-                                      {contract.templateSnapshot?.content ||
-                                        "No content available"}
-                                    </div>
+                      <Collapsible
+                        open={isDocumentOpen}
+                        onOpenChange={setIsDocumentOpen}
+                      >
+                        <Card className="overflow-hidden border shadow-sm">
+                          <CollapsibleTrigger className="w-full">
+                            <div className="bg-indigo-50 dark:bg-indigo-950/40 px-6 py-4 flex items-center justify-between hover:bg-indigo-100 dark:hover:bg-indigo-950/60 transition-colors">
+                              <div className="flex items-center gap-2">
+                                <FileCheck className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                <h3 className="text-lg font-semibold text-indigo-700 dark:text-indigo-400">
+                                  Contract Document
+                                </h3>
+                                <ChevronDown
+                                  className={cn(
+                                    "h-4 w-4 text-indigo-600 dark:text-indigo-400 transition-transform duration-200",
+                                    isDocumentOpen && "rotate-180"
                                   )}
-                                </div>
-
-                                {/* Metadata */}
-                                {contract.templateSnapshot?.version && (
-                                  <div className="mt-8 pt-4 border-t text-xs text-muted-foreground">
-                                    <div>
-                                      Version:{" "}
-                                      {contract.templateSnapshot.version}
+                                />
+                              </div>
+                              {hasContractDetails && (
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownloadPDF();
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-2"
+                                >
+                                  <Download className="h-4 w-4" />
+                                  Download PDF
+                                </Button>
+                              )}
+                            </div>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <CardContent className="p-6">
+                              {hasContractDetails ? (
+                                <div className="bg-white dark:bg-gray-950 border rounded-lg p-8 shadow-inner">
+                                  <div className="max-w-3xl mx-auto">
+                                    {/* Contract Header */}
+                                    <div className="mb-6 pb-4 border-b">
+                                      <div className="text-sm font-medium text-muted-foreground mb-2">
+                                        Contract Reference Number
+                                      </div>
+                                      <div className="text-lg font-semibold">
+                                        {contract.contractNumber}
+                                      </div>
+                                      <div className="text-sm text-muted-foreground mt-2">
+                                        Date:{" "}
+                                        {formatDate(
+                                          contract.createdAt ||
+                                            contract.startDate
+                                        )}
+                                      </div>
                                     </div>
-                                    {contract.templateSnapshot.contentType && (
-                                      <div>
-                                        Format:{" "}
-                                        {contract.templateSnapshot.contentType}
+
+                                    {/* Contract Content */}
+                                    <div
+                                      className="prose prose-sm dark:prose-invert max-w-none"
+                                      style={{
+                                        whiteSpace: "pre-line",
+                                        lineHeight: "1.8",
+                                        fontFamily: "Georgia, serif",
+                                      }}
+                                    >
+                                      {contract.templateSnapshot
+                                        ?.contentType === "html" ? (
+                                        <div
+                                          dangerouslySetInnerHTML={{
+                                            __html:
+                                              contract.templateSnapshot
+                                                ?.content || "",
+                                          }}
+                                        />
+                                      ) : (
+                                        <div>
+                                          {contract.templateSnapshot?.content ||
+                                            "No content available"}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Metadata */}
+                                    {contract.templateSnapshot?.version && (
+                                      <div className="mt-8 pt-4 border-t text-xs text-muted-foreground">
+                                        <div>
+                                          Version:{" "}
+                                          {contract.templateSnapshot.version}
+                                        </div>
+                                        {contract.templateSnapshot
+                                          .contentType && (
+                                          <div>
+                                            Format:{" "}
+                                            {
+                                              contract.templateSnapshot
+                                                .contentType
+                                            }
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="text-center py-12">
-                              <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                              <p className="text-muted-foreground text-lg font-medium mb-2">
-                                No Contract Document Available
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                The contract document has not been generated
-                                yet.
-                              </p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-
-                      {contract.attachments && contract.attachments.length > 0 && (
-                        <Card className="overflow-hidden border shadow-sm">
-                          <div className="bg-slate-50 dark:bg-slate-900/40 px-6 py-4 flex items-center">
-                            <FileText className="h-5 w-5 mr-2 text-slate-600 dark:text-slate-300" />
-                            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
-                              Attachments
-                            </h3>
-                          </div>
-                          <CardContent className="p-6">
-                            <div className="space-y-3">
-                              {contract.attachments.map((att, idx) => (
-                                <div key={idx} className="flex items-center justify-between border rounded-md p-3">
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    <FileText className="h-4 w-4 text-muted-foreground" />
-                                    <a
-                                      href={att.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="font-medium truncate hover:underline"
-                                      title={att.name}
-                                    >
-                                      {att.name || att.url}
-                                    </a>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <a href={att.url} target="_blank" rel="noreferrer">
-                                      <Button variant="outline" size="sm">View</Button>
-                                    </a>
-                                    <a href={att.url} download>
-                                      <Button variant="secondary" size="sm" className="flex items-center gap-1">
-                                        <Download className="h-3 w-3" />
-                                        Download
-                                      </Button>
-                                    </a>
-                                  </div>
                                 </div>
-                              ))}
-                            </div>
-                          </CardContent>
+                              ) : (
+                                <div className="text-center py-12">
+                                  <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                                  <p className="text-muted-foreground text-lg font-medium mb-2">
+                                    No Contract Document Available
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    The contract document has not been generated
+                                    yet.
+                                  </p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </CollapsibleContent>
                         </Card>
-                      )}
+                      </Collapsible>
+
+                      {contract.attachments &&
+                        contract.attachments.length > 0 && (
+                          <Card className="overflow-hidden border shadow-sm">
+                            <div className="bg-slate-50 dark:bg-slate-900/40 px-6 py-4 flex items-center">
+                              <FileText className="h-5 w-5 mr-2 text-slate-600 dark:text-slate-300" />
+                              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">
+                                Attachments
+                              </h3>
+                            </div>
+                            <CardContent className="p-6">
+                              <div className="space-y-3">
+                                {contract.attachments.map((att, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-center justify-between border rounded-md p-3"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <FileText className="h-4 w-4 text-muted-foreground" />
+                                      <a
+                                        href={att.url}
+                                        // target="_blank"
+                                        rel="noreferrer"
+                                        className="font-medium truncate hover:underline"
+                                        title={att.name}
+                                      >
+                                        {att.name || att.url}
+                                      </a>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <a
+                                        href={att.url}
+                                        // target="_blank"
+                                        rel="noreferrer"
+                                      >
+                                        <Button variant="outline" size="sm">
+                                          View
+                                        </Button>
+                                      </a>
+                                      <a href={att.url} download>
+                                        <Button
+                                          variant="secondary"
+                                          size="sm"
+                                          className="flex items-center gap-1"
+                                        >
+                                          <Download className="h-3 w-3" />
+                                          Download
+                                        </Button>
+                                      </a>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
                     </TabsContent>
 
                     {/* Financial Tab */}

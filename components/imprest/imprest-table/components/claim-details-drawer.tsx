@@ -9,7 +9,30 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { approveClaim, rejectClaim } from "@/services/claims.service";
-import { AlertCircle, FileText, Calendar, DollarSign, User, CheckCircle2, XCircle, Clock, FileSignature, History, Info, Receipt, ClipboardList, FileEdit, Building, ArrowRight, CalendarIcon, Tag, Briefcase, BarChart3, Mail, Shield } from 'lucide-react';
+import {
+  AlertCircle,
+  FileText,
+  Calendar,
+  DollarSign,
+  User,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  FileSignature,
+  History,
+  Info,
+  Receipt,
+  ClipboardList,
+  FileEdit,
+  Building,
+  ArrowRight,
+  CalendarIcon,
+  Tag,
+  Briefcase,
+  BarChart3,
+  Mail,
+  Shield,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Drawer,
@@ -27,7 +50,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ClaimDetailsDrawerProps {
   claim: Claim;
@@ -65,24 +93,35 @@ const getStatusColor = (status: ClaimStatus) => {
 const getStatusIcon = (status: ClaimStatus) => {
   switch (status) {
     case "approved":
-      return <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />;
+      return (
+        <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
+      );
     case "pending_checker_approval":
     case "pending_manager_approval":
     case "pending_finance_approval":
-      return <Clock className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />;
+      return (
+        <Clock className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />
+      );
     case "rejected":
-      return <XCircle className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />;
+      return (
+        <XCircle className="h-4 w-4 mr-2 text-red-600 dark:text-red-400" />
+      );
     case "draft":
-      return <FileEdit className="h-4 w-4 mr-2 text-slate-600 dark:text-slate-400" />;
+      return (
+        <FileEdit className="h-4 w-4 mr-2 text-slate-600 dark:text-slate-400" />
+      );
     default:
-      return <Info className="h-4 w-4 mr-2 text-slate-600 dark:text-slate-400" />;
+      return (
+        <Info className="h-4 w-4 mr-2 text-slate-600 dark:text-slate-400" />
+      );
   }
 };
 
 const formatStatus = (status: ClaimStatus) => {
-  return status.split("_").map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(" ");
+  return status
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 const formatDate = (dateString: string | undefined): string => {
@@ -119,12 +158,16 @@ export function ClaimDetailsDrawer({
   const [comments, setComments] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
+  const [actionType, setActionType] = useState<"approve" | "reject" | null>(
+    null
+  );
   const { toast } = useToast();
 
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
-  const onOpenChange = isControlled ? controlledOnOpenChange : setUncontrolledOpen;
+  const onOpenChange = isControlled
+    ? controlledOnOpenChange
+    : setUncontrolledOpen;
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange?.(isOpen);
@@ -138,13 +181,17 @@ export function ClaimDetailsDrawer({
 
   const isApprovalPending = claim.status.startsWith("pending_");
   const currentLevel = isApprovalPending ? claim.status.split("_")[1] : null;
-  const isDeadlinePassed = claim.currentLevelDeadline && new Date(claim.currentLevelDeadline) < new Date();
+  const isDeadlinePassed =
+    claim.currentLevelDeadline &&
+    new Date(claim.currentLevelDeadline) < new Date();
 
   const handleAction = async (type: "approve" | "reject") => {
     if (!comments.trim()) {
       toast({
         title: "Comments Required",
-        description: `Please provide comments before ${type === "approve" ? "approving" : "rejecting"} the claim.`,
+        description: `Please provide comments before ${
+          type === "approve" ? "approving" : "rejecting"
+        } the claim.`,
         variant: "destructive",
       });
       return;
@@ -153,7 +200,7 @@ export function ClaimDetailsDrawer({
     try {
       setIsSubmitting(true);
       setActionType(type);
-      
+
       if (type === "approve") {
         await approveClaim(claim._id, comments);
         toast({
@@ -167,7 +214,7 @@ export function ClaimDetailsDrawer({
           description: "The claim has been rejected.",
         });
       }
-      
+
       onClose?.();
       setComments("");
       window.location.reload();
@@ -206,9 +253,12 @@ export function ClaimDetailsDrawer({
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <Badge 
-                    variant="outline" 
-                    className={cn("border px-3 py-1.5 flex items-center", getStatusColor(claim.status))}
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "border px-3 py-1.5 flex items-center",
+                      getStatusColor(claim.status)
+                    )}
                   >
                     {getStatusIcon(claim.status)}
                     {formatStatus(claim.status)}
@@ -223,46 +273,46 @@ export function ClaimDetailsDrawer({
             </DrawerHeader>
 
             <div className="flex-1 overflow-hidden">
-              <Tabs 
-                defaultValue="overview" 
-                value={activeTab} 
+              <Tabs
+                defaultValue="overview"
+                value={activeTab}
                 onValueChange={setActiveTab}
                 className="h-full flex flex-col"
               >
                 <div className="px-6 border-b">
                   <TabsList className="h-14 w-full justify-start gap-2 bg-transparent">
-                    <TabsTrigger 
-                      value="overview" 
+                    <TabsTrigger
+                      value="overview"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <Info className="h-4 w-4 mr-2" />
                       Overview
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="milestones" 
+                    <TabsTrigger
+                      value="milestones"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <Receipt className="h-4 w-4 mr-2" />
                       Milestones
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="claimant" 
+                    <TabsTrigger
+                      value="claimant"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <User className="h-4 w-4 mr-2" />
                       Claimant
                     </TabsTrigger>
                     {isApprovalPending && (
-                      <TabsTrigger 
-                        value="approval" 
+                      <TabsTrigger
+                        value="approval"
                         className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                       >
                         <ClipboardList className="h-4 w-4 mr-2" />
                         Approval
                       </TabsTrigger>
                     )}
-                    <TabsTrigger 
-                      value="history" 
+                    <TabsTrigger
+                      value="history"
                       className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
                     >
                       <History className="h-4 w-4 mr-2" />
@@ -280,7 +330,9 @@ export function ClaimDetailsDrawer({
                           <Card className="md:col-span-2 overflow-hidden border shadow-sm">
                             <CardHeader className="bg-primary/5 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
                               <FileSignature className="h-5 w-5 text-primary" />
-                              <CardTitle className="text-lg font-semibold">Claim Information</CardTitle>
+                              <CardTitle className="text-lg font-semibold">
+                                Claim Information
+                              </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6">
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -311,7 +363,10 @@ export function ClaimDetailsDrawer({
                                     Contract Value
                                   </div>
                                   <p className="font-semibold text-lg">
-                                    {formatCurrency(claim.contractId?.contractValue || 0, claim?.currency)}
+                                    {formatCurrency(
+                                      claim.contractId?.contractValue || 0,
+                                      claim?.currency
+                                    )}
                                   </p>
                                 </div>
                                 <div className="space-y-1">
@@ -320,7 +375,10 @@ export function ClaimDetailsDrawer({
                                     Claim Amount
                                   </div>
                                   <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
-                                    {formatCurrency(claim?.amount || 0, claim?.currency)}
+                                    {formatCurrency(
+                                      claim?.amount || 0,
+                                      claim?.currency
+                                    )}
                                   </p>
                                 </div>
                                 <div className="space-y-1">
@@ -348,25 +406,41 @@ export function ClaimDetailsDrawer({
                           <Card className="overflow-hidden border shadow-sm">
                             <CardHeader className="bg-primary/5 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
                               <Clock className="h-5 w-5 text-primary" />
-                              <CardTitle className="text-lg font-semibold">Status & Timeline</CardTitle>
+                              <CardTitle className="text-lg font-semibold">
+                                Status & Timeline
+                              </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6">
                               <div className="space-y-4">
                                 <div className="space-y-1">
-                                  <span className="text-sm font-medium text-muted-foreground">Current Status</span>
-                                  <div className={cn("px-3 py-2 rounded-md flex items-center font-medium", getStatusColor(claim.status))}>
+                                  <span className="text-sm font-medium text-muted-foreground">
+                                    Current Status
+                                  </span>
+                                  <div
+                                    className={cn(
+                                      "px-3 py-2 rounded-md flex items-center font-medium",
+                                      getStatusColor(claim.status)
+                                    )}
+                                  >
                                     {getStatusIcon(claim.status)}
                                     {formatStatus(claim.status)}
                                   </div>
                                 </div>
-                                
+
                                 {claim.currentLevelDeadline && (
                                   <div className="space-y-1">
                                     <span className="text-sm font-medium text-muted-foreground flex items-center">
                                       <Clock className="h-3.5 w-3.5 mr-1.5" />
                                       Approval Deadline
                                     </span>
-                                    <p className={cn("font-medium", isDeadlinePassed ? "text-red-600 dark:text-red-400" : "")}>
+                                    <p
+                                      className={cn(
+                                        "font-medium",
+                                        isDeadlinePassed
+                                          ? "text-red-600 dark:text-red-400"
+                                          : ""
+                                      )}
+                                    >
                                       {formatDate(claim.currentLevelDeadline)}
                                       {isDeadlinePassed && (
                                         <span className="ml-2 text-xs bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
@@ -376,30 +450,34 @@ export function ClaimDetailsDrawer({
                                     </p>
                                   </div>
                                 )}
-                                
+
                                 <div className="space-y-1">
                                   <span className="text-sm font-medium text-muted-foreground flex items-center">
                                     <User className="h-3.5 w-3.5 mr-1.5" />
                                     Created By
                                   </span>
                                   <p className="font-medium">
-                                    {claim.createdBy?.firstName} {claim.createdBy?.lastName}
+                                    {claim.createdBy?.firstName}{" "}
+                                    {claim.createdBy?.lastName}
                                   </p>
                                 </div>
                               </div>
                             </CardContent>
                           </Card>
                         </div>
-
-                    
                       </TabsContent>
 
                       {/* Milestones Tab */}
-                      <TabsContent value="milestones" className="mt-0 space-y-6">
+                      <TabsContent
+                        value="milestones"
+                        className="mt-0 space-y-6"
+                      >
                         <Card className="overflow-hidden border shadow-sm">
                           <CardHeader className="bg-emerald-50 dark:bg-emerald-950/40 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
                             <Receipt className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                            <CardTitle className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">Milestones</CardTitle>
+                            <CardTitle className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                              Milestones
+                            </CardTitle>
                           </CardHeader>
                           <CardContent className="p-6">
                             <div className="space-y-8">
@@ -410,11 +488,16 @@ export function ClaimDetailsDrawer({
                                       <div className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 w-8 h-8 rounded-full flex items-center justify-center mr-3 font-semibold">
                                         {index + 1}
                                       </div>
-                                      <h4 className="font-medium text-lg">{milestone.title}</h4>
+                                      <h4 className="font-medium text-lg">
+                                        {milestone.title}
+                                      </h4>
                                     </div>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                                        <Badge
+                                          variant="outline"
+                                          className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+                                        >
                                           {milestone.percentageClaimed}% Claimed
                                         </Badge>
                                       </TooltipTrigger>
@@ -423,28 +506,34 @@ export function ClaimDetailsDrawer({
                                       </TooltipContent>
                                     </Tooltip>
                                   </div>
-                                  
+
                                   <div className="relative pt-1">
                                     <div className="flex items-center justify-between mb-2">
                                       <div>
                                         <span className="text-xs font-semibold inline-block text-emerald-600">
-                                          {milestone.percentageClaimed}% Complete
+                                          {milestone.percentageClaimed}%
+                                          Complete
                                         </span>
                                       </div>
                                       <div className="text-right">
                                         <span className="text-xs font-semibold inline-block text-emerald-600">
-                                          {formatCurrency(milestone.currentClaim, claim.currency)}
+                                          {formatCurrency(
+                                            milestone.currentClaim,
+                                            claim.currency
+                                          )}
                                         </span>
                                       </div>
                                     </div>
                                     <div className="overflow-hidden h-2 text-xs flex rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                                      <div 
-                                        style={{ width: `${milestone.percentageClaimed}%` }} 
+                                      <div
+                                        style={{
+                                          width: `${milestone.percentageClaimed}%`,
+                                        }}
                                         className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500"
                                       ></div>
                                     </div>
                                   </div>
-                                  
+
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 p-4 rounded-lg">
                                     <div className="space-y-1">
                                       <div className="flex items-center text-sm font-medium text-muted-foreground">
@@ -452,7 +541,10 @@ export function ClaimDetailsDrawer({
                                         Maximum Claimable
                                       </div>
                                       <p className="font-medium text-lg">
-                                        {formatCurrency(milestone.maxClaimableAmount, claim.currency)}
+                                        {formatCurrency(
+                                          milestone.maxClaimableAmount,
+                                          claim.currency
+                                        )}
                                       </p>
                                     </div>
                                     <div className="space-y-1">
@@ -461,7 +553,10 @@ export function ClaimDetailsDrawer({
                                         Current Claim
                                       </div>
                                       <p className="font-medium text-lg text-emerald-600 dark:text-emerald-400">
-                                        {formatCurrency(milestone.currentClaim, claim.currency)}
+                                        {formatCurrency(
+                                          milestone.currentClaim,
+                                          claim.currency
+                                        )}
                                       </p>
                                     </div>
                                     <div className="space-y-1">
@@ -470,11 +565,14 @@ export function ClaimDetailsDrawer({
                                         Remaining
                                       </div>
                                       <p className="font-medium text-lg">
-                                        {formatCurrency(milestone.remainingClaimable, claim.currency)}
+                                        {formatCurrency(
+                                          milestone.remainingClaimable,
+                                          claim.currency
+                                        )}
                                       </p>
                                     </div>
                                   </div>
-                                  
+
                                   {index < claim.milestones.length - 1 && (
                                     <Separator className="my-4" />
                                   )}
@@ -498,13 +596,19 @@ export function ClaimDetailsDrawer({
                             <div className="flex flex-col md:flex-row items-start gap-6">
                               <div className="flex-shrink-0">
                                 <Avatar className="h-24 w-24">
-                                  <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${claim.claimantId.firstName}%20${claim.claimantId.lastName}`} alt={`${claim.claimantId.firstName} ${claim.claimantId.lastName}`} />
+                                  <AvatarImage
+                                    src={`https://api.dicebear.com/7.x/initials/svg?seed=${claim.claimantId.firstName}%20${claim.claimantId.lastName}`}
+                                    alt={`${claim.claimantId.firstName} ${claim.claimantId.lastName}`}
+                                  />
                                   <AvatarFallback className="text-2xl">
-                                    {getInitials(claim.claimantId.firstName, claim.claimantId.lastName)}
+                                    {getInitials(
+                                      claim.claimantId.firstName,
+                                      claim.claimantId.lastName
+                                    )}
                                   </AvatarFallback>
                                 </Avatar>
                               </div>
-                              
+
                               <div className="flex-1 space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                   <div className="space-y-1">
@@ -513,7 +617,8 @@ export function ClaimDetailsDrawer({
                                       Full Name
                                     </div>
                                     <p className="font-semibold text-lg">
-                                      {claim.claimantId.firstName} {claim.claimantId.lastName}
+                                      {claim.claimantId.firstName}{" "}
+                                      {claim.claimantId.lastName}
                                     </p>
                                   </div>
                                   <div className="space-y-1">
@@ -526,7 +631,7 @@ export function ClaimDetailsDrawer({
                                     </p>
                                   </div>
                                 </div>
-                                
+
                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                                   <h4 className="font-medium mb-3 flex items-center text-blue-700 dark:text-blue-400">
                                     <Info className="h-4 w-4 mr-2" />
@@ -534,20 +639,29 @@ export function ClaimDetailsDrawer({
                                   </h4>
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                      <span className="text-sm text-muted-foreground">Total Claim Amount</span>
+                                      <span className="text-sm text-muted-foreground">
+                                        Total Claim Amount
+                                      </span>
                                       <p className="font-semibold text-lg text-blue-700 dark:text-blue-400">
-                                        {formatCurrency(claim.amount, claim.currency)}
+                                        {formatCurrency(
+                                          claim.amount,
+                                          claim.currency
+                                        )}
                                       </p>
                                     </div>
                                     <div>
-                                      <span className="text-sm text-muted-foreground">Claim Status</span>
+                                      <span className="text-sm text-muted-foreground">
+                                        Claim Status
+                                      </span>
                                       <p className="font-medium flex items-center mt-1">
                                         {getStatusIcon(claim.status)}
                                         {formatStatus(claim.status)}
                                       </p>
                                     </div>
                                     <div>
-                                      <span className="text-sm text-muted-foreground">Claim Version</span>
+                                      <span className="text-sm text-muted-foreground">
+                                        Claim Version
+                                      </span>
                                       <p className="font-medium">
                                         {claim.version}
                                         {claim.version > 1 && (
@@ -567,11 +681,16 @@ export function ClaimDetailsDrawer({
 
                       {/* Approval Tab C */}
                       {isApprovalPending && (
-                        <TabsContent value="approval" className="mt-0 space-y-6">
+                        <TabsContent
+                          value="approval"
+                          className="mt-0 space-y-6"
+                        >
                           <Card className="overflow-hidden border shadow-sm">
                             <CardHeader className="bg-purple-50 dark:bg-purple-950/40 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
                               <ClipboardList className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                              <CardTitle className="text-lg font-semibold text-purple-700 dark:text-purple-400">Claim Approval</CardTitle>
+                              <CardTitle className="text-lg font-semibold text-purple-700 dark:text-purple-400">
+                                Claim Approval
+                              </CardTitle>
                             </CardHeader>
                             <CardContent className="p-6">
                               {isDeadlinePassed && (
@@ -579,7 +698,9 @@ export function ClaimDetailsDrawer({
                                   <AlertCircle className="h-4 w-4" />
                                   <AlertTitle>Deadline Passed</AlertTitle>
                                   <AlertDescription>
-                                    This approval is past its deadline of {formatDate(claim.currentLevelDeadline)} {formatTime(claim.currentLevelDeadline)}
+                                    This approval is past its deadline of{" "}
+                                    {formatDate(claim.currentLevelDeadline)}{" "}
+                                    {formatTime(claim.currentLevelDeadline)}
                                   </AlertDescription>
                                 </Alert>
                               )}
@@ -588,46 +709,66 @@ export function ClaimDetailsDrawer({
                                 <div className="bg-muted/30 p-4 rounded-lg">
                                   <h3 className="text-base font-medium mb-3 flex items-center">
                                     <Shield className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400" />
-                                    {currentLevel === "finance" ? "Finance Approval Required" : 
-                                     currentLevel === "checker" ? "Checker Approval Required" :
-                                     "Manager Approval Required"}
+                                    {currentLevel === "finance"
+                                      ? "Finance Approval Required"
+                                      : currentLevel === "checker"
+                                      ? "Checker Approval Required"
+                                      : "Manager Approval Required"}
                                   </h3>
                                   <p className="text-sm text-muted-foreground mb-4">
-                                    {currentLevel === "finance" ? 
-                                      "As a finance approver, please review the claim details and financial information before making your decision." : 
-                                     currentLevel === "checker" ? 
-                                      "As a checker, please verify all claim details and milestone information before approving or rejecting." :
-                                      "As a manager, please review this claim and provide your approval or rejection with appropriate comments."}
+                                    {currentLevel === "finance"
+                                      ? "As a finance approver, please review the claim details and financial information before making your decision."
+                                      : currentLevel === "checker"
+                                      ? "As a checker, please verify all claim details and milestone information before approving or rejecting."
+                                      : "As a manager, please review this claim and provide your approval or rejection with appropriate comments."}
                                   </p>
-                                  
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="space-y-1">
-                                      <span className="text-sm font-medium text-muted-foreground">Claim Amount</span>
+                                      <span className="text-sm font-medium text-muted-foreground">
+                                        Claim Amount
+                                      </span>
                                       <p className="font-semibold text-lg text-purple-600 dark:text-purple-400">
-                                        {formatCurrency(claim?.amount || 0, claim?.currency)}
+                                        {formatCurrency(
+                                          claim?.amount || 0,
+                                          claim?.currency
+                                        )}
                                       </p>
                                     </div>
                                     <div className="space-y-1">
-                                      <span className="text-sm font-medium text-muted-foreground">Deadline</span>
-                                      <p className={cn("font-medium", isDeadlinePassed ? "text-red-600 dark:text-red-400" : "")}>
+                                      <span className="text-sm font-medium text-muted-foreground">
+                                        Deadline
+                                      </span>
+                                      <p
+                                        className={cn(
+                                          "font-medium",
+                                          isDeadlinePassed
+                                            ? "text-red-600 dark:text-red-400"
+                                            : ""
+                                        )}
+                                      >
                                         {formatDate(claim.currentLevelDeadline)}
                                         {isDeadlinePassed && " (Overdue)"}
                                       </p>
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 <div>
                                   <label className="text-base font-medium block mb-2">
-                                    {currentLevel === "finance" ? "Finance Approval Comments" : 
-                                     currentLevel === "checker" ? "Checker Approval Comments" :
-                                     "Manager Approval Comments"}
+                                    {currentLevel === "finance"
+                                      ? "Finance Approval Comments"
+                                      : currentLevel === "checker"
+                                      ? "Checker Approval Comments"
+                                      : "Manager Approval Comments"}
                                   </label>
                                   <Textarea
                                     placeholder="Enter your comments regarding this claim approval or rejection..."
                                     className="min-h-[120px] resize-none"
                                     value={comments}
-                                    onChange={(e) => setComments(e.target.value)}
+                                    onChange={(e) =>
+                                      setComments(e.target.value)
+                                    }
                                   />
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -638,11 +779,28 @@ export function ClaimDetailsDrawer({
                                     variant="default"
                                     disabled={isSubmitting || !comments.trim()}
                                   >
-                                    {isSubmitting && actionType === "approve" ? (
+                                    {isSubmitting &&
+                                    actionType === "approve" ? (
                                       <div className="flex items-center space-x-2">
-                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        <svg
+                                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                          ></circle>
+                                          <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                          ></path>
                                         </svg>
                                         <span>Approving...</span>
                                       </div>
@@ -661,10 +819,26 @@ export function ClaimDetailsDrawer({
                                     disabled={isSubmitting || !comments.trim()}
                                   >
                                     {isSubmitting && actionType === "reject" ? (
-                                     <div className="flex items-center space-x-2">
-                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                      <div className="flex items-center space-x-2">
+                                        <svg
+                                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                          ></circle>
+                                          <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                          ></path>
                                         </svg>
                                         <span>Rejecting...</span>
                                       </div>
@@ -687,11 +861,14 @@ export function ClaimDetailsDrawer({
                         <Card className="overflow-hidden border shadow-sm">
                           <CardHeader className="bg-teal-50 dark:bg-teal-950/40 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
                             <History className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                            <CardTitle className="text-lg font-semibold text-teal-700 dark:text-teal-400">Approval History</CardTitle>
+                            <CardTitle className="text-lg font-semibold text-teal-700 dark:text-teal-400">
+                              Approval History
+                            </CardTitle>
                           </CardHeader>
                           <CardContent className="p-6">
                             <div className="space-y-6">
-                              {claim.auditTrail && claim.auditTrail.length > 0 ? (
+                              {claim.auditTrail &&
+                              claim.auditTrail.length > 0 ? (
                                 <div className="relative border-l-2 border-teal-200 dark:border-teal-800 pl-6 ml-3 space-y-8">
                                   {claim.auditTrail.map((entry, index) => (
                                     <div key={entry._id} className="relative">
@@ -704,27 +881,34 @@ export function ClaimDetailsDrawer({
                                           <FileEdit className="h-3 w-3 text-teal-600 dark:text-teal-400" />
                                         )}
                                       </div>
-                                      
+
                                       <div className="bg-muted/30 rounded-lg p-4">
                                         <div className="flex items-center justify-between mb-2">
                                           <div className="font-medium">
                                             {entry.action}
                                           </div>
                                           <div className="text-sm text-muted-foreground">
-                                            {formatDate(entry.performedAt)} {formatTime(entry.performedAt)}
+                                            {formatDate(entry.performedAt)}{" "}
+                                            {formatTime(entry.performedAt)}
                                           </div>
                                         </div>
-                                        
+
                                         <div className="text-sm mb-3">
-                                          <span className="text-muted-foreground">Performed by: </span>
-                                          <span className="font-medium">{entry.performedBy}</span>
+                                          <span className="text-muted-foreground">
+                                            Performed by:{" "}
+                                          </span>
+                                          <span className="font-medium">
+                                            {entry.performedBy}
+                                          </span>
                                         </div>
-                                        
+
                                         {entry.details && (
                                           <div className="bg-background p-4 rounded-md border text-sm">
                                             <div className="flex items-center mb-2">
                                               <Shield className="h-3.5 w-3.5 mr-1.5 text-teal-600 dark:text-teal-400" />
-                                              <span className="font-medium capitalize">{entry.details.level} Level</span>
+                                              <span className="font-medium capitalize">
+                                                {entry.details.level} Level
+                                              </span>
                                             </div>
                                             <div className="pl-5 border-l-2 border-teal-200 dark:border-teal-800">
                                               {entry.details.comments}
@@ -748,25 +932,37 @@ export function ClaimDetailsDrawer({
                                     <CheckCircle2 className="h-5 w-5 mr-2 text-teal-600 dark:text-teal-400" />
                                     Approval Records
                                   </h3>
-                                  
+
                                   {claim.approval.checkerApproval && (
                                     <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
                                       <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center">
                                           <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                                          <h4 className="font-medium">Checker Approval</h4>
+                                          <h4 className="font-medium">
+                                            Checker Approval
+                                          </h4>
                                         </div>
                                         <div className="text-sm text-muted-foreground">
-                                          {formatDate(claim.approval.checkerApproval.approvedAt)}
+                                          {formatDate(
+                                            claim.approval.checkerApproval
+                                              .approvedAt
+                                          )}
                                         </div>
                                       </div>
                                       <div className="text-sm">
                                         <div className="flex items-center text-muted-foreground mb-2">
                                           <User className="h-3.5 w-3.5 mr-1.5" />
-                                          Approved by: {claim.approval.checkerApproval.approvedBy}
+                                          Approved by:{" "}
+                                          {
+                                            claim.approval.checkerApproval
+                                              .approvedBy
+                                          }
                                         </div>
                                         <div className="bg-white dark:bg-green-950 p-3 rounded-md border text-sm">
-                                          {claim.approval.checkerApproval.comments}
+                                          {
+                                            claim.approval.checkerApproval
+                                              .comments
+                                          }
                                         </div>
                                       </div>
                                     </div>
@@ -777,42 +973,66 @@ export function ClaimDetailsDrawer({
                                       <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center">
                                           <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                                          <h4 className="font-medium">Manager Approval</h4>
+                                          <h4 className="font-medium">
+                                            Manager Approval
+                                          </h4>
                                         </div>
                                         <div className="text-sm text-muted-foreground">
-                                          {formatDate(claim.approval.managerApproval.approvedAt)}
+                                          {formatDate(
+                                            claim.approval.managerApproval
+                                              .approvedAt
+                                          )}
                                         </div>
                                       </div>
                                       <div className="text-sm">
                                         <div className="flex items-center text-muted-foreground mb-2">
                                           <User className="h-3.5 w-3.5 mr-1.5" />
-                                          Approved by: {claim.approval.managerApproval.approvedBy}
+                                          Approved by:{" "}
+                                          {
+                                            claim.approval.managerApproval
+                                              .approvedBy
+                                          }
                                         </div>
                                         <div className="bg-white dark:bg-green-950 p-3 rounded-md border text-sm">
-                                          {claim.approval.managerApproval.comments}
+                                          {
+                                            claim.approval.managerApproval
+                                              .comments
+                                          }
                                         </div>
                                       </div>
                                     </div>
                                   )}
-                                  
+
                                   {claim.approval.financeApproval && (
                                     <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
                                       <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center">
                                           <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
-                                          <h4 className="font-medium">Finance Approval</h4>
+                                          <h4 className="font-medium">
+                                            Finance Approval
+                                          </h4>
                                         </div>
                                         <div className="text-sm text-muted-foreground">
-                                          {formatDate(claim.approval.financeApproval.approvedAt)}
+                                          {formatDate(
+                                            claim.approval.financeApproval
+                                              .approvedAt
+                                          )}
                                         </div>
                                       </div>
                                       <div className="text-sm">
                                         <div className="flex items-center text-muted-foreground mb-2">
                                           <User className="h-3.5 w-3.5 mr-1.5" />
-                                          Approved by: {claim.approval.financeApproval.approvedBy}
+                                          Approved by:{" "}
+                                          {
+                                            claim.approval.financeApproval
+                                              .approvedBy
+                                          }
                                         </div>
                                         <div className="bg-white dark:bg-green-950 p-3 rounded-md border text-sm">
-                                          {claim.approval.financeApproval.comments}
+                                          {
+                                            claim.approval.financeApproval
+                                              .comments
+                                          }
                                         </div>
                                       </div>
                                     </div>
@@ -847,7 +1067,13 @@ export function ClaimDetailsDrawer({
                   </>
                 )}
                 <DrawerClose asChild>
-                  <Button variant="outline" size="lg" className={isApprovalPending ? "flex-1" : "w-full"}>Close</Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className={isApprovalPending ? "flex-1" : "w-full"}
+                  >
+                    Close
+                  </Button>
                 </DrawerClose>
               </div>
             </DrawerFooter>

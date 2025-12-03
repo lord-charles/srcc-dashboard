@@ -15,10 +15,7 @@ import {
   XCircleIcon,
   AlertCircleIcon,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ComprehensiveAuditTrail } from "./improved-audit-trail";
@@ -27,7 +24,11 @@ import { User } from "@/types/project";
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { approveBudget, rejectBudget, requestBudgetRevision } from "@/services/budget.service";
+import {
+  approveBudget,
+  rejectBudget,
+  requestBudgetRevision,
+} from "@/services/budget.service";
 import { useToast } from "@/hooks/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
@@ -43,7 +44,11 @@ type BudgetApprovalProps = {
 
 interface ActionFormProps {
   type: "approve" | "reject" | "revise";
-  onSubmit: (data: { comments?: string; reason?: string; changes?: string[] }) => Promise<void>;
+  onSubmit: (data: {
+    comments?: string;
+    reason?: string;
+    changes?: string[];
+  }) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -58,7 +63,8 @@ function ActionForm({ type, onSubmit, onCancel }: ActionFormProps) {
       await onSubmit({
         comments: type === "approve" ? comments : undefined,
         reason: type === "reject" ? comments : undefined,
-        changes: type === "revise" ? comments.split("\n").filter(Boolean) : undefined
+        changes:
+          type === "revise" ? comments.split("\n").filter(Boolean) : undefined,
       });
       setComments("");
     } catch (error) {
@@ -69,21 +75,24 @@ function ActionForm({ type, onSubmit, onCancel }: ActionFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-muted/30">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 p-4 border rounded-lg bg-muted/30"
+    >
       <div className="space-y-2">
         <h3 className="font-medium">
           {type === "approve"
             ? "Approve Budget"
             : type === "reject"
-              ? "Reject Budget"
-              : "Request Revision"}
+            ? "Reject Budget"
+            : "Request Revision"}
         </h3>
         <p className="text-sm text-muted-foreground">
           {type === "approve"
             ? "Add any comments for this approval"
             : type === "reject"
-              ? "Please provide a reason for rejection"
-              : "List the changes needed (one per line)"}
+            ? "Please provide a reason for rejection"
+            : "List the changes needed (one per line)"}
         </p>
       </div>
 
@@ -94,8 +103,8 @@ function ActionForm({ type, onSubmit, onCancel }: ActionFormProps) {
           type === "approve"
             ? "Enter approval comments..."
             : type === "reject"
-              ? "Enter rejection reason..."
-              : "Enter revision changes (one per line)..."
+            ? "Enter rejection reason..."
+            : "Enter revision changes (one per line)..."
         }
         value={comments}
         onChange={(e) => setComments(e.target.value)}
@@ -114,7 +123,13 @@ function ActionForm({ type, onSubmit, onCancel }: ActionFormProps) {
         <Button
           type="submit"
           disabled={!comments.trim() || isSubmitting}
-          variant={type === "approve" ? "default" : type === "reject" ? "destructive" : "secondary"}
+          variant={
+            type === "approve"
+              ? "default"
+              : type === "reject"
+              ? "destructive"
+              : "secondary"
+          }
         >
           {isSubmitting ? (
             <div className="flex items-center space-x-2">
@@ -152,10 +167,30 @@ const getStepFromStatus = (status: string) => {
 
 const approvalSteps = [
   { step: 1, title: "Draft", description: "Budget in draft", status: "draft" },
-  { step: 2, title: "Checker", description: "Pending checker approval", status: "pending_checker_approval" },
-  { step: 3, title: "Manager", description: "Pending manager approval", status: "pending_manager_approval" },
-  { step: 4, title: "Finance", description: "Pending finance approval", status: "pending_finance_approval" },
-  { step: 5, title: "Approved", description: "Budget approved", status: "approved" },
+  {
+    step: 2,
+    title: "Checker",
+    description: "Pending checker approval",
+    status: "pending_checker_approval",
+  },
+  {
+    step: 3,
+    title: "Manager",
+    description: "Pending manager approval",
+    status: "pending_manager_approval",
+  },
+  {
+    step: 4,
+    title: "Finance",
+    description: "Pending finance approval",
+    status: "pending_finance_approval",
+  },
+  {
+    step: 5,
+    title: "Approved",
+    description: "Budget approved",
+    status: "approved",
+  },
 ];
 
 const getStepStatusClass = (stepStatus: number, currentStatus: string) => {
@@ -173,7 +208,13 @@ const getStepStatusClass = (stepStatus: number, currentStatus: string) => {
   return "bg-muted text-muted-foreground"; // upcoming
 };
 
-const CountdownRenderer = ({ days, hours, minutes, seconds, completed }: any) => {
+const CountdownRenderer = ({
+  days,
+  hours,
+  minutes,
+  seconds,
+  completed,
+}: any) => {
   if (completed) {
     return (
       <div className="flex items-center text-destructive">
@@ -206,11 +247,14 @@ const CountdownRenderer = ({ days, hours, minutes, seconds, completed }: any) =>
 };
 
 const getDeadlineStatus = (deadline?: string) => {
-  if (!deadline) return { color: "text-muted-foreground", text: "No deadline set" };
+  if (!deadline)
+    return { color: "text-muted-foreground", text: "No deadline set" };
 
   const now = new Date();
   const deadlineDate = new Date(deadline);
-  const diffInDays = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const diffInDays = Math.ceil(
+    (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   if (isAfter(now, deadlineDate)) {
     return { color: "text-destructive", text: "Deadline passed" };
@@ -221,14 +265,30 @@ const getDeadlineStatus = (deadline?: string) => {
   return { color: "text-primary", text: "On track" };
 };
 
-const shouldShowAction = (action: "approve" | "reject" | "revise", status: string) => {
+const shouldShowAction = (
+  action: "approve" | "reject" | "revise",
+  status: string
+) => {
   switch (action) {
     case "approve":
-      return ["draft", "pending_checker_approval", "pending_manager_approval", "pending_finance_approval"].includes(status);
+      return [
+        "draft",
+        "pending_checker_approval",
+        "pending_manager_approval",
+        "pending_finance_approval",
+      ].includes(status);
     case "reject":
-      return ["pending_checker_approval", "pending_manager_approval", "pending_finance_approval"].includes(status);
+      return [
+        "pending_checker_approval",
+        "pending_manager_approval",
+        "pending_finance_approval",
+      ].includes(status);
     case "revise":
-      return ["pending_checker_approval", "pending_manager_approval", "pending_finance_approval"].includes(status);
+      return [
+        "pending_checker_approval",
+        "pending_manager_approval",
+        "pending_finance_approval",
+      ].includes(status);
     default:
       return false;
   }
@@ -243,7 +303,9 @@ export default function ImprovedBudgetApprovalComponent({
   budgetId,
 }: BudgetApprovalProps) {
   const { toast } = useToast();
-  const [actionType, setActionType] = useState<"approve" | "reject" | "revise" | null>(null);
+  const [actionType, setActionType] = useState<
+    "approve" | "reject" | "revise" | null
+  >(null);
 
   const router = useRouter();
 
@@ -254,7 +316,11 @@ export default function ImprovedBudgetApprovalComponent({
     return "1";
   };
 
-  const handleAction = async (data: { comments?: string; reason?: string; changes?: string[] }) => {
+  const handleAction = async (data: {
+    comments?: string;
+    reason?: string;
+    changes?: string[];
+  }) => {
     if (!budgetId) {
       toast({
         title: "Error",
@@ -270,34 +336,38 @@ export default function ImprovedBudgetApprovalComponent({
         toast({
           title: "Budget Approved",
           description: "The budget has been successfully approved.",
-        }),
-          router.refresh();
+        });
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
       } else if (actionType === "reject") {
         await rejectBudget(budgetId, {
           reason: data?.reason || "",
-          level: getCurrentLevel()
+          level: getCurrentLevel(),
         });
         toast({
           title: "Budget Rejected",
           description: "The budget has been rejected.",
-        }),
-          router.refresh();
+        });
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
       } else if (actionType === "revise") {
         await requestBudgetRevision(budgetId, {
           comments: data?.changes?.join("\n") || "",
-          changes: data?.changes || []
+          changes: data?.changes || [],
         });
         toast({
           title: "Revision Requested",
           description: "A revision has been requested for this budget.",
-        }),
-          router.refresh();
+        });
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
       }
       setActionType(null);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "An error occurred while processing your request.",
+        description:
+          error.message || "An error occurred while processing your request.",
         variant: "destructive",
       });
     }
@@ -334,13 +404,10 @@ export default function ImprovedBudgetApprovalComponent({
     }
   }, [status]);
 
-
-
   const deadlineStatus = getDeadlineStatus(currentLevelDeadline);
 
   return (
     <Card className="shadow-lg">
-
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-6">
           <div className="space-y-1">
@@ -391,16 +458,25 @@ export default function ImprovedBudgetApprovalComponent({
                   <React.Fragment key={step.step}>
                     <div className="flex flex-col items-center">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${getStepStatusClass(step.step, status || "draft")}`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${getStepStatusClass(
+                          step.step,
+                          status || "draft"
+                        )}`}
                       >
                         {step.step}
                       </div>
                       <p className="mt-2 text-xs font-medium">{step.title}</p>
-                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {step.description}
+                      </p>
                     </div>
                     {index < approvalSteps.length - 1 && (
                       <div
-                        className={`h-[2px] flex-1 mx-2 ${step.step < getStepFromStatus(status || "draft") ? "bg-primary" : "bg-muted"}`}
+                        className={`h-[2px] flex-1 mx-2 ${
+                          step.step < getStepFromStatus(status || "draft")
+                            ? "bg-primary"
+                            : "bg-muted"
+                        }`}
                       />
                     )}
                   </React.Fragment>
@@ -424,7 +500,11 @@ export default function ImprovedBudgetApprovalComponent({
                     {deadlineStatus.text}
                   </Badge>
                 </div>
-                <div className={`rounded-lg p-4 ${isDeadlinePassed ? 'bg-destructive/10' : 'bg-muted'}`}>
+                <div
+                  className={`rounded-lg p-4 ${
+                    isDeadlinePassed ? "bg-destructive/10" : "bg-muted"
+                  }`}
+                >
                   <Countdown
                     date={new Date(currentLevelDeadline)}
                     renderer={CountdownRenderer}

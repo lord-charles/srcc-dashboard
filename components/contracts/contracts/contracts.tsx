@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ColumnFiltersState,
   SortingState,
@@ -26,18 +26,24 @@ import {
 
 import { DataTablePagination } from "./components/data-table-pagination";
 import { DataTableToolbar } from "./components/data-table-toolbar";
-import { columns } from "./components/columns";
+import { getColumns } from "./components/columns";
 import { Contract } from "@/types/contract";
+import { useSession } from "next-auth/react";
 
 interface DataTableProps {
   data: Contract[];
 }
 
 export default function ContractTable({ data }: DataTableProps) {
+  const { data: session } = useSession();
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const columns = useMemo(() => {
+    return getColumns(session?.user?.roles as string[] | undefined);
+  }, [session?.user?.roles]);
 
   const table = useReactTable({
     data,

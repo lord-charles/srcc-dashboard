@@ -28,7 +28,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Claim } from "@/types/claim";
 import { ClaimDetailsDrawer } from "./claim-details-drawer";
 
-
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
 }
@@ -82,16 +81,15 @@ export function DataTableRowActions<TData>({
       <ClaimDetailsDrawer
         claim={claim}
         trigger={
-          <Button
-            variant="ghost"
-            className="hidden"
-          >
+          <Button variant="ghost" className="hidden">
             Open Details
           </Button>
         }
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
+        onClose={() => {
+          setIsDetailsOpen(false), location.reload();
+        }}
       />
 
       {/* Delete dialog implementation can be added later if needed */}

@@ -42,7 +42,7 @@ const milestoneSchema = z.object({
   dueDate: z.string().min(1, "Due date is required"),
   completed: z.boolean(),
   completionDate: z.string().optional().nullable(),
-  budget: z.coerce.number().min(0, "Budget must be a positive number"),
+  budget: z.coerce.number(),
   actualCost: z.coerce
     .number()
     .min(0, "Actual cost must be a positive number")
@@ -136,8 +136,9 @@ export function EditMilestoneDialog({
           description: "Milestone added successfully",
         });
       }
-      router.refresh();
       onClose();
+      // Delay refresh to ensure dialog closes first
+      setTimeout(() => location.reload(), 100);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -216,7 +217,6 @@ export function EditMilestoneDialog({
                       <Input
                         type="number"
                         {...field}
-                        min={0}
                         step="10"
                         placeholder="Enter budget amount"
                       />

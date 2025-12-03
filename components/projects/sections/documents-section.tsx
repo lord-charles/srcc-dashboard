@@ -5,7 +5,16 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Download, FileCheck, FileText, Paperclip, Upload, AlertCircle, Check, Loader2 } from "lucide-react";
+import {
+  Download,
+  FileCheck,
+  FileText,
+  Paperclip,
+  Upload,
+  AlertCircle,
+  Check,
+  Loader2,
+} from "lucide-react";
 import type { ProjectDocument } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
 import { cloudinaryService } from "@/lib/cloudinary-service";
@@ -35,7 +44,10 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   const [mainUploading, setMainUploading] = useState<
     Partial<
       Record<
-        "projectProposalUrl" | "signedContractUrl" | "executionMemoUrl" | "signedBudgetUrl",
+        | "projectProposalUrl"
+        | "signedContractUrl"
+        | "executionMemoUrl"
+        | "signedBudgetUrl",
         boolean
       >
     >
@@ -43,35 +55,79 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   const [newDocName, setNewDocName] = useState("");
   const [newDocUploading, setNewDocUploading] = useState(false);
   const [newDocUrl, setNewDocUrl] = useState<string>("");
-  const [pendingMain, setPendingMain] = useState<Partial<Record<
-    "projectProposalUrl" | "signedContractUrl" | "executionMemoUrl" | "signedBudgetUrl",
-    string
-  >>>({});
-  const [pendingAdditional, setPendingAdditional] = useState<{ name: string; url: string }[]>([]);
+  const [pendingMain, setPendingMain] = useState<
+    Partial<
+      Record<
+        | "projectProposalUrl"
+        | "signedContractUrl"
+        | "executionMemoUrl"
+        | "signedBudgetUrl",
+        string
+      >
+    >
+  >({});
+  const [pendingAdditional, setPendingAdditional] = useState<
+    { name: string; url: string }[]
+  >([]);
 
   const mainDocuments: Array<{
     name: string;
     url?: string;
     icon: any;
-    field: "projectProposalUrl" | "signedContractUrl" | "executionMemoUrl" | "signedBudgetUrl";
+    field:
+      | "projectProposalUrl"
+      | "signedContractUrl"
+      | "executionMemoUrl"
+      | "signedBudgetUrl";
   }> = [
-    { name: "Project Proposal", url: projectProposalUrl, icon: FileText, field: "projectProposalUrl" },
-    { name: "Signed Contract", url: signedContractUrl, icon: FileCheck, field: "signedContractUrl" },
-    { name: "Execution Memo", url: executionMemoUrl, icon: Paperclip, field: "executionMemoUrl" },
-    { name: "Signed Budget", url: signedBudgetUrl, icon: FileCheck, field: "signedBudgetUrl" },
+    {
+      name: "Project Proposal",
+      url: projectProposalUrl,
+      icon: FileText,
+      field: "projectProposalUrl",
+    },
+    {
+      name: "Signed Contract",
+      url: signedContractUrl,
+      icon: FileCheck,
+      field: "signedContractUrl",
+    },
+    {
+      name: "Execution Memo",
+      url: executionMemoUrl,
+      icon: Paperclip,
+      field: "executionMemoUrl",
+    },
+    {
+      name: "Signed Budget",
+      url: signedBudgetUrl,
+      icon: FileCheck,
+      field: "signedBudgetUrl",
+    },
   ];
 
   const replaceMainDocument = async (
-    field: "projectProposalUrl" | "signedContractUrl" | "executionMemoUrl" | "signedBudgetUrl",
+    field:
+      | "projectProposalUrl"
+      | "signedContractUrl"
+      | "executionMemoUrl"
+      | "signedBudgetUrl",
     file: File
   ) => {
     setMainUploading((prev) => ({ ...prev, [field]: true }));
     try {
       const url = await cloudinaryService.uploadFile(file);
       setPendingMain((prev) => ({ ...prev, [field]: url }));
-      toast({ title: "Staged", description: `Change staged. Click Save Changes to apply.` });
+      toast({
+        title: "Staged",
+        description: `Change staged. Click Save Changes to apply.`,
+      });
     } catch (e: any) {
-      toast({ title: "Upload failed", description: e?.message || "Unable to upload", variant: "destructive" });
+      toast({
+        title: "Upload failed",
+        description: e?.message || "Unable to upload",
+        variant: "destructive",
+      });
     } finally {
       setMainUploading((prev) => ({ ...prev, [field]: false }));
     }
@@ -79,16 +135,27 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 
   const addAdditionalDocument = async () => {
     if (!newDocName || !newDocUrl) {
-      toast({ title: "Missing fields", description: "Please provide a name and upload a file.", variant: "destructive" });
+      toast({
+        title: "Missing fields",
+        description: "Please provide a name and upload a file.",
+        variant: "destructive",
+      });
       return;
     }
-    setPendingAdditional((prev) => [...prev, { name: newDocName, url: newDocUrl }]);
+    setPendingAdditional((prev) => [
+      ...prev,
+      { name: newDocName, url: newDocUrl },
+    ]);
     setNewDocName("");
     setNewDocUrl("");
-    toast({ title: "Staged", description: "Additional document staged. Click Save Changes to apply." });
+    toast({
+      title: "Staged",
+      description: "Additional document staged. Click Save Changes to apply.",
+    });
   };
 
-  const hasPending = Object.keys(pendingMain).length > 0 || pendingAdditional.length > 0;
+  const hasPending =
+    Object.keys(pendingMain).length > 0 || pendingAdditional.length > 0;
 
   const saveChanges = async () => {
     try {
@@ -101,9 +168,14 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
       toast({ title: "Saved", description: "Documents updated successfully." });
       setPendingMain({});
       setPendingAdditional([]);
-      router.refresh();
+      // Delay reload to ensure any modals close first
+      setTimeout(() => window.location.reload(), 100);
     } catch (e: any) {
-      toast({ title: "Save failed", description: e?.message || "Unable to save changes", variant: "destructive" });
+      toast({
+        title: "Save failed",
+        description: e?.message || "Unable to save changes",
+        variant: "destructive",
+      });
     }
   };
 
@@ -125,11 +197,14 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
           {hasPending && (
             <div className="flex items-center gap-2 rounded-md bg-amber-50 p-2 text-amber-700 text-xs border border-amber-200">
               <AlertCircle className="h-3 w-3" />
-              You have pending document changes. Click &quot;Save Changes&quot; to apply.
+              You have pending document changes. Click &quot;Save Changes&quot;
+              to apply.
             </div>
           )}
           <div className="space-y-1">
-            <h4 className="text-xs font-medium text-muted-foreground">Main Documents</h4>
+            <h4 className="text-xs font-medium text-muted-foreground">
+              Main Documents
+            </h4>
             <div className="grid gap-1">
               {mainDocuments.map((doc, index) => {
                 const Icon = doc.icon;
@@ -173,7 +248,8 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                       />
                       {mainUploading[doc.field] && (
                         <span className="text-[10px] text-muted-foreground flex items-center gap-1 px-1">
-                          <Loader2 className="h-3 w-3 animate-spin" /> Uploading...
+                          <Loader2 className="h-3 w-3 animate-spin" />{" "}
+                          Uploading...
                         </span>
                       )}
                     </div>
@@ -184,7 +260,9 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
           </div>
 
           <div className="space-y-1">
-            <h4 className="text-xs font-medium text-muted-foreground">Additional Documents</h4>
+            <h4 className="text-xs font-medium text-muted-foreground">
+              Additional Documents
+            </h4>
             <div className="grid gap-1">
               {documents.map((doc, index) => (
                 <div
@@ -195,7 +273,12 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                     <FileText className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs">{doc.name}</span>
                   </div>
-                  <Button variant="ghost" size="icon" asChild className="ml-auto h-7 w-7">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    className="ml-auto h-7 w-7"
+                  >
                     <a href={doc.url} target="_blank" rel="noopener">
                       <Download className="h-3 w-3" />
                       <span className="sr-only">Download {doc.name}</span>
@@ -220,11 +303,20 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                       if (!files?.length) return;
                       setNewDocUploading(true);
                       try {
-                        const url = await cloudinaryService.uploadFile(files[0]);
+                        const url = await cloudinaryService.uploadFile(
+                          files[0]
+                        );
                         setNewDocUrl(url);
-                        toast({ title: "Uploaded", description: "File uploaded. Click Add to save." });
+                        toast({
+                          title: "Uploaded",
+                          description: "File uploaded. Click Add to save.",
+                        });
                       } catch (e: any) {
-                        toast({ title: "Upload failed", description: e?.message || "Unable to upload", variant: "destructive" });
+                        toast({
+                          title: "Upload failed",
+                          description: e?.message || "Unable to upload",
+                          variant: "destructive",
+                        });
                       } finally {
                         setNewDocUploading(false);
                       }
@@ -235,7 +327,11 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                       <Loader2 className="h-3 w-3 animate-spin" /> Uploading...
                     </span>
                   )}
-                  <Button size="sm" onClick={addAdditionalDocument} disabled={!newDocName || !newDocUrl}>
+                  <Button
+                    size="sm"
+                    onClick={addAdditionalDocument}
+                    disabled={!newDocName || !newDocUrl}
+                  >
                     Add
                   </Button>
                 </div>
@@ -246,7 +342,8 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
                 )}
                 {pendingAdditional.length > 0 && (
                   <div className="text-[10px] text-amber-600 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" /> {pendingAdditional.length} staged document(s)
+                    <AlertCircle className="h-3 w-3" />{" "}
+                    {pendingAdditional.length} staged document(s)
                   </div>
                 )}
               </div>
@@ -254,7 +351,12 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
           </div>
 
           <div className="flex items-center justify-end gap-2 py-4">
-            <Button variant="outline" size="sm" onClick={discardChanges} disabled={!hasPending}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={discardChanges}
+              disabled={!hasPending}
+            >
               Discard
             </Button>
             <Button size="sm" onClick={saveChanges} disabled={!hasPending}>
