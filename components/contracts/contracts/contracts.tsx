@@ -39,7 +39,9 @@ export default function ContractTable({ data }: DataTableProps) {
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "status", desc: false },
+  ]);
 
   const columns = useMemo(() => {
     return getColumns(session?.user?.roles as string[] | undefined);

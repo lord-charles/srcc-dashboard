@@ -34,20 +34,40 @@ export function DataTableToolbar<TData>({
             title="Status"
             options={[
               {
+                label: "Pending Acceptance",
+                value: "pending_acceptance",
+              },
+              {
+                label: "Pending Finance Approval",
+                value: "pending_finance_approval",
+              },
+              {
+                label: "Pending MD Approval",
+                value: "pending_md_approval",
+              },
+              {
+                label: "Pending Signature",
+                value: "pending_signature",
+              },
+              {
                 label: "Active",
                 value: "active",
+              },
+              {
+                label: "Suspended",
+                value: "suspended",
+              },
+              {
+                label: "Terminated",
+                value: "terminated",
               },
               {
                 label: "Completed",
                 value: "completed",
               },
               {
-                label: "Draft",
-                value: "draft",
-              },
-              {
-                label: "Terminated",
-                value: "terminated",
+                label: "Rejected",
+                value: "rejected",
               },
             ]}
           />

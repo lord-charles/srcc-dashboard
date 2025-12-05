@@ -73,7 +73,7 @@ const MyContracts = ({ initialData = [], isLoading = false }: MyContractsProps) 
   const [showFilters, setShowFilters] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
-
+console.log(selectedContract)
   const handleGenerateOtp = async (contractId: string) => {
     if (otpGenerating) return;
 
@@ -481,7 +481,7 @@ const MyContracts = ({ initialData = [], isLoading = false }: MyContractsProps) 
 
       {/* Contracts list */}
       <div className="px-6 pb-6">
-        <Tabs defaultValue="grid" className="w-full">
+        <Tabs defaultValue="list" className="w-full">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Contract List</h2>
@@ -633,7 +633,7 @@ const MyContracts = ({ initialData = [], isLoading = false }: MyContractsProps) 
                           </div>
                         </div>
                       </CardContent>
-                      <CardFooter className="flex justify-between p-3 pt-2 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                      <CardFooter className="p-3 pt-2 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
                         <MyContractDetailsDrawer
                           contract={contract}
                           trigger={
@@ -641,7 +641,7 @@ const MyContracts = ({ initialData = [], isLoading = false }: MyContractsProps) 
                               variant="outline"
                               size="sm"
                               onClick={() => setSelectedContract(contract)}
-                              className="gap-1.5 text-xs h-8"
+                              className="gap-1.5 text-xs h-8 w-full"
                             >
                               <Eye className="h-3.5 w-3.5" />
                               View Details
@@ -655,29 +655,7 @@ const MyContracts = ({ initialData = [], isLoading = false }: MyContractsProps) 
                           onGenerateOtp={handleGenerateOtp}
                           otpGenerating={otpGenerating}
                         />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">More options</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem onClick={() => handleDownload(contract._id)}>
-                              <ArrowDownToLine className="mr-2 h-4 w-4" />
-                              Download PDF
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <CalendarClock className="mr-2 h-4 w-4" />
-                              View Timeline
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              <Share2 className="mr-2 h-4 w-4" />
-                              Share Contract
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                   
                       </CardFooter>
                     </Card>
                   )
@@ -837,29 +815,7 @@ const MyContracts = ({ initialData = [], isLoading = false }: MyContractsProps) 
                                   onGenerateOtp={handleGenerateOtp}
                                   otpGenerating={otpGenerating}
                                 />
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                      <span className="sr-only">More options</span>
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuItem onClick={() => handleDownload(contract._id)}>
-                                      <ArrowDownToLine className="mr-2 h-4 w-4" />
-                                      Download PDF
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <CalendarClock className="mr-2 h-4 w-4" />
-                                      View Timeline
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem>
-                                      <Share2 className="mr-2 h-4 w-4" />
-                                      Share Contract
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                               
                               </div>
                             </td>
                           </tr>

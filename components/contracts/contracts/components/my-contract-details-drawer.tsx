@@ -33,6 +33,7 @@ import {
   Receipt,
   Download,
   FileCheck,
+  ChevronDown,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -45,7 +46,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -270,12 +271,6 @@ export function MyContractDetailsDrawer({
     }
   };
 
-  const isActiveMilestone = (milestone: ProjectMilestone) => {
-    if (!milestone) return false;
-    const milestoneDate = new Date(milestone.dueDate);
-    const now = new Date();
-    return milestone.completed;
-  };
 
   const handleDownloadPDF = async () => {
     if (!hasContractDetails || !contract.templateSnapshot?.content) return;
@@ -335,25 +330,32 @@ export function MyContractDetailsDrawer({
                 margin-top: 60px;
                 page-break-inside: avoid;
               }
-              .signature-block {
-                margin-top: 40px;
-              }
               .signature-label {
                 font-weight: bold;
-                margin-bottom: 5px;
+                margin-top: 6px;
+                color: #003366;
               }
-              .signature-line {
-                border-bottom: 1px solid #000;
-                width: 300px;
-                height: 40px;
-                margin-bottom: 5px;
+              .md-signature {
+                margin-top: 30px;
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 24px;
+              }
+              .signature-image {
+                width: 160px;
+                height: auto;
+              }
+              .stamp-image {
+                width: 180px;
+                height: auto;
+                opacity: 0.95;
               }
               .footer {
                 position: fixed;
                 bottom: 0;
                 left: 0;
                 right: 0;
-                background: linear-gradient(to right, #003366, #0066cc);
                 color: white;
                 padding: 15px 30px;
                 font-size: 9pt;
@@ -410,47 +412,17 @@ export function MyContractDetailsDrawer({
               </div>
 
               <div class="signature-section">
-                <div style="margin-bottom: 30px;">
-                  <strong>I accept the offer:</strong>
-                </div>
-
-                <div class="signature-block">
-                  <div class="signature-label">Signature of Recipient:</div>
-                  <div class="signature-line"></div>
-                </div>
-
-                <div class="signature-block">
-                  <div class="signature-label">Date of Signing:</div>
-                  <div class="signature-line"></div>
+                <div class="md-signature">
+                  <div style="text-align:center;">
+                    <img src="${location.origin}/srcc/owande_signature.png" alt="MD Signature" class="signature-image" />
+                    <div class="signature-label">Managing Director</div>
+                  </div>
+                  <img src="${location.origin}/srcc/srcc_stamp.jpg" alt="SRCC Stamp" class="stamp-image" />
                 </div>
               </div>
             </div>
 
-            <div class="footer">
-              <div class="footer-content">
-                <div class="footer-title">STRATHMORE RESEARCH AND CONSULTANCY CENTRE</div>
-                <div class="footer-details">
-                  <div class="footer-item">
-                    <span class="footer-label">Address:</span> Ole Sangale Road, Madaraka Estate
-                  </div>
-                  <div class="footer-item">
-                    <span class="footer-label">P.O. Box:</span> 59857-00200 Nairobi, Kenya
-                  </div>
-                </div>
-                <div class="footer-details" style="margin-top: 5px;">
-                  <div class="footer-item">
-                    <span class="footer-label">Tel:</span> +254 0703 034 496, 0703 034 269, 0703 034 268
-                  </div>
-                  <div class="footer-item">
-                    <span class="footer-label">Fax:</span> +254 020 600 74 98
-                  </div>
-                </div>
-                <div style="margin-top: 5px;">
-                  <span class="footer-label">Email:</span> info@srcc.co.ke | 
-                  <span class="footer-label">Website:</span> www.srcc.co.ke
-                </div>
-              </div>
-            </div>
+
           </body>
         </html>
       `;
@@ -570,7 +542,7 @@ export function MyContractDetailsDrawer({
               </div>
 
               <div className="flex-1 overflow-hidden">
-                <ScrollArea className="h-[calc(95vh-13rem)] w-full">
+                <ScrollArea id="my-contract-scroll-area" className="h-[calc(95vh-13rem)] w-full">
                   <div className="px-6 py-6">
                     <TabsContent value="details" className="mt-0 space-y-6">
                       <Card>
@@ -731,8 +703,13 @@ export function MyContractDetailsDrawer({
                             </Button>
                           )}
                         </div>
-                        <CardContent className="p-6">
+                        <CardContent
+                          id="contract-scroll-container"
+                          className="p-6 relative max-h-[70vh] overflow-y-auto"
+                          style={{ scrollBehavior: "smooth" }}
+                        >
                           {hasContractDetails ? (
+                            <>
                             <div className="bg-white dark:bg-gray-950 border rounded-lg p-8 shadow-inner">
                               <div className="max-w-3xl mx-auto">
                                 {/* Contract Header */}
@@ -794,6 +771,36 @@ export function MyContractDetailsDrawer({
                                 )}
                               </div>
                             </div>
+                            {/* Bottom gradient scroll hint */}
+                            <div className="pointer-events-none absolute left-1/2 right-0 bottom-60 h-14 bg-gradient-to-t from-white/95 dark:from-gray-950/95 to-transparent flex items-end justify-center">
+                              <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                                <span className="hidden sm:inline">Scroll to read more</span>
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              </div>
+                            </div>
+
+                            {/* Floating Scroll Button */}
+                            <Button
+                              type="button"
+                              size="icon"
+                              aria-label="Scroll down"
+                              title="Scroll down"
+                              className="absolute left-3/4 -translate-x-1/2 bottom-72 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-400 animate-bounce"
+                              onClick={() => {
+                                const el = document.getElementById(
+                                  "contract-scroll-container"
+                                );
+                                if (el) {
+                                  el.scrollBy({
+                                    top: Math.round(el.clientHeight * 0.85),
+                                    behavior: "smooth",
+                                  });
+                                }
+                              }}
+                            >
+                              <ChevronDown className="h-5 w-5" />
+                            </Button>
+                            </>
                           ) : (
                             <div className="text-center py-12">
                               <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
@@ -934,6 +941,7 @@ export function MyContractDetailsDrawer({
                                   <Table>
                                     <TableHeader>
                                       <TableRow>
+                                        <TableHead>Approver</TableHead>
                                         <TableHead>Comment</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Date</TableHead>
@@ -944,6 +952,9 @@ export function MyContractDetailsDrawer({
                                         contract.approvalFlow.financeApprovals.map(
                                           (approval, index) => (
                                             <TableRow key={index}>
+                                              <TableCell>
+                                                {`${approval?.approverId?.firstName || ''} ${approval?.approverId?.lastName || ''}`.trim() || '—'}
+                                              </TableCell>
                                               <TableCell>
                                                 {approval.comments}
                                               </TableCell>
@@ -992,6 +1003,7 @@ export function MyContractDetailsDrawer({
                                   <Table>
                                     <TableHeader>
                                       <TableRow>
+                                        <TableHead>Approver</TableHead>
                                         <TableHead>Comments</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Date</TableHead>
@@ -1002,6 +1014,9 @@ export function MyContractDetailsDrawer({
                                         contract?.approvalFlow?.mdApprovals.map(
                                           (approval, index) => (
                                             <TableRow key={index}>
+                                              <TableCell>
+                                                {`${approval?.approverId?.firstName || ''} ${approval?.approverId?.lastName || ''}`.trim() || '—'}
+                                              </TableCell>
                                               <TableCell>
                                                 {approval.comments}
                                               </TableCell>
@@ -1479,6 +1494,7 @@ export function MyContractDetailsDrawer({
                       </>
                     )}
                   </div>
+                  <ScrollBar orientation="vertical" />
                 </ScrollArea>
               </div>
             </Tabs>

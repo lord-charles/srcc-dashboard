@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 import { DataTableViewOptions } from "./data-table-view-options";
-import { Claim } from "@/types/claim";
+import { Claim, ClaimStatus } from "@/types/claim";
 import { Download } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -14,14 +14,22 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-const statuses = [
+const statuses: { value: ClaimStatus; label: string }[] = [
   {
-    value: "pending_finance",
-    label: "Pending Finance",
+    value: "draft",
+    label: "Draft",
   },
   {
-    value: "pending_md",
-    label: "Pending MD",
+    value: "pending_checker_approval",
+    label: "Pending Checker Approval",
+  },
+  {
+    value: "pending_manager_approval",
+    label: "Pending Manager Approval",
+  },
+  {
+    value: "pending_finance_approval",
+    label: "Pending Finance Approval",
   },
   {
     value: "approved",
@@ -32,58 +40,6 @@ const statuses = [
     label: "Rejected",
   },
 ];
-
-const amounts = [
-  {
-    value: "0-100000",
-    label: "0 - 100,000",
-  },
-  {
-    value: "100000-500000",
-    label: "100,000 - 500,000",
-  },
-  {
-    value: "500000-1000000",
-    label: "500,000 - 1,000,000",
-  },
-  {
-    value: "1000000+",
-    label: "1,000,000+",
-  },
-];
-
-// function downloadCSV(data: any[], filename: string) {
-//   const headers = Object.keys(data[0]);
-//   const csvRows = [
-//     headers.join(','),
-//     ...data.map(row => 
-//       headers.map(header => {
-//         const value = row[header];
-//         // Handle values that need quotes (contain commas, quotes, or newlines)
-//         if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-//           return `"${value.replace(/"/g, '""')}"`;
-//         }
-//         return value;
-//       }).join(',')
-//     )
-//   ];
-  
-//   const csvContent = csvRows.join('\n');
-//   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-//   const link = document.createElement('a');
-  
-//   if (navigator.msSaveBlob) { // IE 10+
-//     navigator.msSaveBlob(blob, filename);
-//   } else {
-//     const url = URL.createObjectURL(blob);
-//     link.href = url;
-//     link.download = filename;
-//     document.body.appendChild(link);
-//     link.click();
-//     document.body.removeChild(link);
-//     URL.revokeObjectURL(url);
-//   }
-// }
 
 export function DataTableToolbar<TData>({
   table,
@@ -97,11 +53,11 @@ export function DataTableToolbar<TData>({
       return {
         "Contract Number": claim.contractId?.contractNumber || "N/A",
         "Project": claim.projectId?.name || "N/A",
-        "Claimant": claim.claimantId 
+        "Claimant": claim.claimantId
           ? `${claim.claimantId.firstName} ${claim.claimantId.lastName}`
           : "N/A",
         "Amount": formatCurrency(claim.amount || 0, claim.currency),
-        "Status": claim.status?.split("_").map(word => 
+        "Status": claim.status?.split("_").map(word =>
           word.charAt(0).toUpperCase() + word.slice(1)
         ).join(" ") || "Unknown",
         "Milestones": claim.milestones?.map(m => m.title).join(", ") || "None",

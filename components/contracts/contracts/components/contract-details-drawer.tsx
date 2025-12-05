@@ -120,7 +120,6 @@ export function ContractDetailsDrawer({
   const [isRejecting, setIsRejecting] = useState(false);
   const [isDocumentOpen, setIsDocumentOpen] = useState(false);
   const { toast } = useToast();
-  console.log("contract", contract);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
   const onOpenChange = isControlled
@@ -275,18 +274,41 @@ export function ContractDetailsDrawer({
                 margin-top: 60px;
                 page-break-inside: avoid;
               }
-              .signature-block {
-                margin-top: 40px;
-              }
               .signature-label {
                 font-weight: bold;
-                margin-bottom: 5px;
+                margin-top: 6px;
+                color: #003366;
               }
-              .signature-line {
-                border-bottom: 1px solid #000;
-                width: 300px;
-                height: 40px;
-                margin-bottom: 5px;
+              .md-signature {
+                margin-top: 30px;
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 24px;
+              }
+              .signature-image {
+                width: 160px;
+                height: auto;
+              }
+              .stamp-image {
+                width: 180px;
+                height: auto;
+                opacity: 0.95;
+              }
+              .md-signature {
+                margin-top: 40px;
+                display: flex;
+                align-items: center;
+                gap: 40px;
+              }
+              .signature-image {
+                width: 220px;
+                height: auto;
+              }
+              .stamp-image {
+                width: 140px;
+                height: auto;
+                opacity: 0.9;
               }
               .footer {
                 position: fixed;
@@ -349,18 +371,12 @@ export function ContractDetailsDrawer({
               </div>
 
               <div class="signature-section">
-                <div style="margin-bottom: 30px;">
-                  <strong>I accept the offer:</strong>
-                </div>
-
-                <div class="signature-block">
-                  <div class="signature-label">Signature of Recipient:</div>
-                  <div class="signature-line"></div>
-                </div>
-
-                <div class="signature-block">
-                  <div class="signature-label">Date of Signing:</div>
-                  <div class="signature-line"></div>
+                <div class="md-signature">
+                  <div style="text-align:center;">
+                    <img src="${location.origin}/srcc/owande_signature.png" alt="MD Signature" class="signature-image" />
+                    <div class="signature-label">Managing Director</div>
+                  </div>
+                  <img src="${location.origin}/srcc/srcc_stamp.jpg" alt="SRCC Stamp" class="stamp-image" />
                 </div>
               </div>
             </div>
@@ -661,10 +677,14 @@ export function ContractDetailsDrawer({
                             </div>
                           </CollapsibleTrigger>
                           <CollapsibleContent>
-                            <CardContent className="p-6">
+                            <CardContent
+                              id="contract-scroll-container"
+                              className="p-6 relative max-h-[70vh] overflow-y-auto"
+                              style={{ scrollBehavior: "smooth" }}
+                            >
                               {hasContractDetails ? (
                                 <div className="bg-white dark:bg-gray-950 border rounded-lg p-8 shadow-inner">
-                                  <div className="max-w-3xl mx-auto">
+                                  <div className="max-w-3xl mx-auto pr-0">
                                     {/* Contract Header */}
                                     <div className="mb-6 pb-4 border-b">
                                       <div className="text-sm font-medium text-muted-foreground mb-2">
@@ -728,6 +748,35 @@ export function ContractDetailsDrawer({
                                       </div>
                                     )}
                                   </div>
+                                  {/* Bottom gradient scroll hint */}
+                                  <div className="pointer-events-none absolute left-1/2 right-0 bottom-60 h-14 bg-gradient-to-t from-white/95 dark:from-gray-950/95 to-transparent flex items-end justify-center">
+                                    <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                                      <span className="hidden sm:inline">Scroll to read more</span>
+                                      <ChevronDown className="h-3.5 w-3.5" />
+                                    </div>
+                                  </div>
+
+                                  {/* Floating Scroll Button */}
+                                  <Button
+                                    type="button"
+                                    size="icon"
+                                    aria-label="Scroll down"
+                                    title="Scroll down"
+                                    className="absolute left-3/4 -translate-x-1/2 bottom-72 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-400 animate-bounce"
+                                    onClick={() => {
+                                      const el = document.getElementById(
+                                        "contract-scroll-container"
+                                      );
+                                      if (el) {
+                                        el.scrollBy({
+                                          top: Math.round(el.clientHeight * 0.85),
+                                          behavior: "smooth",
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    <ChevronDown className="h-5 w-5" />
+                                  </Button>
                                 </div>
                               ) : (
                                 <div className="text-center py-12">
@@ -1182,6 +1231,14 @@ export function ContractDetailsDrawer({
                                         <div className="flex items-center">
                                           <Calendar className="h-3.5 w-3.5 mr-1" />
                                           {formatDate(amendment.date)}
+                                        </div>
+                                      )}
+                                      {amendment?.approvedBy && (
+                                        <div className="flex items-center">
+                                          <User className="h-3.5 w-3.5 mr-1" />
+                                          <span>
+                                            {`${(amendment as any)?.approvedBy?.firstName || ""} ${(amendment as any)?.approvedBy?.lastName || ""}`.trim() || "—"}
+                                          </span>
                                         </div>
                                       )}
                                       {amendment.changedFields &&

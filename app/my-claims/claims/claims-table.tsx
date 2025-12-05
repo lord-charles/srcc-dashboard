@@ -204,19 +204,6 @@ export function ClaimsTable({ claims }: ClaimsTableProps) {
               </DropdownMenu>
             </div>
             <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9">
-                      <FileDown className="mr-2 h-4 w-4" />
-                      Export
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Export claims data</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="ml-auto h-9">

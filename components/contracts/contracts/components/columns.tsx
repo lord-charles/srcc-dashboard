@@ -6,7 +6,6 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { useSession } from "next-auth/react";
 
 const customIncludesStringFilter = (
   row: Row<Contract>,
@@ -73,6 +72,8 @@ export const getColumns = (
         if (typeof contract === "object" && contract !== null) {
           return `${contract?.description || ""} ${
             contract?.contractNumber || ""
+          } ${contract?.contractedUserId?.firstName || ""} ${
+            contract?.contractedUserId?.lastName || ""
           }`;
         }
         return "";
@@ -89,16 +90,31 @@ export const getColumns = (
         <DataTableColumnHeader column={column} title="Description" />
       ),
       cell: ({ row }) => {
+        const desc = row.getValue("description") as string;
         return (
           <div className="flex flex-col">
-            <span className="font-medium">{row.getValue("description")}</span>
-            <span className="text-xs text-muted-foreground line-clamp-1">
-              {row.original.contractedUserId?.firstName}{" "}
-              {row.original.contractedUserId?.lastName}
+            <span className="font-medium line-clamp-1" title={desc}>
+              {desc}
             </span>
           </div>
         );
       },
+    },
+    {
+      accessorKey: "contractedUserId",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="consultant" />
+      ),
+      cell: ({ row }) => {
+        const first = row.original.contractedUserId?.firstName || "";
+        const last = row.original.contractedUserId?.lastName || "";
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium">{`${first} ${last}`.trim()}</span>
+          </div>
+        );
+      },
+      enableSorting: false,
     },
     {
       accessorKey: "contractValue",
@@ -162,26 +178,42 @@ export const getColumns = (
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id));
       },
-    },
-    {
-      accessorKey: "amendments",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Amendments" />
-      ),
-      cell: ({ row }) => {
-        const amendments = row.original.amendments || [];
-        const count = amendments.length;
-
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium">{count}</span>
-            <span className="text-xs text-muted-foreground">
-              {count === 1 ? "amendment" : "amendments"}
-            </span>
-          </div>
-        );
+      sortingFn: (rowA, rowB, columnId) => {
+        const order: Record<string, number> = {
+          draft: 10,
+          pending_finance_approval: 0,
+          pending_md_approval: 1,
+          pending_signature: 2,
+          active: 20,
+          suspended: 30,
+          terminated: 40,
+          completed: 50,
+          rejected: 60,
+        };
+        const a = order[(rowA.getValue(columnId) as string) || ""] ?? 999;
+        const b = order[(rowB.getValue(columnId) as string) || ""] ?? 999;
+        return a - b;
       },
     },
+    // {
+    //   accessorKey: "amendments",
+    //   header: ({ column }) => (
+    //     <DataTableColumnHeader column={column} title="Amendments" />
+    //   ),
+    //   cell: ({ row }) => {
+    //     const amendments = row.original.amendments || [];
+    //     const count = amendments.length;
+
+    //     return (
+    //       <div className="flex flex-col">
+    //         <span className="font-medium">{count}</span>
+    //         <span className="text-xs text-muted-foreground">
+    //           {count === 1 ? "amendment" : "amendments"}
+    //         </span>
+    //       </div>
+    //     );
+    //   },
+    // },
   ];
 
   // Conditionally add actions column

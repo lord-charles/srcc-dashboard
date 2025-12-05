@@ -162,7 +162,7 @@ export function ClaimDetailsDrawer({
     null
   );
   const { toast } = useToast();
-  // console.log(claim);
+  console.log(claim);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
   const onOpenChange = isControlled
