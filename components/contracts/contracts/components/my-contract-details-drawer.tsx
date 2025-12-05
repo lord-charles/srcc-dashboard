@@ -271,7 +271,6 @@ export function MyContractDetailsDrawer({
     }
   };
 
-
   const handleDownloadPDF = async () => {
     if (!hasContractDetails || !contract.templateSnapshot?.content) return;
 
@@ -414,10 +413,14 @@ export function MyContractDetailsDrawer({
               <div class="signature-section">
                 <div class="md-signature">
                   <div style="text-align:center;">
-                    <img src="${location.origin}/srcc/owande_signature.png" alt="MD Signature" class="signature-image" />
+                    <img src="${
+                      location.origin
+                    }/srcc/owande_signature.png" alt="MD Signature" class="signature-image" />
                     <div class="signature-label">Managing Director</div>
                   </div>
-                  <img src="${location.origin}/srcc/srcc_stamp.jpg" alt="SRCC Stamp" class="stamp-image" />
+                  <img src="${
+                    location.origin
+                  }/srcc/srcc_stamp.jpg" alt="SRCC Stamp" class="stamp-image" />
                 </div>
               </div>
             </div>
@@ -542,7 +545,10 @@ export function MyContractDetailsDrawer({
               </div>
 
               <div className="flex-1 overflow-hidden">
-                <ScrollArea id="my-contract-scroll-area" className="h-[calc(95vh-13rem)] w-full">
+                <ScrollArea
+                  id="my-contract-scroll-area"
+                  className="h-[calc(95vh-13rem)] w-full"
+                >
                   <div className="px-6 py-6">
                     <TabsContent value="details" className="mt-0 space-y-6">
                       <Card>
@@ -710,96 +716,102 @@ export function MyContractDetailsDrawer({
                         >
                           {hasContractDetails ? (
                             <>
-                            <div className="bg-white dark:bg-gray-950 border rounded-lg p-8 shadow-inner">
-                              <div className="max-w-3xl mx-auto">
-                                {/* Contract Header */}
-                                <div className="mb-6 pb-4 border-b">
-                                  <div className="text-sm font-medium text-muted-foreground mb-2">
-                                    Contract Reference Number
-                                  </div>
-                                  <div className="text-lg font-semibold">
-                                    {contract.contractNumber}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground mt-2">
-                                    Date:{" "}
-                                    {formatDate(
-                                      contract.createdAt || contract.startDate
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Contract Content */}
-                                <div
-                                  className="prose prose-sm dark:prose-invert max-w-none"
-                                  style={{
-                                    whiteSpace: "pre-line",
-                                    lineHeight: "1.8",
-                                    fontFamily: "Georgia, serif",
-                                  }}
-                                >
-                                  {contract.templateSnapshot?.contentType ===
-                                  "html" ? (
-                                    <div
-                                      dangerouslySetInnerHTML={{
-                                        __html:
-                                          contract.templateSnapshot?.content ||
-                                          "",
-                                      }}
-                                    />
-                                  ) : (
-                                    <div>
-                                      {contract.templateSnapshot?.content ||
-                                        "No content available"}
+                              <div className="bg-white dark:bg-gray-950 border rounded-lg p-8 shadow-inner">
+                                <div className="max-w-3xl mx-auto">
+                                  {/* Contract Header */}
+                                  <div className="mb-6 pb-4 border-b">
+                                    <div className="text-sm font-medium text-muted-foreground mb-2">
+                                      Contract Reference Number
                                     </div>
-                                  )}
-                                </div>
-
-                                {/* Metadata */}
-                                {contract.templateSnapshot?.version && (
-                                  <div className="mt-8 pt-4 border-t text-xs text-muted-foreground">
-                                    <div>
-                                      Version:{" "}
-                                      {contract.templateSnapshot.version}
+                                    <div className="text-lg font-semibold">
+                                      {contract.contractNumber}
                                     </div>
-                                    {contract.templateSnapshot.contentType && (
+                                    <div className="text-sm text-muted-foreground mt-2">
+                                      Date:{" "}
+                                      {formatDate(
+                                        contract.createdAt || contract.startDate
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Contract Content */}
+                                  <div
+                                    className="prose prose-sm dark:prose-invert max-w-none"
+                                    style={{
+                                      whiteSpace: "pre-line",
+                                      lineHeight: "1.8",
+                                      fontFamily: "Georgia, serif",
+                                    }}
+                                  >
+                                    {contract.templateSnapshot?.contentType ===
+                                    "html" ? (
+                                      <div
+                                        dangerouslySetInnerHTML={{
+                                          __html:
+                                            contract.templateSnapshot
+                                              ?.content || "",
+                                        }}
+                                      />
+                                    ) : (
                                       <div>
-                                        Format:{" "}
-                                        {contract.templateSnapshot.contentType}
+                                        {contract.templateSnapshot?.content ||
+                                          "No content available"}
                                       </div>
                                     )}
                                   </div>
-                                )}
-                              </div>
-                            </div>
-                            {/* Bottom gradient scroll hint */}
-                            <div className="pointer-events-none absolute left-1/2 right-0 bottom-60 h-14 bg-gradient-to-t from-white/95 dark:from-gray-950/95 to-transparent flex items-end justify-center">
-                              <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-                                <span className="hidden sm:inline">Scroll to read more</span>
-                                <ChevronDown className="h-3.5 w-3.5" />
-                              </div>
-                            </div>
 
-                            {/* Floating Scroll Button */}
-                            <Button
-                              type="button"
-                              size="icon"
-                              aria-label="Scroll down"
-                              title="Scroll down"
-                              className="absolute left-3/4 -translate-x-1/2 bottom-72 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-400 animate-bounce"
-                              onClick={() => {
-                                const el = document.getElementById(
-                                  "contract-scroll-container"
-                                );
-                                if (el) {
-                                  el.scrollBy({
-                                    top: Math.round(el.clientHeight * 0.85),
-                                    behavior: "smooth",
-                                  });
-                                }
-                              }}
-                            >
-                              <ChevronDown className="h-5 w-5" />
-                            </Button>
+                                  {/* Metadata */}
+                                  {contract.templateSnapshot?.version && (
+                                    <div className="mt-8 pt-4 border-t text-xs text-muted-foreground">
+                                      <div>
+                                        Version:{" "}
+                                        {contract.templateSnapshot.version}
+                                      </div>
+                                      {contract.templateSnapshot
+                                        .contentType && (
+                                        <div>
+                                          Format:{" "}
+                                          {
+                                            contract.templateSnapshot
+                                              .contentType
+                                          }
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              {/* Bottom gradient scroll hint */}
+                              <div className="pointer-events-none absolute left-1/2 right-0 bottom-60 h-14 bg-gradient-to-t from-white/95 dark:from-gray-950/95 to-transparent flex items-end justify-center">
+                                <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                                  <span className="hidden sm:inline">
+                                    Scroll to read more
+                                  </span>
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                </div>
+                              </div>
+
+                              {/* Floating Scroll Button */}
+                              <Button
+                                type="button"
+                                size="icon"
+                                aria-label="Scroll down"
+                                title="Scroll down"
+                                className="absolute left-3/4 -translate-x-1/2 bottom-72 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-400 animate-bounce"
+                                onClick={() => {
+                                  const el = document.getElementById(
+                                    "contract-scroll-container"
+                                  );
+                                  if (el) {
+                                    el.scrollBy({
+                                      top: Math.round(el.clientHeight * 0.85),
+                                      behavior: "smooth",
+                                    });
+                                  }
+                                }}
+                              >
+                                <ChevronDown className="h-5 w-5" />
+                              </Button>
                             </>
                           ) : (
                             <div className="text-center py-12">
@@ -895,6 +907,15 @@ export function MyContractDetailsDrawer({
                                         {formatDate(amendment.date)}
                                       </div>
                                     )}
+                                    {amendment.approvedBy && (
+                                      <div className="flex items-center">
+                                        <User className="h-3.5 w-3.5 mr-1" />
+                                        <span>
+                                          {amendment.approvedBy.firstName}{" "}
+                                          {amendment.approvedBy.lastName}
+                                        </span>
+                                      </div>
+                                    )}
                                     {amendment.changedFields &&
                                       amendment.changedFields.length > 0 && (
                                         <div className="flex items-start">
@@ -953,7 +974,13 @@ export function MyContractDetailsDrawer({
                                           (approval, index) => (
                                             <TableRow key={index}>
                                               <TableCell>
-                                                {`${approval?.approverId?.firstName || ''} ${approval?.approverId?.lastName || ''}`.trim() || '—'}
+                                                {`${
+                                                  approval?.approverId
+                                                    ?.firstName || ""
+                                                } ${
+                                                  approval?.approverId
+                                                    ?.lastName || ""
+                                                }`.trim() || "—"}
                                               </TableCell>
                                               <TableCell>
                                                 {approval.comments}
@@ -1015,7 +1042,13 @@ export function MyContractDetailsDrawer({
                                           (approval, index) => (
                                             <TableRow key={index}>
                                               <TableCell>
-                                                {`${approval?.approverId?.firstName || ''} ${approval?.approverId?.lastName || ''}`.trim() || '—'}
+                                                {`${
+                                                  approval?.approverId
+                                                    ?.firstName || ""
+                                                } ${
+                                                  approval?.approverId
+                                                    ?.lastName || ""
+                                                }`.trim() || "—"}
                                               </TableCell>
                                               <TableCell>
                                                 {approval.comments}

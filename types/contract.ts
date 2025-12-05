@@ -36,11 +36,16 @@ export type ContractStatus =
   | "rejected";
 
 export interface ApprovalEntry {
-  approverId: string;
+  approverId: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    id: string;
+  };
   approvedAt: string;
   comments?: string;
 }
-
 export interface RejectionDetails {
   rejectedBy: string;
   rejectedAt: string;
@@ -62,10 +67,15 @@ export interface Amendment {
   date?: string;
   description?: string;
   changedFields?: string[];
-  approvedBy?: string;
+  approvedBy?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    id: string;
+  };
   _id?: string;
 }
-
 export interface ContractedUser {
   _id: string;
   firstName: string;

@@ -373,10 +373,14 @@ export function ContractDetailsDrawer({
               <div class="signature-section">
                 <div class="md-signature">
                   <div style="text-align:center;">
-                    <img src="${location.origin}/srcc/owande_signature.png" alt="MD Signature" class="signature-image" />
+                    <img src="${
+                      location.origin
+                    }/srcc/owande_signature.png" alt="MD Signature" class="signature-image" />
                     <div class="signature-label">Managing Director</div>
                   </div>
-                  <img src="${location.origin}/srcc/srcc_stamp.jpg" alt="SRCC Stamp" class="stamp-image" />
+                  <img src="${
+                    location.origin
+                  }/srcc/srcc_stamp.jpg" alt="SRCC Stamp" class="stamp-image" />
                 </div>
               </div>
             </div>
@@ -751,7 +755,9 @@ export function ContractDetailsDrawer({
                                   {/* Bottom gradient scroll hint */}
                                   <div className="pointer-events-none absolute left-1/2 right-0 bottom-60 h-14 bg-gradient-to-t from-white/95 dark:from-gray-950/95 to-transparent flex items-end justify-center">
                                     <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-                                      <span className="hidden sm:inline">Scroll to read more</span>
+                                      <span className="hidden sm:inline">
+                                        Scroll to read more
+                                      </span>
                                       <ChevronDown className="h-3.5 w-3.5" />
                                     </div>
                                   </div>
@@ -769,7 +775,9 @@ export function ContractDetailsDrawer({
                                       );
                                       if (el) {
                                         el.scrollBy({
-                                          top: Math.round(el.clientHeight * 0.85),
+                                          top: Math.round(
+                                            el.clientHeight * 0.85
+                                          ),
                                           behavior: "smooth",
                                         });
                                       }
@@ -1098,7 +1106,9 @@ export function ContractDetailsDrawer({
                                           >
                                             <div className="text-sm font-medium text-muted-foreground mb-2">
                                               Approved on{" "}
-                                              {formatDate(approval.approvedAt)}
+                                              {formatDate(approval.approvedAt)}{" "}
+                                              by {approval.approverId.firstName}{" "}
+                                              {approval.approverId.lastName}
                                             </div>
                                             {approval.comments && (
                                               <div className="bg-background p-3 rounded-md border text-sm">
@@ -1129,7 +1139,8 @@ export function ContractDetailsDrawer({
                                           >
                                             <div className="text-sm font-medium text-muted-foreground mb-2">
                                               Approved on{" "}
-                                              {formatDate(approval.approvedAt)}
+                                              {formatDate(approval.approvedAt)}{" "}
+                                              by {approval.approverId.firstName}
                                             </div>
                                             {approval.comments && (
                                               <div className="bg-background p-3 rounded-md border text-sm">
@@ -1237,7 +1248,13 @@ export function ContractDetailsDrawer({
                                         <div className="flex items-center">
                                           <User className="h-3.5 w-3.5 mr-1" />
                                           <span>
-                                            {`${(amendment as any)?.approvedBy?.firstName || ""} ${(amendment as any)?.approvedBy?.lastName || ""}`.trim() || "—"}
+                                            {`${
+                                              (amendment as any)?.approvedBy
+                                                ?.firstName || ""
+                                            } ${
+                                              (amendment as any)?.approvedBy
+                                                ?.lastName || ""
+                                            }`.trim() || "—"}
                                           </span>
                                         </div>
                                       )}
