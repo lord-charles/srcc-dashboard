@@ -77,6 +77,19 @@ export const getColumns = (
     cell: () => null,
   },
   {
+    id: "isAdmin",
+    accessorFn: (row) => {
+      // User is considered admin if they have more than one role
+      return row.roles && row.roles.length > 1 ? "admin" : "regular";
+    },
+    filterFn: (row, id, value) => {
+      const userType = row.getValue(id) as string;
+      return value.includes(userType);
+    },
+    enableHiding: true,
+    enableSorting: false,
+  },
+  {
     accessorKey: "name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Consultant" />

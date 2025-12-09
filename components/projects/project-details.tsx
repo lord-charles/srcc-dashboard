@@ -27,6 +27,7 @@ import { ProjectStatCards } from "./project-stat-cards";
 import ModernBudgetDisplay from "./sections/modern-budget-display";
 import ProjectOverview from "./sections/project-overview";
 import ContractsTable from "./sections/team-contracts-table";
+import { ProjectClaimsSection } from "./sections/project-claims-section";
 
 interface ProjectDetailsProps {
   project?: Project;
@@ -57,6 +58,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
         "milestones",
         "documents",
         "invoices",
+        "budget",
+        "contracts",
+        "claims",
       ].includes(tab)
     ) {
       setActiveTab(tab);
@@ -191,6 +195,17 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             />
             Contracts
           </TabsTrigger>
+          <TabsTrigger
+            value="claims"
+            className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
+          >
+            <Receipt
+              className="-ms-0.5 me-1.5 opacity-60"
+              size={16}
+              strokeWidth={2}
+            />
+            Claims
+          </TabsTrigger>
         </TabsList>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
@@ -261,7 +276,18 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       </TabsContent>
 
       <TabsContent value="contracts">
-        <ContractsTable contracts={projectData?.teamMemberContracts || []} />
+        <ContractsTable
+          contracts={projectData?.teamMemberContracts || []}
+          projectId={projectData._id}
+          projectMilestones={projectData.milestones || []}
+        />
+      </TabsContent>
+
+      <TabsContent value="claims">
+        <ProjectClaimsSection
+          projectId={projectData._id}
+          projectName={projectData.name}
+        />
       </TabsContent>
     </Tabs>
   );

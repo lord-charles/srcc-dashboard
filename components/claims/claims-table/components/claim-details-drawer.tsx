@@ -8,7 +8,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { approveClaim, rejectClaim } from "@/services/claims.service";
+import {
+  approveClaim,
+  rejectClaim,
+  markClaimAsPaid,
+} from "@/services/claims.service";
+import { FileUpload } from "@/components/ui/file-upload";
+import { cloudinaryService } from "@/lib/cloudinary-service";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertCircle,
   FileText,
@@ -78,7 +93,7 @@ const getStatusColor = (status: ClaimStatus) => {
     case "approved":
       return "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800";
     case "pending_checker_approval":
-    case "pending_manager_approval":
+    // case "pending_manager_approval":
     case "pending_finance_approval":
       return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800";
     case "rejected":
@@ -97,7 +112,7 @@ const getStatusIcon = (status: ClaimStatus) => {
         <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
       );
     case "pending_checker_approval":
-    case "pending_manager_approval":
+    // case "pending_manager_approval":
     case "pending_finance_approval":
       return (
         <Clock className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />
@@ -158,9 +173,15 @@ export function ClaimDetailsDrawer({
   const [comments, setComments] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [actionType, setActionType] = useState<"approve" | "reject" | null>(
-    null
-  );
+  const [actionType, setActionType] = useState<
+    "approve" | "reject" | "payment" | null
+  >(null);
+  const [paymentAdviceUrl, setPaymentAdviceUrl] = useState("");
+  const [isUploadingPayment, setIsUploadingPayment] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
+  const [transactionId, setTransactionId] = useState("");
+  const [paymentReference, setPaymentReference] = useState("");
+  const [approvalConsent, setApprovalConsent] = useState(false);
   const { toast } = useToast();
   console.log(claim);
   const isControlled = controlledOpen !== undefined;
@@ -176,6 +197,7 @@ export function ClaimDetailsDrawer({
       setActiveTab("overview");
       setComments("");
       setActionType(null);
+      setApprovalConsent(false);
     }
   };
 
@@ -189,12 +211,22 @@ export function ClaimDetailsDrawer({
     new Date(claim.currentLevelDeadline) < new Date();
 
   const handleAction = async (type: "approve" | "reject") => {
-    if (!comments.trim()) {
+    // For approval, check consent checkbox
+    if (type === "approve" && !approvalConsent) {
+      toast({
+        title: "Consent Required",
+        description:
+          "Please confirm that you have reviewed and approve this claim.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // For rejection, comments are required
+    if (type === "reject" && !comments.trim()) {
       toast({
         title: "Comments Required",
-        description: `Please provide comments before ${
-          type === "approve" ? "approving" : "rejecting"
-        } the claim.`,
+        description: "Please provide a reason for rejecting the claim.",
         variant: "destructive",
       });
       return;
@@ -205,7 +237,7 @@ export function ClaimDetailsDrawer({
       setActionType(type);
 
       if (type === "approve") {
-        await approveClaim(claim._id, comments);
+        await approveClaim(claim._id, comments || "Approved");
         toast({
           title: "Claim Approved",
           description: "The claim has been successfully approved.",
@@ -220,11 +252,62 @@ export function ClaimDetailsDrawer({
 
       onClose?.();
       setComments("");
+      setApprovalConsent(false);
       window.location.reload();
     } catch (error: any) {
       toast({
         title: type === "approve" ? "Approval Failed" : "Rejection Failed",
         description: error.message || `Failed to ${type} claim`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+      setActionType(null);
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (!paymentAdviceUrl) {
+      toast({
+        title: "Payment Advice Required",
+        description:
+          "Please upload the payment advice document before marking as paid.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!transactionId.trim()) {
+      toast({
+        title: "Transaction ID Required",
+        description: "Please provide a transaction ID.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setActionType("payment");
+
+      await markClaimAsPaid(claim._id, {
+        paymentMethod,
+        transactionId,
+        reference: paymentReference,
+        paymentAdviceUrl,
+      });
+
+      toast({
+        title: "Claim Marked as Paid",
+        description: "The claim has been successfully marked as paid.",
+      });
+
+      onClose?.();
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: "Payment Failed",
+        description: error.message || "Failed to mark claim as paid",
         variant: "destructive",
       });
     } finally {
@@ -305,6 +388,13 @@ export function ClaimDetailsDrawer({
                       <User className="h-4 w-4 mr-2" />
                       Claimant
                     </TabsTrigger>
+                    <TabsTrigger
+                      value="contract"
+                      className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
+                    >
+                      <FileSignature className="h-4 w-4 mr-2" />
+                      Contract
+                    </TabsTrigger>
                     {isApprovalPending && (
                       <TabsTrigger
                         value="approval"
@@ -312,6 +402,15 @@ export function ClaimDetailsDrawer({
                       >
                         <ClipboardList className="h-4 w-4 mr-2" />
                         Approval
+                      </TabsTrigger>
+                    )}
+                    {claim.status === "approved" && (
+                      <TabsTrigger
+                        value="payment"
+                        className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
+                      >
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Mark as Paid
                       </TabsTrigger>
                     )}
                     <TabsTrigger
@@ -524,8 +623,10 @@ export function ClaimDetailsDrawer({
                                             variant="outline"
                                             className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
                                           >
-                                            {milestone.percentageClaimed}%
-                                            Claimed
+                                            {milestone.percentageClaimed?.toFixed(
+                                              2
+                                            )}
+                                            % Claimed
                                           </Badge>
                                         </TooltipTrigger>
                                         <TooltipContent>
@@ -538,8 +639,10 @@ export function ClaimDetailsDrawer({
                                       <div className="flex items-center justify-between mb-2">
                                         <div>
                                           <span className="text-xs font-semibold inline-block text-emerald-600">
-                                            {milestone.percentageClaimed}%
-                                            Complete
+                                            {milestone.percentageClaimed?.toFixed(
+                                              2
+                                            )}
+                                            % Complete
                                           </span>
                                         </div>
                                         <div className="text-right">
@@ -554,7 +657,9 @@ export function ClaimDetailsDrawer({
                                       <div className="overflow-hidden h-2 text-xs flex rounded-full bg-emerald-100 dark:bg-emerald-900/30">
                                         <div
                                           style={{
-                                            width: `${milestone.percentageClaimed}%`,
+                                            width: `${milestone.percentageClaimed?.toFixed(
+                                              2
+                                            )}%`,
                                           }}
                                           className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500"
                                         ></div>
@@ -713,6 +818,232 @@ export function ClaimDetailsDrawer({
                         </Card>
                       </TabsContent>
 
+                      {/* Contract Tab */}
+                      <TabsContent value="contract" className="mt-0 space-y-6">
+                        <Card className="overflow-hidden border shadow-sm">
+                          <CardHeader className="bg-indigo-50 dark:bg-indigo-950/40 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
+                            <FileSignature className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                            <CardTitle className="text-lg font-semibold text-indigo-700 dark:text-indigo-400">
+                              Contract Details
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-6">
+                            <div className="space-y-6">
+                              {/* Contract Overview */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                    <Tag className="h-3.5 w-3.5 mr-1.5" />
+                                    Contract Number
+                                  </div>
+                                  <p className="font-semibold text-lg">
+                                    {claim.contractId?.contractNumber || "N/A"}
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                    <Badge className="h-3.5 w-3.5 mr-1.5" />
+                                    Status
+                                  </div>
+                                  <Badge
+                                    variant="outline"
+                                    className="capitalize"
+                                  >
+                                    {claim.contractId?.status || "N/A"}
+                                  </Badge>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                    <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+                                    Contract Value
+                                  </div>
+                                  <p className="font-semibold text-lg text-indigo-600 dark:text-indigo-400">
+                                    {formatCurrency(
+                                      claim.contractId?.contractValue || 0,
+                                      claim.contractId?.currency ||
+                                        claim.currency
+                                    )}
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                    <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+                                    Currency
+                                  </div>
+                                  <p className="font-medium">
+                                    {claim.contractId?.currency ||
+                                      claim.currency}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <Separator />
+
+                              {/* Contract Period */}
+                              <div>
+                                <h4 className="font-medium mb-3 flex items-center text-indigo-700 dark:text-indigo-400">
+                                  <CalendarIcon className="h-4 w-4 mr-2" />
+                                  Contract Period
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-lg">
+                                  <div className="space-y-1">
+                                    <span className="text-sm text-muted-foreground">
+                                      Start Date
+                                    </span>
+                                    <p className="font-medium">
+                                      {formatDate(claim.contractId?.startDate)}
+                                    </p>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <span className="text-sm text-muted-foreground">
+                                      End Date
+                                    </span>
+                                    <p className="font-medium">
+                                      {formatDate(claim.contractId?.endDate)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <Separator />
+
+                              {/* Project Information */}
+                              {claim.contractId?.projectId && (
+                                <>
+                                  <div>
+                                    <h4 className="font-medium mb-3 flex items-center text-indigo-700 dark:text-indigo-400">
+                                      <Building className="h-4 w-4 mr-2" />
+                                      Associated Project
+                                    </h4>
+                                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                                      <p className="font-semibold text-lg mb-1">
+                                        {claim.contractId.projectId.name}
+                                      </p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {claim.contractId.projectId.description}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <Separator />
+                                </>
+                              )}
+
+                              {/* Contract Parties */}
+                              <div>
+                                <h4 className="font-medium mb-3 flex items-center text-indigo-700 dark:text-indigo-400">
+                                  <User className="h-4 w-4 mr-2" />
+                                  Contract Parties
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Contracted User */}
+                                  {claim.contractId?.contractedUserId && (
+                                    <div className="bg-muted/30 p-4 rounded-lg">
+                                      <div className="flex items-center mb-3">
+                                        <Avatar className="h-12 w-12 mr-3">
+                                          <AvatarImage
+                                            src={`https://api.dicebear.com/7.x/initials/svg?seed=${
+                                              claim.contractId.contractedUserId
+                                                .firstName || "U"
+                                            }%20${
+                                              claim.contractId.contractedUserId
+                                                .lastName || "N"
+                                            }`}
+                                          />
+                                          <AvatarFallback>
+                                            {getInitials(
+                                              claim.contractId.contractedUserId
+                                                .firstName || "U",
+                                              claim.contractId.contractedUserId
+                                                .lastName || "N"
+                                            )}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <p className="text-xs text-muted-foreground mb-1">
+                                            Contracted User
+                                          </p>
+                                          <p className="font-semibold">
+                                            {claim.contractId.contractedUserId
+                                              .firstName || ""}{" "}
+                                            {claim.contractId.contractedUserId
+                                              .lastName || ""}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {claim.contractId.contractedUserId
+                                              .email || ""}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Created By */}
+                                  {claim.contractId?.createdBy && (
+                                    <div className="bg-muted/30 p-4 rounded-lg">
+                                      <div className="flex items-center mb-3">
+                                        <Avatar className="h-12 w-12 mr-3">
+                                          <AvatarImage
+                                            src={`https://api.dicebear.com/7.x/initials/svg?seed=${
+                                              claim.contractId.createdBy
+                                                .firstName || "C"
+                                            }%20${
+                                              claim.contractId.createdBy
+                                                .lastName || "B"
+                                            }`}
+                                          />
+                                          <AvatarFallback>
+                                            {getInitials(
+                                              claim.contractId.createdBy
+                                                .firstName || "C",
+                                              claim.contractId.createdBy
+                                                .lastName || "B"
+                                            )}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <p className="text-xs text-muted-foreground mb-1">
+                                            Created By
+                                          </p>
+                                          <p className="font-semibold">
+                                            {claim.contractId.createdBy
+                                              .firstName || ""}{" "}
+                                            {claim.contractId.createdBy
+                                              .lastName || ""}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            {claim.contractId.createdBy.email ||
+                                              ""}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Contract Description */}
+                              {claim.contractId?.description && (
+                                <>
+                                  <Separator />
+                                  <div>
+                                    <h4 className="font-medium mb-3 flex items-center text-indigo-700 dark:text-indigo-400">
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      Description
+                                    </h4>
+                                    <div className="bg-muted/30 p-4 rounded-lg">
+                                      <p className="text-sm">
+                                        {claim.contractId.description}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+
                       {/* Approval Tab C */}
                       {isApprovalPending && (
                         <TabsContent
@@ -796,11 +1127,11 @@ export function ClaimDetailsDrawer({
                                         } ${currentStep.role
                                           .split("_")
                                           .join(" ")
-                                          .toUpperCase()} Comments`
-                                      : "Approval Comments"}
+                                          .toUpperCase()} Comments (Optional)`
+                                      : "Approval Comments (Optional)"}
                                   </label>
                                   <Textarea
-                                    placeholder="Enter your comments regarding this claim approval or rejection..."
+                                    placeholder="Enter your comments regarding this claim approval or rejection (optional for approval, required for rejection)..."
                                     className="min-h-[120px] resize-none"
                                     value={comments}
                                     onChange={(e) =>
@@ -808,13 +1139,42 @@ export function ClaimDetailsDrawer({
                                     }
                                   />
                                 </div>
+
+                                <div className="flex items-start space-x-3 bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                                  <input
+                                    type="checkbox"
+                                    id="approvalConsent"
+                                    checked={approvalConsent}
+                                    onChange={(e) =>
+                                      setApprovalConsent(e.target.checked)
+                                    }
+                                    className="mt-1 h-4 w-4 rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                                  />
+                                  <label
+                                    htmlFor="approvalConsent"
+                                    className="text-sm font-medium cursor-pointer"
+                                  >
+                                    I confirm that I have reviewed all claim
+                                    details, supporting documents, and
+                                    milestones, and I approve this claim for the
+                                    amount of{" "}
+                                    <span className="font-bold text-purple-700 dark:text-purple-400">
+                                      {formatCurrency(
+                                        claim?.amount || 0,
+                                        claim?.currency
+                                      )}
+                                    </span>
+                                    .
+                                  </label>
+                                </div>
+
                                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                                   <Button
                                     onClick={() => handleAction("approve")}
                                     className="flex-1"
                                     size="lg"
                                     variant="default"
-                                    disabled={isSubmitting || !comments.trim()}
+                                    disabled={isSubmitting || !approvalConsent}
                                   >
                                     {isSubmitting &&
                                     actionType === "approve" ? (
@@ -854,7 +1214,7 @@ export function ClaimDetailsDrawer({
                                     className="flex-1"
                                     size="lg"
                                     variant="destructive"
-                                    disabled={isSubmitting || !comments.trim()}
+                                    disabled={isSubmitting}
                                   >
                                     {isSubmitting && actionType === "reject" ? (
                                       <div className="flex items-center space-x-2">
@@ -933,12 +1293,41 @@ export function ClaimDetailsDrawer({
                                         </div>
 
                                         <div className="text-sm mb-3">
-                                          <span className="text-muted-foreground">
-                                            Performed by:{" "}
-                                          </span>
-                                          <span className="font-medium">
-                                            {entry.performedBy}
-                                          </span>
+                                          <div className="flex items-center">
+                                            <Avatar className="h-8 w-8 mr-2">
+                                              <AvatarImage
+                                                src={`https://api.dicebear.com/7.x/initials/svg?seed=${
+                                                  entry.performedBy
+                                                    ?.firstName || "U"
+                                                }%20${
+                                                  entry.performedBy?.lastName ||
+                                                  "N"
+                                                }`}
+                                              />
+                                              <AvatarFallback className="text-xs">
+                                                {entry.performedBy?.firstName &&
+                                                entry.performedBy?.lastName
+                                                  ? getInitials(
+                                                      entry.performedBy
+                                                        .firstName,
+                                                      entry.performedBy.lastName
+                                                    )
+                                                  : "UN"}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <p className="font-medium">
+                                                {entry.performedBy?.firstName ||
+                                                  ""}{" "}
+                                                {entry.performedBy?.lastName ||
+                                                  ""}
+                                              </p>
+                                              <p className="text-xs text-muted-foreground flex items-center">
+                                                <Mail className="h-3 w-3 mr-1" />
+                                                {entry.performedBy?.email || ""}
+                                              </p>
+                                            </div>
+                                          </div>
                                         </div>
 
                                         {entry.details && (
@@ -1082,6 +1471,188 @@ export function ClaimDetailsDrawer({
                           </CardContent>
                         </Card>
                       </TabsContent>
+
+                      {/* Payment Tab */}
+                      {claim.status === "approved" && (
+                        <TabsContent value="payment" className="mt-0 space-y-6">
+                          <Card className="overflow-hidden border shadow-sm">
+                            <CardHeader className="bg-emerald-50 dark:bg-emerald-950/40 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
+                              <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                              <CardTitle className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">
+                                Mark Claim as Paid
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                              <Alert className="mb-6">
+                                <Info className="h-4 w-4" />
+                                <AlertTitle>Payment Advice Required</AlertTitle>
+                                <AlertDescription>
+                                  You must upload a payment advice document
+                                  before marking this claim as paid. This is
+                                  mandatory for audit purposes.
+                                </AlertDescription>
+                              </Alert>
+
+                              <div className="space-y-6">
+                                <div className="bg-muted/30 p-4 rounded-lg">
+                                  <h3 className="text-base font-medium mb-3 flex items-center">
+                                    <Receipt className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />
+                                    Claim Summary
+                                  </h3>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <span className="text-sm font-medium text-muted-foreground">
+                                        Claim Amount
+                                      </span>
+                                      <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
+                                        {formatCurrency(
+                                          claim?.amount || 0,
+                                          claim?.currency
+                                        )}
+                                      </p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <span className="text-sm font-medium text-muted-foreground">
+                                        Claimant
+                                      </span>
+                                      <p className="font-medium">
+                                        {claim.claimantId?.firstName}{" "}
+                                        {claim.claimantId?.lastName}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="paymentMethod">
+                                      Payment Method *
+                                    </Label>
+                                    <Select
+                                      value={paymentMethod}
+                                      onValueChange={setPaymentMethod}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select payment method" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="bank_transfer">
+                                          Bank Transfer
+                                        </SelectItem>
+                                        <SelectItem value="mpesa">
+                                          M-Pesa
+                                        </SelectItem>
+                                        <SelectItem value="cheque">
+                                          Cheque
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="transactionId">
+                                      Transaction ID *
+                                    </Label>
+                                    <Input
+                                      id="transactionId"
+                                      placeholder="Enter transaction ID"
+                                      value={transactionId}
+                                      onChange={(e) =>
+                                        setTransactionId(e.target.value)
+                                      }
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label htmlFor="paymentReference">
+                                      Payment Reference (Optional)
+                                    </Label>
+                                    <Input
+                                      id="paymentReference"
+                                      placeholder="Enter payment reference"
+                                      value={paymentReference}
+                                      onChange={(e) =>
+                                        setPaymentReference(e.target.value)
+                                      }
+                                    />
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <Label>Payment Advice Document *</Label>
+                                    <FileUpload
+                                      onChange={async (files) => {
+                                        if (files.length > 0) {
+                                          setIsUploadingPayment(true);
+                                          try {
+                                            const url =
+                                              await cloudinaryService.uploadFile(
+                                                files[0]
+                                              );
+                                            setPaymentAdviceUrl(url);
+                                            toast({
+                                              title: "Success",
+                                              description:
+                                                "Payment advice uploaded successfully.",
+                                            });
+                                          } catch (error) {
+                                            toast({
+                                              title: "Upload Failed",
+                                              description:
+                                                "Could not upload payment advice.",
+                                              variant: "destructive",
+                                            });
+                                          } finally {
+                                            setIsUploadingPayment(false);
+                                          }
+                                        }
+                                      }}
+                                    />
+                                    {paymentAdviceUrl && (
+                                      <a
+                                        href={paymentAdviceUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs text-blue-500 hover:underline flex items-center mt-2"
+                                      >
+                                        <FileText className="h-3 w-3 mr-1" />
+                                        View Uploaded Payment Advice
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                                  <Button
+                                    onClick={handleMarkAsPaid}
+                                    className="flex-1"
+                                    size="lg"
+                                    variant="default"
+                                    disabled={
+                                      isSubmitting ||
+                                      isUploadingPayment ||
+                                      !paymentAdviceUrl ||
+                                      !transactionId.trim()
+                                    }
+                                  >
+                                    {isSubmitting &&
+                                    actionType === "payment" ? (
+                                      <div className="flex items-center space-x-2">
+                                        <Spinner />
+                                        <span>Processing Payment...</span>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="mr-2 h-5 w-5" />
+                                        Mark as Paid
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </TabsContent>
+                      )}
                     </div>
                   </ScrollArea>
                 </div>

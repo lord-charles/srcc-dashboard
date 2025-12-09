@@ -3,6 +3,8 @@ import {
   UserMinusIcon,
   ShieldOffIcon,
   UserXIcon,
+  ShieldCheck,
+  User as UserIcon,
 } from "lucide-react";
 
 export const statuses = [
@@ -33,5 +35,18 @@ export const statuses = [
     icon: UserXIcon,
     color: "#8C33FF", // Purple background
     textColor: "#FFFFFF", // White text
+  },
+];
+
+export const userTypes = [
+  {
+    value: "admin",
+    label: "Admin Users",
+    icon: ShieldCheck,
+  },
+  {
+    value: "regular",
+    label: "Regular Users",
+    icon: UserIcon,
   },
 ];

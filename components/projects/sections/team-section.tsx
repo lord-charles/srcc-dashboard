@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditTeamMemberDialog } from "@/components/users/edit-team-member-dialog";
 import {
   AlertDialog,
@@ -32,13 +33,20 @@ import {
   updateContract,
   getContractTemplates,
 } from "@/services/contracts.service";
-import type { Project, TeamMember, Contract } from "@/types/project";
+import type {
+  Project,
+  TeamMember,
+  Contract,
+  AssistantProjectManager,
+} from "@/types/project";
 import {
   CalendarDays,
   Trash2,
   UserPlus,
   Pencil,
   FileSignature,
+  Users,
+  UserCog,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import {
@@ -253,242 +261,490 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 
   return (
     <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-2xl font-bold">Team Members</CardTitle>
-        <Button
-          variant="default"
-          size="sm"
-          className="flex items-center gap-2"
-          onClick={() => {
-            const params = new URLSearchParams({
-              projectId: projectData._id,
-              projectName: projectData.name,
-              returnUrl: `${window.location.pathname}?tab=team`,
-            });
-            router.push(`/users?${params.toString()}`);
-          }}
-        >
-          <UserPlus className="h-4 w-4" />
-          Add Member
-        </Button>
+      <CardHeader className="p-4">
+        <CardTitle className="text-2xl font-bold">Team Management</CardTitle>
       </CardHeader>
+
       <CardContent>
-        <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-          {teamMembers.map((member) => (
-            <div
-              key={member._id}
-              className="flex items-center justify-between space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
-            >
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={`https://avatar.vercel.sh/${member.userId?.email}`}
-                    alt={`${member.userId?.firstName} ${member.userId?.lastName}`}
-                  />
-                  <AvatarFallback>
-                    {getInitials(
-                      member.userId?.firstName,
-                      member.userId?.lastName
-                    )}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-sm font-medium leading-none">
-                    {member.userId?.firstName} {member.userId?.lastName}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {member.userId?.email}
-                  </p>
-                  <div className="mt-1 flex flex-wrap gap-0.5">
-                    {member.responsibilities.map((responsibility) => (
-                      <Badge
-                        key={responsibility}
-                        variant="secondary"
-                        className="text-[8px]"
-                      >
-                        {responsibility}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col items-end">
-                <div className="mb-2">
-                  {getMemberContract(member.userId?._id) ? (
-                    <div className="">
-                      <Badge
-                        variant="outline"
-                        className="bg-green-50  text-green-700 border-green-200 flex gap-1 items-center cursor-pointer hover:bg-green-100"
-                        onClick={() =>
-                          handleEditContract(
-                            getMemberContract(member.userId?._id)!
-                          )
-                        }
-                      >
-                        <FileSignature className="h-3 w-3" />
-                        <div className="text-[8px]">
-                          {
-                            getMemberContract(member.userId?._id)
-                              ?.contractNumber
-                          }
-                        </div>
-                      </Badge>
-                      <Badge
-                        variant="outline"
-                        className="ml-2 text-xs cursor-pointer hover:bg-gray-100"
-                        style={{
-                          backgroundColor:
-                            getMemberContract(member.userId?._id)?.status ===
-                            "active"
-                              ? "rgb(240, 253, 244)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "draft"
-                              ? "rgb(240, 249, 255)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "pending_signature"
-                              ? "rgb(254, 249, 195)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "suspended"
-                              ? "rgb(254, 242, 242)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "terminated"
-                              ? "rgb(249, 250, 251)"
-                              : "rgb(249, 250, 251)",
-                          color:
-                            getMemberContract(member.userId?._id)?.status ===
-                            "active"
-                              ? "rgb(22, 101, 52)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "draft"
-                              ? "rgb(3, 105, 161)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "pending_signature"
-                              ? "rgb(161, 98, 7)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "suspended"
-                              ? "rgb(185, 28, 28)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "terminated"
-                              ? "rgb(107, 114, 128)"
-                              : "rgb(107, 114, 128)",
-                          borderColor:
-                            getMemberContract(member.userId?._id)?.status ===
-                            "active"
-                              ? "rgb(187, 247, 208)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "draft"
-                              ? "rgb(186, 230, 253)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "pending_signature"
-                              ? "rgb(254, 240, 138)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "suspended"
-                              ? "rgb(254, 202, 202)"
-                              : getMemberContract(member.userId?._id)
-                                  ?.status === "terminated"
-                              ? "rgb(229, 231, 235)"
-                              : "rgb(229, 231, 235)",
-                        }}
-                        onClick={() =>
-                          handleEditContract(
-                            getMemberContract(member.userId?._id)!
-                          )
-                        }
-                      >
-                        <div className="text-[8px]">
-                          {getMemberContract(member.userId?._id)?.status}
-                        </div>
-                      </Badge>
+        <Tabs defaultValue="members" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-0">
+            <TabsTrigger value="members" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Team Members
+            </TabsTrigger>
+            <TabsTrigger value="managers" className="flex items-center gap-2">
+              <UserCog className="h-4 w-4" />
+              Project Management
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="members" className="space-y-2">
+            <div className="flex justify-end mb-4">
+              <Button
+                variant="default"
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    projectId: projectData._id,
+                    projectName: projectData.name,
+                    returnUrl: `${window.location.pathname}?tab=team`,
+                  });
+                  router.push(`/users?${params.toString()}`);
+                }}
+              >
+                <UserPlus className="h-4 w-4" />
+                Add Member
+              </Button>
+            </div>
+            <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+              {teamMembers.map((member) => (
+                <div
+                  key={member._id}
+                  className="flex items-center justify-between space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage
+                        src={`https://avatar.vercel.sh/${member.userId?.email}`}
+                        alt={`${member.userId?.firstName} ${member.userId?.lastName}`}
+                      />
+                      <AvatarFallback>
+                        {getInitials(
+                          member.userId?.firstName,
+                          member.userId?.lastName
+                        )}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-sm font-medium leading-none">
+                        {member.userId?.firstName} {member.userId?.lastName}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {member.userId?.email}
+                      </p>
+                      <div className="mt-1 flex flex-wrap gap-0.5">
+                        {member.responsibilities.map((responsibility) => (
+                          <Badge
+                            key={responsibility}
+                            variant="secondary"
+                            className="text-[8px]"
+                          >
+                            {responsibility}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-blue-600 border-blue-200 bg-blue-50"
-                      onClick={() =>
-                        handleOpenContractDialog(member.userId?._id)
-                      }
-                    >
-                      <FileSignature className="h-3 w-3 mr-1" />
-                      Award Contract
-                    </Button>
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <div className="mb-2">
+                      {getMemberContract(member.userId?._id) ? (
+                        <div className="">
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50  text-green-700 border-green-200 flex gap-1 items-center cursor-pointer hover:bg-green-100"
+                            onClick={() =>
+                              handleEditContract(
+                                getMemberContract(member.userId?._id)!
+                              )
+                            }
+                          >
+                            <FileSignature className="h-3 w-3" />
+                            <div className="text-[8px]">
+                              {
+                                getMemberContract(member.userId?._id)
+                                  ?.contractNumber
+                              }
+                            </div>
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="ml-2 text-xs cursor-pointer hover:bg-gray-100"
+                            style={{
+                              backgroundColor:
+                                getMemberContract(member.userId?._id)
+                                  ?.status === "active"
+                                  ? "rgb(240, 253, 244)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "draft"
+                                  ? "rgb(240, 249, 255)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "pending_signature"
+                                  ? "rgb(254, 249, 195)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "suspended"
+                                  ? "rgb(254, 242, 242)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "terminated"
+                                  ? "rgb(249, 250, 251)"
+                                  : "rgb(249, 250, 251)",
+                              color:
+                                getMemberContract(member.userId?._id)
+                                  ?.status === "active"
+                                  ? "rgb(22, 101, 52)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "draft"
+                                  ? "rgb(3, 105, 161)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "pending_signature"
+                                  ? "rgb(161, 98, 7)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "suspended"
+                                  ? "rgb(185, 28, 28)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "terminated"
+                                  ? "rgb(107, 114, 128)"
+                                  : "rgb(107, 114, 128)",
+                              borderColor:
+                                getMemberContract(member.userId?._id)
+                                  ?.status === "active"
+                                  ? "rgb(187, 247, 208)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "draft"
+                                  ? "rgb(186, 230, 253)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "pending_signature"
+                                  ? "rgb(254, 240, 138)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "suspended"
+                                  ? "rgb(254, 202, 202)"
+                                  : getMemberContract(member.userId?._id)
+                                      ?.status === "terminated"
+                                  ? "rgb(229, 231, 235)"
+                                  : "rgb(229, 231, 235)",
+                            }}
+                            onClick={() =>
+                              handleEditContract(
+                                getMemberContract(member.userId?._id)!
+                              )
+                            }
+                          >
+                            <div className="text-[8px]">
+                              {getMemberContract(member.userId?._id)?.status}
+                            </div>
+                          </Badge>
+                        </div>
+                      ) : (
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground hover:text-foreground"
+                          variant="outline"
+                          size="sm"
+                          className="text-blue-600 border-blue-200 bg-blue-50"
+                          onClick={() =>
+                            handleOpenContractDialog(member.userId?._id)
+                          }
                         >
-                          <CalendarDays className="h-4 w-4" />
-                          <span className="sr-only">Member since</span>
+                          <FileSignature className="h-3 w-3 mr-1" />
+                          Award Contract
                         </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Member since: {formatDate(member.startDate)}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setSelectedMember(member);
-                      setShowEditDialog(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit team member</span>
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              <CalendarDays className="h-4 w-4" />
+                              <span className="sr-only">Member since</span>
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Member since: {formatDate(member.startDate)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-destructive hover:text-destructive/90"
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setSelectedMember(member);
+                          setShowEditDialog(true);
+                        }}
                       >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Remove team member</span>
+                        <Pencil className="h-4 w-4" />
+                        <span className="sr-only">Edit team member</span>
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently
-                          remove {member.userId?.firstName}{" "}
-                          {member.userId?.lastName} from the project.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() =>
-                            handleDeleteTeamMember(member.userId?._id)
-                          }
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? "Removing..." : "Remove"}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive/90"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove team member</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently remove {member.userId?.firstName}{" "}
+                              {member.userId?.lastName} from the project.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() =>
+                                handleDeleteTeamMember(member.userId?._id)
+                              }
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={isDeleting}
+                            >
+                              {isDeleting ? "Removing..." : "Remove"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {teamMembers.length === 0 && (
+                <p className="col-span-full text-center text-sm text-muted-foreground py-8">
+                  No team members added yet. Click &quot;Add Member&quot; to get
+                  started.
+                </p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="managers" className="space-y-4">
+            <div className="space-y-6">
+              {/* Project Manager Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Project Manager</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      const params = new URLSearchParams({
+                        projectId: projectData._id,
+                        projectName: projectData.name,
+                        returnUrl: `${window.location.pathname}?tab=team`,
+                        isProjectManager: "true",
+                      });
+                      router.push(`/users?${params.toString()}`);
+                    }}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {projectData.projectManagerId ? "Change" : "Assign"} Manager
+                  </Button>
+                </div>
+                {projectData.projectManagerId ? (
+                  <div className="rounded-lg border p-4 bg-muted/30">
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage
+                          src={`https://avatar.vercel.sh/${projectData.projectManagerId.email}`}
+                          alt={`${projectData.projectManagerId.firstName} ${projectData.projectManagerId.lastName}`}
+                        />
+                        <AvatarFallback>
+                          {getInitials(
+                            projectData.projectManagerId.firstName,
+                            projectData.projectManagerId.lastName
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium">
+                          {projectData.projectManagerId.firstName}{" "}
+                          {projectData.projectManagerId.lastName}
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          {projectData.projectManagerId.email}
+                        </p>
+                        <Badge variant="secondary" className="mt-2">
+                          Project Manager
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-8 text-center">
+                    <UserCog className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      No project manager assigned yet
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Assistant Project Managers Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">
+                    Assistant Project Managers
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      const params = new URLSearchParams({
+                        projectId: projectData._id,
+                        projectName: projectData.name,
+                        returnUrl: `${window.location.pathname}?tab=team`,
+                        isAssistantPM: "true",
+                      });
+                      router.push(`/users?${params.toString()}`);
+                    }}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Add Assistant
+                  </Button>
+                </div>
+                <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+                  {projectData.assistantProjectManagers?.map((assistant) => (
+                    <div
+                      key={assistant._id}
+                      className="flex items-center justify-between space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage
+                            src={`https://avatar.vercel.sh/${assistant.userId?.email}`}
+                            alt={`${assistant.userId?.firstName} ${assistant.userId?.lastName}`}
+                          />
+                          <AvatarFallback>
+                            {getInitials(
+                              assistant.userId?.firstName,
+                              assistant.userId?.lastName
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="text-sm font-medium leading-none">
+                            {assistant.userId?.firstName}{" "}
+                            {assistant.userId?.lastName}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {assistant.userId?.email}
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-0.5">
+                            {assistant.responsibilities?.map(
+                              (responsibility) => (
+                                <Badge
+                                  key={responsibility}
+                                  variant="secondary"
+                                  className="text-[8px]"
+                                >
+                                  {responsibility}
+                                </Badge>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center space-x-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-muted-foreground hover:text-foreground"
+                                >
+                                  <CalendarDays className="h-4 w-4" />
+                                  <span className="sr-only">Assigned date</span>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Assigned: {formatDate(assistant.assignedDate)}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive/90"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">
+                                  Remove assistant PM
+                                </span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Are you sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will remove {assistant.userId?.firstName}{" "}
+                                  {assistant.userId?.lastName} as an assistant
+                                  project manager.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={async () => {
+                                    try {
+                                      const { removeAssistantProjectManager } =
+                                        await import(
+                                          "@/services/projects-service"
+                                        );
+                                      await removeAssistantProjectManager(
+                                        projectId,
+                                        assistant.userId._id
+                                      );
+                                      toast({
+                                        title: "Assistant PM removed",
+                                        description:
+                                          "The assistant project manager has been removed successfully.",
+                                      });
+                                      setTimeout(
+                                        () => window.location.reload(),
+                                        100
+                                      );
+                                    } catch (error) {
+                                      toast({
+                                        title: "Error",
+                                        description:
+                                          "Failed to remove assistant project manager",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Remove
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {(!projectData.assistantProjectManagers ||
+                    projectData.assistantProjectManagers.length === 0) && (
+                    <div className="col-span-full rounded-lg border border-dashed p-8 text-center">
+                      <Users className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        No assistant project managers assigned yet
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          ))}
-          {teamMembers.length === 0 && (
-            <p className="text-center text-sm text-muted-foreground">
-              No team members added yet. Click &quot;Add Member&quot; to get
-              started.
-            </p>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
       {selectedMember && (
         <EditTeamMemberDialog

@@ -1,10 +1,18 @@
 export type ClaimStatus =
   | "draft"
   | "pending_checker_approval"
-  | "pending_manager_approval" 
+  | "pending_reviewer_approval"
+  | "pending_approver_approval"
+  | "pending_srcc_checker_approval"
+  | "pending_srcc_finance_approval"
+  | "pending_director_approval"
+  | "pending_academic_director_approval"
   | "pending_finance_approval"
   | "approved"
-  | "rejected";
+  | "rejected"
+  | "paid"
+  | "cancelled"
+  | "revision_requested";
 
 export interface ClaimMilestone {
   _id: string;
@@ -26,7 +34,12 @@ export interface ApprovalDetails {
 export interface AuditTrailEntry {
   _id: string;
   action: string;
-  performedBy: string;
+  performedBy: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   performedAt: string;
   details: {
     level: string;
@@ -64,6 +77,28 @@ export interface Claim {
     _id: string;
     contractNumber: string;
     contractValue: number;
+    currency?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+    projectId?: {
+      _id: string;
+      name: string;
+      description: string;
+    };
+    createdBy?: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    contractedUserId?: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
   };
   claimantId: {
     _id: string;
@@ -80,11 +115,13 @@ export interface Claim {
     _id: string;
     firstName: string;
     lastName: string;
+    email?: string;
   };
   updatedBy: {
     _id: string;
     firstName: string;
     lastName: string;
+    email?: string;
   };
   documents: string[];
   auditTrail: AuditTrailEntry[];

@@ -39,6 +39,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  Receipt,
 } from "lucide-react";
 import { Contract } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
@@ -50,12 +51,24 @@ import {
   getContractTemplates,
 } from "@/services/contracts.service";
 import { Spinner } from "@/components/ui/spinner";
+import { CreateClaimOnBehalfDialog } from "@/components/contracts/create-claim-on-behalf-dialog";
 
 interface ContractsTableProps {
   contracts: Contract[];
+  projectId: string;
+  projectMilestones: Array<{
+    _id: string;
+    title: string;
+    description: string;
+    budget: number;
+  }>;
 }
 
-const ContractsTable = ({ contracts }: ContractsTableProps) => {
+const ContractsTable = ({
+  contracts,
+  projectId,
+  projectMilestones,
+}: ContractsTableProps) => {
   const { toast } = useToast();
   const router = useRouter();
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
@@ -64,9 +77,13 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
   const [contractToDelete, setContractToDelete] = useState<Contract | null>(
     null
   );
+  const [contractForClaim, setContractForClaim] = useState<Contract | null>(
+    null
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
+  const [showCreateClaimDialog, setShowCreateClaimDialog] = useState(false);
   const [isUpdatingContract, setIsUpdatingContract] = useState(false);
   const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -319,6 +336,17 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setContractForClaim(contract);
+                            setShowCreateClaimDialog(true);
+                          }}
+                        >
+                          <Receipt className="h-3 w-3 mr-1" />
+                          Create Claim
+                        </Button>
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
@@ -589,6 +617,16 @@ const ContractsTable = ({ contracts }: ContractsTableProps) => {
           contract={selectedContract}
           isSubmitting={isUpdatingContract}
           templates={templates}
+        />
+      )}
+
+      {/* Create Claim on Behalf Dialog */}
+      {contractForClaim && (
+        <CreateClaimOnBehalfDialog
+          open={showCreateClaimDialog}
+          onOpenChange={setShowCreateClaimDialog}
+          contract={contractForClaim}
+          projectMilestones={projectMilestones}
         />
       )}
 

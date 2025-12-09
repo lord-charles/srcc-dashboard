@@ -9,7 +9,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -90,10 +89,8 @@ export function EditContractDialog({
     (typeof templates)[0] | null
   >(null);
 
-  // Format ISO date string to YYYY-MM-DD for HTML date input
   const formatDateForInput = (dateString?: string) => {
     if (!dateString) return new Date().toISOString().split("T")[0];
-    // Handle both ISO string and date objects
     const date =
       typeof dateString === "object" ? dateString : new Date(dateString);
     return date.toISOString().split("T")[0];
@@ -115,7 +112,6 @@ export function EditContractDialog({
     },
   });
 
-  // Update form values when contract changes
   useEffect(() => {
     if (contract) {
       const templateId =
@@ -154,7 +150,6 @@ export function EditContractDialog({
 
   const isDraft = contract?.status === "draft";
 
-  // Prepare contract data for template population
   const contractDataForTemplate = {
     projectName: (contract as any)?.projectId?.name || "Project",
     teamMemberName: `${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`,
@@ -168,8 +163,9 @@ export function EditContractDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col p-0">
+        {/* Fixed Header */}
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle>Edit Contract</DialogTitle>
           <DialogDescription>
             {isDraft
@@ -177,255 +173,263 @@ export function EditContractDialog({
               : "You can only update the status of this contract since it's not in draft status."}
           </DialogDescription>
         </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Contract description"
-                      className="resize-none"
-                      {...field}
-                      disabled={!isDraft}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-2 gap-4">
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-6">
+          <Form {...form}>
+            <div className="space-y-4 pb-4">
               <FormField
                 control={form.control}
-                name="contractValue"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contract Value</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="0"
+                      <Textarea
+                        placeholder="Contract description"
+                        className="resize-none"
                         {...field}
-                        disabled
+                        disabled={!isDraft}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Fixed as per budget allocation
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="contractValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contract Value</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          {...field}
+                          disabled
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Fixed as per budget allocation
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="KES">KES</SelectItem>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                          <SelectItem value="GBP">GBP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        {isDraft
+                          ? "Select contract currency"
+                          : "Fixed as per budget allocation"}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Start Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          className={cn(
+                            "w-full",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Fixed as per budget allocation
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="endDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>End Date</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          className={cn(
+                            "w-full",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Fixed as per budget allocation
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {templates && templates.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="templateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Contract Template{" "}
+                        {!field.value && isDraft && "(Optional)"}
+                      </FormLabel>
+                      <div className="flex gap-2">
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Select a template (optional)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">No Template</SelectItem>
+                            {templates.map((t) => (
+                              <SelectItem key={t._id} value={t._id}>
+                                {t.name}
+                                {t.version ? ` (v${t.version})` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={handleViewTemplate}
+                          disabled={
+                            !field.value || field.value === "none" || !isDraft
+                          }
+                          title="View and edit template"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <FormDescription>
+                        {isDraft
+                          ? field.value && field.value !== "none"
+                            ? "The selected template will be embedded in the contract. Click the eye icon to preview and edit."
+                            : "You can assign a template to this contract. Templates help standardize contract content."
+                          : "Template cannot be changed after draft status"}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
-                name="currency"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Currency</FormLabel>
+                    <FormLabel>Status</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      // disabled={!isDraft}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
+                          <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="KES">KES</SelectItem>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
+                        {isDraft && (
+                          <SelectItem value="draft">Draft</SelectItem>
+                        )}
+                        <SelectItem value="terminated">Terminated</SelectItem>
+                        {!isDraft &&
+                          contract?.status !== "suspended" &&
+                          contract?.status !== "terminated" && (
+                            <SelectItem value={contract?.status || "active"}>
+                              {contract?.status === "pending_signature"
+                                ? "Pending Signature"
+                                : contract?.status === "active"
+                                ? "Active"
+                                : contract?.status}
+                            </SelectItem>
+                          )}
                       </SelectContent>
                     </Select>
                     <FormDescription>
                       {isDraft
-                        ? "Select contract currency"
-                        : "Fixed as per budget allocation"}
+                        ? "Draft contracts can be edited."
+                        : "You can suspend or terminate this contract."}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        className={cn(
-                          "w-full",
-                          !field.value && "text-muted-foreground"
-                        )}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Fixed as per budget allocation
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>End Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        className={cn(
-                          "w-full",
-                          !field.value && "text-muted-foreground"
-                        )}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Fixed as per budget allocation
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            {templates && templates.length > 0 && (
-              <FormField
-                control={form.control}
-                name="templateId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Contract Template{" "}
-                      {!field.value && isDraft && "(Optional)"}
-                    </FormLabel>
-                    <div className="flex gap-2">
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || undefined}
-                        // disabled={!isDraft}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Select a template (optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">No Template</SelectItem>
-                          {templates.map((t) => (
-                            <SelectItem key={t._id} value={t._id}>
-                              {t.name}
-                              {t.version ? ` (v${t.version})` : ""}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={handleViewTemplate}
-                        disabled={
-                          !field.value || field.value === "none" || !isDraft
-                        }
-                        title="View and edit template"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <FormDescription>
-                      {isDraft
-                        ? field.value && field.value !== "none"
-                          ? "The selected template will be embedded in the contract. Click the eye icon to preview and edit."
-                          : "You can assign a template to this contract. Templates help standardize contract content."
-                        : "Template cannot be changed after draft status"}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {isDraft && (
-                        <>
-                          <SelectItem value="draft">Draft</SelectItem>
-                        </>
-                      )}
-                      {/* <SelectItem value="suspended">Suspended</SelectItem> */}
-                      <SelectItem value="terminated">Terminated</SelectItem>
-                      {!isDraft &&
-                        contract?.status !== "suspended" &&
-                        contract?.status !== "terminated" && (
-                          <SelectItem value={contract?.status || "active"}>
-                            {contract?.status === "pending_signature"
-                              ? "Pending Signature"
-                              : contract?.status === "active"
-                              ? "Active"
-                              : contract?.status}
-                          </SelectItem>
-                        )}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    {isDraft
-                      ? "Draft contracts can be edited."
-                      : "You can suspend or terminate this contract."}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
+          </Form>
+        </div>
+
+        {/* Fixed Footer */}
+        <div className="border-t bg-background px-6 py-4 shrink-0">
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              onClick={form.handleSubmit(handleSubmit)}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center space-x-2">
+                  <Spinner />
+                  <span>Updating...</span>
+                </div>
+              ) : (
+                "Update Contract"
               )}
-            />
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <div className="flex items-center space-x-2">
-                    <Spinner />
-                    <span>Updating...</span>
-                  </div>
-                ) : (
-                  "Update Contract"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            </Button>
+          </div>
+        </div>
       </DialogContent>
 
       <TemplateEditorDialog

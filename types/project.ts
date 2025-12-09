@@ -147,12 +147,12 @@ export interface Invoice {
   updatedAt: string;
   __v: number;
   revisionRequest?: RevisionRequest;
-  actualInvoice?:string
+  actualInvoice?: string;
 }
 
 export interface Payment {
   _id: string;
-  method: 'bank_transfer' | 'cheque' | 'mpesa' | 'cash';
+  method: "bank_transfer" | "cheque" | "mpesa" | "cash";
   bankName?: string;
   accountNumber?: string;
   branchCode?: string;
@@ -296,6 +296,14 @@ export interface Contract {
   __v: number;
 }
 
+export interface AssistantProjectManager {
+  userId: User;
+  contractId?: Contract;
+  assignedDate: string;
+  responsibilities: string[];
+  _id: string;
+}
+
 export interface Project {
   _id: string;
   name: string;
@@ -310,6 +318,7 @@ export interface Project {
   createdBy: User | null;
   updatedBy: User | null;
   projectManagerId: User;
+  assistantProjectManagers?: AssistantProjectManager[];
   teamMembers: TeamMember[];
   procurementMethod: string;
   projectProposalUrl: string;

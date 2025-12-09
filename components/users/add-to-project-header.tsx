@@ -6,6 +6,7 @@ import { ArrowLeft, UserPlus } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AddTeamMemberDialog } from "./add-team-member-dialog";
+import { AddAssistantPMDialog } from "./add-assistant-pm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/types/user";
 import { updateProjectManager } from "@/services/projects-service";
@@ -20,11 +21,13 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
+  const [showAssistantPMDialog, setShowAssistantPMDialog] = useState(false);
 
   const projectId = searchParams.get("projectId");
   const projectName = searchParams.get("projectName");
   const returnUrl = searchParams.get("returnUrl");
   const isProjectManager = searchParams.get("isProjectManager") === "true";
+  const isAssistantPM = searchParams.get("isAssistantPM") === "true";
 
   if (!projectId || !projectName) return null;
 
@@ -39,12 +42,32 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
           description: "Project manager assigned successfully",
         });
         if (returnUrl) router.push(returnUrl);
+      } else if (isAssistantPM) {
+        setShowAssistantPMDialog(true);
       } else {
         setShowDialog(true);
       }
     } catch (error) {
       console.error("Failed to update project manager:", error);
     }
+  };
+
+  const getActionText = () => {
+    if (isProjectManager) return "Assign Project Manager";
+    if (isAssistantPM) return "Add Assistant PM";
+    return "Add Members";
+  };
+
+  const getButtonText = () => {
+    if (isProjectManager) return "Assign as Project Manager";
+    if (isAssistantPM) return "Add as Assistant PM";
+    return "Add to Project";
+  };
+
+  const getDescription = () => {
+    if (isProjectManager) return "assign them as project manager";
+    if (isAssistantPM) return "add them as an assistant project manager";
+    return "add them to the project";
   };
 
   return (
@@ -62,14 +85,10 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
             </Button>
             <div>
               <h2 className="text-lg font-semibold">
-                {isProjectManager ? "Assign Project Manager" : "Add Members"} to{" "}
-                {projectName}
+                {getActionText()} to {projectName}
               </h2>
               <p className="text-sm text-gray-400">
-                Select a user from the list below to{" "}
-                {isProjectManager
-                  ? "assign them as project manager"
-                  : "add them to the project"}
+                Select a user from the list below to {getDescription()}
               </p>
             </div>
           </div>
@@ -86,21 +105,29 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
               </div>
               <Button onClick={handleAddUser}>
                 <UserPlus className="h-4 w-4 mr-2" />
-                {isProjectManager
-                  ? "Assign as Project Manager"
-                  : "Add to Project"}
+                {getButtonText()}
               </Button>
             </div>
           )}
         </div>
       </Card>
-      {!isProjectManager && (
+      {!isProjectManager && !isAssistantPM && (
         <AddTeamMemberDialog
           open={showDialog}
           onOpenChange={setShowDialog}
           projectId={projectId}
           projectName={projectName}
           user={selectedUser!}
+          returnUrl={returnUrl || undefined}
+        />
+      )}
+      {isAssistantPM && selectedUser && (
+        <AddAssistantPMDialog
+          open={showAssistantPMDialog}
+          onOpenChange={setShowAssistantPMDialog}
+          projectId={projectId}
+          projectName={projectName}
+          user={selectedUser}
           returnUrl={returnUrl || undefined}
         />
       )}

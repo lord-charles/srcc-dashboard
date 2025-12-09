@@ -5,7 +5,12 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Claim, ClaimStatus } from "@/types/claim";
 
 const formatCurrency = (amount: number, currency: string = "KES") => {
@@ -18,17 +23,38 @@ const formatCurrency = (amount: number, currency: string = "KES") => {
 
 const getStatusColor = (status: ClaimStatus) => {
   switch (status) {
+    case "draft":
+      return "bg-gray-100 text-gray-800";
+    case "pending_checker_approval":
+      return "bg-blue-100 text-blue-800";
+    case "pending_reviewer_approval":
+      return "bg-blue-100 text-blue-800";
+    case "pending_approver_approval":
+      return "bg-blue-100 text-blue-800";
+    case "pending_srcc_checker_approval":
+      return "bg-indigo-100 text-indigo-800";
+    case "pending_srcc_finance_approval":
+      return "bg-indigo-100 text-indigo-800";
+    case "pending_director_approval":
+      return "bg-purple-100 text-purple-800";
+    case "pending_academic_director_approval":
+      return "bg-purple-100 text-purple-800";
+    case "pending_finance_approval":
+      return "bg-cyan-100 text-cyan-800";
     case "approved":
       return "bg-green-100 text-green-800";
     case "rejected":
       return "bg-red-100 text-red-800";
-    case "draft":
-      return "bg-gray-100 text-gray-800";
+    case "paid":
+      return "bg-emerald-100 text-emerald-800";
+    case "cancelled":
+      return "bg-slate-100 text-slate-800";
+    case "revision_requested":
+      return "bg-orange-100 text-orange-800";
     default:
       return "bg-yellow-100 text-yellow-800";
   }
 };
-
 const customIncludesStringFilter = (
   row: Row<Claim>,
   columnId: string,
@@ -37,7 +63,6 @@ const customIncludesStringFilter = (
   const value = row.getValue(columnId) as string;
   return value?.toLowerCase().includes((filterValue as string).toLowerCase());
 };
- 
 
 const formatStatus = (status: string) => {
   return status
@@ -57,7 +82,9 @@ export const columns: ColumnDef<Claim>[] = [
       const project = row.original?.projectId;
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{contract?.contractNumber || "N/A"}</span>
+          <span className="font-medium">
+            {contract?.contractNumber || "N/A"}
+          </span>
           <span className="text-xs text-muted-foreground line-clamp-1">
             {project?.name || "No Project"}
           </span>
@@ -110,17 +137,21 @@ export const columns: ColumnDef<Claim>[] = [
     cell: ({ row }) => {
       const amount = row.getValue("amount") as number;
       const currency = row.original.currency || "KES";
-      const totalMaxAmount = row.original.milestones?.reduce(
-        (sum, m) => sum + (m.maxClaimableAmount || 0),
-        0
-      ) || 0;
-      const percentage = totalMaxAmount > 0 
-        ? ((amount / totalMaxAmount) * 100).toFixed(1)
-        : "0.0";
+      const totalMaxAmount =
+        row.original.milestones?.reduce(
+          (sum, m) => sum + (m.maxClaimableAmount || 0),
+          0
+        ) || 0;
+      const percentage =
+        totalMaxAmount > 0
+          ? ((amount / totalMaxAmount) * 100).toFixed(1)
+          : "0.0";
 
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{formatCurrency(amount, currency)}</span>
+          <span className="font-medium">
+            {formatCurrency(amount, currency)}
+          </span>
           <span className="text-xs text-muted-foreground">
             {percentage}% of total claimable
           </span>
@@ -136,15 +167,18 @@ export const columns: ColumnDef<Claim>[] = [
     cell: ({ row }) => {
       const milestones = row.original.milestones || [];
       const currency = row.original.currency || "KES";
-      
+
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex flex-col cursor-help">
-                <span className="font-medium">{milestones.length} milestone{milestones.length !== 1 ? 's' : ''}</span>
+                <span className="font-medium">
+                  {milestones.length} milestone
+                  {milestones.length !== 1 ? "s" : ""}
+                </span>
                 <span className="text-xs text-muted-foreground line-clamp-1">
-                  {milestones.map(m => m.title).join(", ") || "No milestones"}
+                  {milestones.map((m) => m.title).join(", ") || "No milestones"}
                 </span>
               </div>
             </TooltipTrigger>
@@ -176,9 +210,7 @@ export const columns: ColumnDef<Claim>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as ClaimStatus;
       return (
-        <Badge className={getStatusColor(status)}>
-          {formatStatus(status)}
-        </Badge>
+        <Badge className={getStatusColor(status)}>{formatStatus(status)}</Badge>
       );
     },
     filterFn: (row, id, value) => {

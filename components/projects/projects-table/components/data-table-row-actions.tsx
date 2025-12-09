@@ -48,8 +48,6 @@ export function DataTableRowActions<TData>({
         title: "Success",
         description: "Project deleted successfully",
       });
-      // Refresh the page to update the table
-      window.location.reload();
     } catch (error) {
       toast({
         title: "Error",
@@ -59,6 +57,9 @@ export function DataTableRowActions<TData>({
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     }
   };
 
@@ -92,7 +93,8 @@ export function DataTableRowActions<TData>({
         <DialogHeader>
           <DialogTitle>Delete Project</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this project? This action cannot be undone.
+            Are you sure you want to delete this project? This action cannot be
+            undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

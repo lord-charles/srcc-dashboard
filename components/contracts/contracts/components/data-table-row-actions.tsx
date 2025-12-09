@@ -50,17 +50,18 @@ export function DataTableRowActions<TData>({
         title: "Contract deleted",
         description: "The contract has been successfully deleted.",
       });
-
-      window.location.reload();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete the contract. Please try again.",
+        description: error instanceof Error ? error.message : "Unknown error",
         variant: "destructive",
       });
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     }
   };
   return (

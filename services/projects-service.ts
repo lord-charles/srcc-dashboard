@@ -131,7 +131,7 @@ export const createProject = async (data: any) => {
     );
 
     return response.data;
-  } catch (error:any) {
+  } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const errorMessage =
         error.response?.data?.message || "Failed to create project";
@@ -267,6 +267,49 @@ export async function updateProjectManager(
     }
     console.error("Failed to update project manager:", error);
     return null;
+  }
+}
+
+export async function addAssistantProjectManager(
+  projectId: string,
+  userId: string,
+  responsibilities: string[],
+  contractId?: string
+): Promise<Project | null> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/assistant-project-managers`,
+      { userId, responsibilities, contractId },
+      config
+    );
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to add assistant project manager:", error);
+    throw error;
+  }
+}
+
+export async function removeAssistantProjectManager(
+  projectId: string,
+  assistantUserId: string
+): Promise<Project | null> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/assistant-project-managers/${assistantUserId}`,
+      config
+    );
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to remove assistant project manager:", error);
+    throw error;
   }
 }
 

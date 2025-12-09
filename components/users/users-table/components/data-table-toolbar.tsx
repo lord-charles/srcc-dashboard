@@ -6,7 +6,7 @@ import { Table } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { statuses } from "../data/data";
+import { statuses, userTypes } from "../data/data";
 import { DataTableFacetedFilter } from "./data-table-faceted-filter";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { Download, PlusCircle } from "lucide-react";
@@ -39,6 +39,13 @@ export function DataTableToolbar<TData>({
             column={table.getColumn("status")}
             title="Status"
             options={statuses}
+          />
+        )}
+        {table.getColumn("isAdmin") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("isAdmin")}
+            title="User Type"
+            options={userTypes}
           />
         )}
 
