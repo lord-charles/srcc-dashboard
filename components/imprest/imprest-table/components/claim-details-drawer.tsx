@@ -78,7 +78,7 @@ const getStatusColor = (status: ClaimStatus) => {
     case "approved":
       return "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800";
     case "pending_checker_approval":
-    case "pending_manager_approval":
+    // case "pending_manager_approval":
     case "pending_finance_approval":
       return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800";
     case "rejected":
@@ -97,7 +97,7 @@ const getStatusIcon = (status: ClaimStatus) => {
         <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
       );
     case "pending_checker_approval":
-    case "pending_manager_approval":
+    // case "pending_manager_approval":
     case "pending_finance_approval":
       return (
         <Clock className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400" />
@@ -894,12 +894,56 @@ export function ClaimDetailsDrawer({
                                         </div>
 
                                         <div className="text-sm mb-3">
-                                          <span className="text-muted-foreground">
-                                            Performed by:{" "}
-                                          </span>
-                                          <span className="font-medium">
-                                            {entry.performedBy}
-                                          </span>
+                                          {typeof entry?.performedBy ===
+                                          "string" ? (
+                                            <>
+                                              <span className="text-muted-foreground">
+                                                Performed by:{" "}
+                                              </span>
+                                              <span className="font-medium">
+                                                {entry.performedBy}
+                                              </span>
+                                            </>
+                                          ) : (
+                                            <div className="flex items-center">
+                                              <Avatar className="h-8 w-8 mr-2">
+                                                <AvatarImage
+                                                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${
+                                                    entry.performedBy
+                                                      ?.firstName || "U"
+                                                  }%20${
+                                                    entry.performedBy
+                                                      ?.lastName || "N"
+                                                  }`}
+                                                />
+                                                <AvatarFallback className="text-xs">
+                                                  {entry.performedBy
+                                                    ?.firstName &&
+                                                  entry.performedBy?.lastName
+                                                    ? getInitials(
+                                                        entry.performedBy
+                                                          .firstName,
+                                                        entry.performedBy
+                                                          .lastName
+                                                      )
+                                                    : "UN"}
+                                                </AvatarFallback>
+                                              </Avatar>
+                                              <div>
+                                                <p className="font-medium">
+                                                  {entry.performedBy
+                                                    ?.firstName || ""}{" "}
+                                                  {entry.performedBy
+                                                    ?.lastName || ""}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground flex items-center">
+                                                  <Mail className="h-3 w-3 mr-1" />
+                                                  {entry.performedBy?.email ||
+                                                    ""}
+                                                </p>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
 
                                         {entry.details && (
