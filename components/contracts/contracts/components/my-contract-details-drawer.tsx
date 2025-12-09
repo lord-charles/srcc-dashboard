@@ -60,7 +60,6 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { ProjectMilestone } from "@/types/project";
 
 interface MyContractDetailsDrawerProps {
   contract: Contract;
