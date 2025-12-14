@@ -38,14 +38,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { motion } from "framer-motion";
-
 interface ClaimDetailsDialogProps {
   claim: any;
   open: boolean;
@@ -57,14 +49,14 @@ export function ClaimDetailsDialog({
   open,
   onOpenChange,
 }: ClaimDetailsDialogProps) {
-  const statusIcon =
-    {
-      approved: CheckCircle2,
-      rejected: XCircle,
-      pending: Clock,
-    }[claim.status] ?? Clock;
+  const statusIconMap = {
+    approved: CheckCircle2,
+    rejected: XCircle,
+    pending: Clock,
+  } as const;
 
-  const StatusIcon = statusIcon;
+  const StatusIcon =
+    statusIconMap[claim.status as keyof typeof statusIconMap] ?? Clock;
 
   const statusVariant =
     claim.status === "approved"
