@@ -21,6 +21,12 @@ const getStatusColor = (status: ImprestStatus) => {
       return "bg-red-500";
     case "disbursed":
       return "bg-blue-500";
+    case "pending_acknowledgment":
+      return "bg-amber-500";
+    case "disputed":
+      return "bg-red-600";
+    case "resolved_dispute":
+      return "bg-purple-500";
     case "accounted":
       return "bg-emerald-500";
     case "overdue":
@@ -30,11 +36,10 @@ const getStatusColor = (status: ImprestStatus) => {
   }
 };
 
-
-
 export const columns: ColumnDef<Imprest>[] = [
   {
-    accessorFn: (row) => `${row.requestedBy.firstName} ${row.requestedBy.lastName}`,
+    accessorFn: (row) =>
+      `${row.requestedBy.firstName} ${row.requestedBy.lastName}`,
     id: "employeeName",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Employee" />
@@ -47,7 +52,7 @@ export const columns: ColumnDef<Imprest>[] = [
             {employee?.firstName} {employee?.lastName}
           </span>
           <span className="text-xs text-muted-foreground">
-            {employee?.email || "No Email"} • {employee?.phoneNumber || "No Phone"}
+            {employee?.email || "No Email"}
           </span>
         </div>
       );
@@ -120,9 +125,10 @@ export const columns: ColumnDef<Imprest>[] = [
       const status = row.original.status;
       return (
         <Badge className={`${getStatusColor(status)}`}>
-          {status.split("_").map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1)
-          ).join(" ")}
+          {status
+            .split("_")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ")}
         </Badge>
       );
     },

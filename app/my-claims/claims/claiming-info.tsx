@@ -1,14 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { AlertCircle, ArrowRight, CheckCircle, FileCheck, X } from "lucide-react"
-import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle,
+  FileCheck,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function ClaimingInfo() {
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(true);
 
   if (!isOpen) {
     return (
@@ -16,59 +22,70 @@ export function ClaimingInfo() {
         variant="outline"
         size="sm"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800"
+        className="flex items-center gap-2"
       >
-        <AlertCircle className="h-4 w-4" />
+        <AlertCircle className="h-4 w-4 text-muted-foreground" />
         Show claiming information
       </Button>
-    )
+    );
   }
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
+        exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.2 }}
       >
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100">
+        <Card>
           <CardContent className="pt-6 pb-4">
-            <div className="flex justify-between items-start">
+            <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <div className="bg-blue-100 p-2 rounded-full mt-1">
-                  <FileCheck className="h-5 w-5 text-blue-700" />
+                <div className="mt-1 flex h-9 w-9 items-center justify-center rounded-md bg-muted">
+                  <FileCheck className="h-5 w-5 text-foreground" />
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-blue-900">How to Submit a New Claim</h3>
-                  <div className="text-sm text-blue-800 space-y-1">
-                    <p className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      Navigate to <span className="font-medium">My Contracts</span> to select the contract you want to
-                      claim against
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      At least one milestone must be completed for the project to be eligible for claiming
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                      Submit claim for approval
-                    </p>
-                  </div>
-                  <Button asChild variant="default" size="sm" className="mt-2 bg-blue-600 hover:bg-blue-700">
-                    <Link href="/my-contracts" className="flex items-center gap-1">
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold">
+                    How to Submit a New Claim
+                  </h3>
+
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      Select the relevant contract from{" "}
+                      <span className="font-medium text-foreground">
+                        My Contracts
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      Ensure at least one milestone is completed
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      Submit the claim for approval
+                    </li>
+                  </ul>
+
+                  <Button asChild size="sm">
+                    <Link
+                      href="/my-contracts"
+                      className="flex items-center gap-1"
+                    >
                       Go to My Contracts
-                      <ArrowRight className="h-4 w-4 ml-1" />
+                      <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
               </div>
+
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="text-blue-700 hover:text-blue-800 hover:bg-blue-100"
+                className="text-muted-foreground"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -77,5 +94,5 @@ export function ClaimingInfo() {
         </Card>
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }

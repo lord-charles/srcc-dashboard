@@ -354,7 +354,11 @@ export default function ContractStats({
             } catch (error) {
               console.error("Error calculating approval time:", error);
             }
-          } else if (status === "pending" || status === "draft") {
+          } else if (
+            status === "pending" ||
+            status === "draft" ||
+            status.startsWith("pending")
+          ) {
             pendingApprovals++;
           }
 
@@ -560,33 +564,6 @@ export default function ContractStats({
     }
   };
 
-  // Get badge variant based on status
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "active":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200";
-      case "pending":
-        return "bg-amber-50 text-amber-700 border-amber-200";
-      case "expired":
-        return "bg-red-50 text-red-700 border-red-200";
-      case "draft":
-        return "bg-blue-50 text-blue-700 border-blue-200";
-      case "terminated":
-        return "bg-slate-50 text-slate-700 border-slate-200";
-      case "rejected":
-        return "bg-rose-50 text-rose-700 border-rose-200";
-      default:
-        return "bg-slate-50 text-slate-700 border-slate-200";
-    }
-  };
-
-  // Memoize project distribution for performance
-  const topProjects = useMemo(() => {
-    return Object.entries(stats.valueByProject)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 3);
-  }, [stats.valueByProject]);
-
   // Memoize status distribution for performance
   const statusDistribution = useMemo(() => {
     return Object.entries(stats.statusDistribution).sort(
@@ -651,9 +628,6 @@ export default function ContractStats({
                     <p className="text-sm text-muted-foreground">
                       Total Contract Value
                     </p>
-                  </div>
-                  <div className="h-16 w-16 rounded-full bg-emerald-50 flex items-center justify-center">
-                    <BarChart3 className="h-8 w-8 text-emerald-500" />
                   </div>
                 </div>
 
@@ -1044,21 +1018,21 @@ export default function ContractStats({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200">
-                    <p className="text-xl font-bold">
+                    <p className="text-md font-bold">
                       {stats.approvalMetrics.pendingApprovals}
                     </p>
                     <p className="text-xs text-muted-foreground text-center">
-                      Pending Approvals
+                      Pending
                     </p>
                   </div>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-help">
-                        <p className="text-xl font-bold">
+                        <p className="text-md font-bold">
                           {stats.amendmentMetrics.totalAmendments}
                         </p>
                         <p className="text-xs text-muted-foreground text-center">
-                          Total Amendments
+                          Amendments
                         </p>
                       </div>
                     </TooltipTrigger>

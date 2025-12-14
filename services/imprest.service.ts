@@ -264,3 +264,53 @@ export async function disburseImprest(
     throw error?.response?.data?.message || error;
   }
 }
+
+interface AcknowledgmentData {
+  received: boolean;
+  comments?: string;
+}
+
+export async function acknowledgeImprestReceipt(
+  id: string,
+  data: AcknowledgmentData
+): Promise<Imprest> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Imprest>(
+      `${API_URL}/imprest/${id}/acknowledge`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+interface DisputeResolutionData {
+  resolution: "disbursed" | "cancelled";
+  adminComments?: string;
+}
+
+export async function resolveImprestDispute(
+  id: string,
+  data: DisputeResolutionData
+): Promise<Imprest> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Imprest>(
+      `${API_URL}/imprest/${id}/resolve-dispute`,
+      data,
+      config
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}

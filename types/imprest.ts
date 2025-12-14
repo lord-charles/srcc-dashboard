@@ -35,24 +35,40 @@ export interface ImprestAccounting {
   comments?: string;
 }
 
+export interface ImprestAcknowledgment {
+  acknowledgedBy: User;
+  acknowledgedAt: string;
+  received: boolean;
+  comments?: string;
+}
+
+export interface ImprestDisputeResolution {
+  resolvedBy: User;
+  resolvedAt: string;
+  resolution: "disbursed" | "cancelled";
+  adminComments?: string;
+}
+
 export interface ImprestAttachment {
   fileName: string;
   fileUrl: string;
   uploadedAt: string;
 }
 
-
-export type ImprestStatus = 
+export type ImprestStatus =
   | "pending_hod"
   | "pending_accountant"
   | "pending_accounting_approval"
   | "approved"
   | "rejected"
   | "disbursed"
+  | "pending_acknowledgment"
+  | "disputed"
+  | "resolved_dispute"
   | "accounted"
   | "overdue";
 
-export type ImprestPaymentType = 
+export type ImprestPaymentType =
   | "Contingency Cash"
   | "Travel Cash"
   | "Purchase Cash"
@@ -70,11 +86,14 @@ export interface Imprest {
   paymentType: ImprestPaymentType;
   explanation: string;
   status: ImprestStatus;
+  hasDisputeHistory?: boolean; // Track if this imprest was ever disputed
   requestedBy: User;
   hodApproval?: ImprestApproval;
   accountantApproval?: ImprestApproval;
   rejection?: ImprestRejection;
   disbursement?: ImprestDisbursement;
+  acknowledgment?: ImprestAcknowledgment;
+  disputeResolution?: ImprestDisputeResolution;
   accounting?: ImprestAccounting;
   attachments?: ImprestAttachment[];
   createdAt: string;

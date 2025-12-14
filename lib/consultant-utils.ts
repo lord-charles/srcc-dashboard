@@ -6,6 +6,7 @@ export const CONSULTANT_REQUIRED_FIELDS = [
   "nationalId",
   "position",
   "department",
+  "department",
   // "bankDetails.bankName",
   // "bankDetails.accountNumber",
   // "emergencyContact.name",

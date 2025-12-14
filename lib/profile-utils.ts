@@ -2,6 +2,7 @@ export const REQUIRED_FIELDS = [
   "companyName",
   "registrationNumber",
   "kraPin",
+  "department",
   "businessAddress",
   "businessPhone",
   "businessEmail",

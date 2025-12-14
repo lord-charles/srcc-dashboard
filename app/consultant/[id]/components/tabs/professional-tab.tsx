@@ -296,17 +296,25 @@ export function ProfessionalTab() {
                     <CheckCircle className="w-4 h-4 text-primary" />
                   )}
                 </Label>
-                <Input
-                  id="department"
+                <Select
                   value={formData.department}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, department: e.target.value }))
+                  onValueChange={(value) =>
+                    setFormData((p) => ({ ...p, department: value }))
                   }
-                  placeholder="e.g., Software Engineering"
-                  className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                />
+                >
+                  <SelectTrigger className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/20">
+                    <SelectValue placeholder="Select School/Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ILAB">ILAB</SelectItem>
+                    <SelectItem value="SBS">SBS</SelectItem>
+                    <SelectItem value="SRCC">SRCC</SelectItem>
+                    <SelectItem value="SHSS">SHSS</SelectItem>
+                    <SelectItem value="SERC">SERC</SelectItem>
+                    <SelectItem value="SIMS">SIMS</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
               <div className="space-y-2">
                 <Label
                   htmlFor="experience"

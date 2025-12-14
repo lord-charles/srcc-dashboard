@@ -91,10 +91,10 @@ export type FormValues = z.infer<typeof formSchema>;
 
 // Currency options
 const currencies = [
+  { value: "KES", label: "KES - Kenyan Shilling", symbol: "KSh" },
   { value: "USD", label: "USD - US Dollar", symbol: "$" },
   { value: "EUR", label: "EUR - Euro", symbol: "€" },
   { value: "GBP", label: "GBP - British Pound", symbol: "£" },
-  { value: "KES", label: "KES - Kenyan Shilling", symbol: "KSh" },
 ];
 
 // Payment type options
@@ -129,7 +129,7 @@ export function NewImprestDrawer({
     resolver: zodResolver(formSchema),
     defaultValues: {
       paymentReason: "",
-      currency: "USD",
+      currency: "KES",
       amount: undefined,
       paymentType: "Contingency Cash",
       explanation: "",

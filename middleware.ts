@@ -53,6 +53,15 @@ export default withAuth(
         return NextResponse.redirect(redirectUrl);
       }
 
+      // Check if accessing /settings - require admin role
+      if (
+        (pathname === "/settings" || pathname.startsWith("/settings/")) &&
+        !hasAdminRole
+      ) {
+        const redirectUrl = new URL("/analytics?unauthorized=1", req.url);
+        return NextResponse.redirect(redirectUrl);
+      }
+
       // Allow /users with project context regardless of role
       if (isProjectContext) {
         return NextResponse.next();

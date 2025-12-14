@@ -337,12 +337,27 @@ export function UpdateEmployeeComponent({ employee }: any) {
                   <div className="grid lg:grid-cols-2 sm:grid-cols-1 gap-2">
                     <div className="space-y-2">
                       <Label htmlFor="department">Department *</Label>
-                      <Input
-                        id="department"
-                        {...register("department")}
-                        className={`w-full ${
-                          errors.department ? "border-red-500" : ""
-                        }`}
+                      <Controller
+                        name="department"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value || "SRCC"}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger id="department">
+                              <SelectValue placeholder="Select School/Department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ILAB">ILAB</SelectItem>
+                              <SelectItem value="SBS">SBS</SelectItem>
+                              <SelectItem value="SRCC">SRCC</SelectItem>
+                              <SelectItem value="SHSS">SHSS</SelectItem>
+                              <SelectItem value="SERC">SERC</SelectItem>
+                              <SelectItem value="SIMS">SIMS</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       />
                       {errors.department && (
                         <p className="text-sm text-red-500">

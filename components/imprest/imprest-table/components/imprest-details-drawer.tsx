@@ -72,6 +72,7 @@ import {
   Coins,
   Settings,
   CreditCardIcon,
+  ChevronDown,
 } from "lucide-react";
 import {
   approveImprestAccountant,
@@ -79,6 +80,7 @@ import {
   disburseImprest,
   rejectImprest,
   approveImprestAccounting,
+  resolveImprestDispute,
 } from "@/services/imprest.service";
 
 interface ImprestDetailsDrawerProps {
@@ -118,18 +120,26 @@ export function ImprestDetailsDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [isDisbursing, setIsDisbursing] = useState(false);
+  const [isResolvingDispute, setIsResolvingDispute] = useState(false);
+  const [disputeResolution, setDisputeResolution] = useState<
+    "disbursed" | "cancelled"
+  >("disbursed");
+  const [disputeComments, setDisputeComments] = useState("");
   const [progress, setProgress] = useState(0);
   const { toast } = useToast();
 
   // Calculate approval progress
   useEffect(() => {
     let progressValue = 0;
-    if (imprest?.status === "pending_hod") progressValue = 20;
-    else if (imprest?.status === "pending_accountant") progressValue = 40;
-    else if (imprest?.status === "approved") progressValue = 70;
-    else if (imprest?.status === "disbursed") progressValue = 80;
+    if (imprest?.status === "pending_hod") progressValue = 15;
+    else if (imprest?.status === "pending_accountant") progressValue = 30;
+    else if (imprest?.status === "approved") progressValue = 50;
+    else if (imprest?.status === "disbursed") progressValue = 65;
+    else if (imprest?.status === "pending_acknowledgment") progressValue = 75;
+    else if (imprest?.status === "disputed") progressValue = 75;
+    else if (imprest?.status === "resolved_dispute") progressValue = 80;
     else if (imprest?.status === "pending_accounting_approval")
-      progressValue = 90;
+      progressValue = 85;
     else if (imprest?.status === "accounted") progressValue = 100;
     else if (imprest?.status === "rejected") progressValue = 100;
     else if (imprest?.status === "overdue") progressValue = 100;
@@ -218,6 +228,27 @@ export function ImprestDetailsDrawer({
             "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30",
           icon: <Banknote className="h-3.5 w-3.5 mr-1.5" />,
         };
+      case "pending_acknowledgment":
+        return {
+          label: "Pending Acknowledgment",
+          color:
+            "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30",
+          icon: <Clock className="h-3.5 w-3.5 mr-1.5" />,
+        };
+      case "disputed":
+        return {
+          label: "Disputed",
+          color:
+            "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30",
+          icon: <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />,
+        };
+      case "resolved_dispute":
+        return {
+          label: "Resolved Dispute",
+          color:
+            "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30",
+          icon: <CheckCircle className="h-3.5 w-3.5 mr-1.5" />,
+        };
       case "accounted":
         return {
           label: "Accounted",
@@ -261,7 +292,9 @@ export function ImprestDetailsDrawer({
       });
     } finally {
       setIsSubmitting(false);
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   };
 
@@ -291,7 +324,9 @@ export function ImprestDetailsDrawer({
       });
     } finally {
       setIsSubmitting(false);
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   };
 
@@ -314,6 +349,7 @@ export function ImprestDetailsDrawer({
       });
       onClose();
     } catch (error: any) {
+      console.log(error);
       toast({
         title: "Approval failed",
         description: error.message || "Failed to approve imprest accounting",
@@ -321,7 +357,9 @@ export function ImprestDetailsDrawer({
       });
     } finally {
       setIsSubmitting(false);
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   };
 
@@ -352,7 +390,9 @@ export function ImprestDetailsDrawer({
     } finally {
       setIsRejecting(false);
       setShowRejectForm(false);
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   };
 
@@ -389,7 +429,44 @@ export function ImprestDetailsDrawer({
       });
     } finally {
       setIsDisbursing(false);
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  };
+
+  const handleResolveDispute = async () => {
+    if (!disputeComments.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide resolution comments",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsResolvingDispute(true);
+      await resolveImprestDispute(imprest?._id, {
+        resolution: disputeResolution,
+        adminComments: disputeComments,
+      });
+      toast({
+        title: "Dispute resolved",
+        description: `Dispute has been resolved as ${disputeResolution}`,
+      });
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Resolution failed",
+        description: error?.message || "Failed to resolve dispute",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResolvingDispute(false);
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   };
 
@@ -425,11 +502,11 @@ export function ImprestDetailsDrawer({
                   variant="outline"
                   className={cn(
                     "flex items-center px-3 py-1.5",
-                    statusInfo.color
+                    statusInfo?.color
                   )}
                 >
-                  {statusInfo.icon}
-                  {statusInfo.label}
+                  {statusInfo?.icon}
+                  {statusInfo?.label}
                 </Badge>
               </div>
 
@@ -439,6 +516,7 @@ export function ImprestDetailsDrawer({
                   <span>HOD Approval</span>
                   <span>Finance Approval</span>
                   <span>Disbursed</span>
+                  <span>Acknowledged</span>
                   <span>Accounting Approval</span>
                   <span>Accounted</span>
                 </div>
@@ -448,28 +526,39 @@ export function ImprestDetailsDrawer({
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 20 ? "bg-primary" : "bg-muted"
+                        progress >= 15 ? "bg-primary" : "bg-muted"
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 40 ? "bg-primary" : "bg-muted"
+                        progress >= 30 ? "bg-primary" : "bg-muted"
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 60 ? "bg-primary" : "bg-muted"
+                        progress >= 50 ? "bg-primary" : "bg-muted"
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 80 ? "bg-primary" : "bg-muted"
+                        progress >= 65 ? "bg-primary" : "bg-muted"
                       )}
                     />
-
+                    <div
+                      className={cn(
+                        "h-4 w-4 rounded-full border-2 border-background",
+                        progress >= 75 ? "bg-primary" : "bg-muted"
+                      )}
+                    />
+                    <div
+                      className={cn(
+                        "h-4 w-4 rounded-full border-2 border-background",
+                        progress >= 85 ? "bg-primary" : "bg-muted"
+                      )}
+                    />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
@@ -544,6 +633,7 @@ export function ImprestDetailsDrawer({
                       "pending_accountant",
                       "approved",
                       "pending_accounting_approval",
+                      "disputed",
                     ].includes(imprest?.status)
                   }
                 >
@@ -961,6 +1051,209 @@ export function ImprestDetailsDrawer({
                       </div>
                     </div>
 
+                    {/* Acknowledgment Section */}
+                    <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+                      <div className="bg-muted/30 px-5 py-3 border-b">
+                        <h3 className="font-medium flex items-center">
+                          <CheckCircle className="h-4 w-4 mr-2 text-primary" />
+                          Receipt Acknowledgment
+                        </h3>
+                      </div>
+                      <div className="p-5">
+                        {imprest?.acknowledgment ? (
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10 border">
+                                <AvatarImage
+                                  src={`https://avatar.vercel.sh/${imprest?.acknowledgment.acknowledgedBy?.email}`}
+                                  alt={`${imprest?.acknowledgment.acknowledgedBy?.firstName} ${imprest?.acknowledgment.acknowledgedBy?.lastName}`}
+                                />
+                                <AvatarFallback
+                                  className={cn(
+                                    "border",
+                                    imprest?.acknowledgment.received
+                                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                      : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                  )}
+                                >
+                                  {getInitials(
+                                    imprest?.acknowledgment.acknowledgedBy
+                                      ?.firstName || "A",
+                                    imprest?.acknowledgment.acknowledgedBy
+                                      ?.lastName || "U"
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="flex items-center">
+                                  <h4 className="font-medium">
+                                    {
+                                      imprest?.acknowledgment.acknowledgedBy
+                                        ?.firstName
+                                    }{" "}
+                                    {
+                                      imprest?.acknowledgment.acknowledgedBy
+                                        ?.lastName
+                                    }
+                                  </h4>
+                                  <Badge
+                                    className={cn(
+                                      "ml-2",
+                                      imprest?.acknowledgment.received
+                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30"
+                                        : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30"
+                                    )}
+                                  >
+                                    {imprest?.acknowledgment.received ? (
+                                      <>
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                        Received
+                                      </>
+                                    ) : (
+                                      <>
+                                        <XCircle className="h-3 w-3 mr-1" />
+                                        Not Received
+                                      </>
+                                    )}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {formatDate(
+                                    imprest?.acknowledgment.acknowledgedAt
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            {imprest?.acknowledgment.comments && (
+                              <div className="bg-muted/30 p-3 rounded-md">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                  <div>
+                                    <h5 className="text-sm font-medium mb-1">
+                                      Acknowledgment Comments
+                                    </h5>
+                                    <p className="text-sm">
+                                      {imprest?.acknowledgment.comments}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : imprest?.status === "pending_acknowledgment" ? (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="h-12 w-12 rounded-full bg-amber-50 flex items-center justify-center mb-3">
+                              <Clock className="h-6 w-6 text-amber-500" />
+                            </div>
+                            <h4 className="font-medium mb-1">
+                              Awaiting Receipt Acknowledgment
+                            </h4>
+                            <p className="text-sm text-muted-foreground max-w-md">
+                              The consultant needs to acknowledge whether they
+                              have received the disbursed funds.
+                            </p>
+                          </div>
+                        ) : imprest?.status === "disputed" ? (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="h-12 w-12 rounded-full bg-red-50 flex items-center justify-center mb-3">
+                              <AlertTriangle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <h4 className="font-medium mb-1 text-red-700">
+                              Disbursement Disputed
+                            </h4>
+                            <p className="text-sm text-muted-foreground max-w-md">
+                              The consultant has reported not receiving the
+                              disbursed funds. Admin intervention required.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                              <Clock className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <h4 className="font-medium mb-1">
+                              Not Yet Applicable
+                            </h4>
+                            <p className="text-sm text-muted-foreground max-w-md">
+                              Acknowledgment will be required after the imprest
+                              has been disbursed.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dispute Resolution (if applicable) */}
+                    {imprest?.disputeResolution && (
+                      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+                        <div className="bg-muted/30 px-5 py-3 border-b">
+                          <h3 className="font-medium flex items-center">
+                            <ShieldCheck className="h-4 w-4 mr-2 text-primary" />
+                            Dispute Resolution
+                          </h3>
+                        </div>
+                        <div className="p-5">
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-10 w-10 border">
+                                <AvatarImage
+                                  src={`https://avatar.vercel.sh/${imprest?.disputeResolution.resolvedBy?.email}`}
+                                  alt={`${imprest?.disputeResolution.resolvedBy?.firstName} ${imprest?.disputeResolution.resolvedBy?.lastName}`}
+                                />
+                                <AvatarFallback className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                  {getInitials(
+                                    imprest?.disputeResolution.resolvedBy
+                                      ?.firstName || "A",
+                                    imprest?.disputeResolution.resolvedBy
+                                      ?.lastName || "D"
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="flex items-center">
+                                  <h4 className="font-medium">
+                                    {
+                                      imprest?.disputeResolution.resolvedBy
+                                        ?.firstName
+                                    }{" "}
+                                    {
+                                      imprest?.disputeResolution.resolvedBy
+                                        ?.lastName
+                                    }
+                                  </h4>
+                                  <Badge className="ml-2 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30">
+                                    <ShieldCheck className="h-3 w-3 mr-1" />
+                                    Resolved as{" "}
+                                    {imprest?.disputeResolution.resolution}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  {formatDate(
+                                    imprest?.disputeResolution.resolvedAt
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            {imprest?.disputeResolution.adminComments && (
+                              <div className="bg-muted/30 p-3 rounded-md">
+                                <div className="flex items-start gap-2">
+                                  <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                  <div>
+                                    <h5 className="text-sm font-medium mb-1">
+                                      Resolution Comments
+                                    </h5>
+                                    <p className="text-sm">
+                                      {imprest?.disputeResolution.adminComments}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Disbursement Information (if applicable) */}
                     {imprest?.disbursement && (
                       <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
@@ -1323,7 +1616,7 @@ export function ImprestDetailsDrawer({
                             </h4>
                             <p className="text-sm text-muted-foreground max-w-md">
                               This imprest has been disbursed but not yet
-                              accounted for. The employee needs to submit
+                              accounted for. The consultant needs to submit
                               receipts and accounting details.
                             </p>
                           </div>
@@ -1667,7 +1960,9 @@ export function ImprestDetailsDrawer({
                                       });
                                     } finally {
                                       setIsSubmitting(false);
-                                      window.location.reload();
+                                      setTimeout(() => {
+                                        window.location.reload();
+                                      }, 2000);
                                     }
                                   }}
                                   disabled={isSubmitting}
@@ -1812,6 +2107,111 @@ export function ImprestDetailsDrawer({
                                     <>
                                       <Send className="mr-2 h-4 w-4" />
                                       Disburse Funds
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {imprest?.status === "disputed" && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+                            <div className="bg-muted/30 px-5 py-3 border-b">
+                              <h3 className="font-medium flex items-center">
+                                <ShieldCheck className="h-4 w-4 mr-2 text-primary" />
+                                Resolve Dispute (Admin Only)
+                              </h3>
+                            </div>
+                            <div className="p-5">
+                              <div className="space-y-4">
+                                <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start gap-3">
+                                  <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+                                  <div>
+                                    <h4 className="font-medium text-red-700 mb-1">
+                                      Disbursement Dispute
+                                    </h4>
+                                    <p className="text-sm text-red-600">
+                                      The consultant has reported not receiving
+                                      the disbursed funds. Please investigate
+                                      and resolve this dispute.
+                                    </p>
+                                  </div>
+                                </div>
+                                <div>
+                                  <Label htmlFor="dispute-resolution">
+                                    Resolution Action
+                                  </Label>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        className="w-full justify-between mt-1.5"
+                                      >
+                                        {disputeResolution === "disbursed"
+                                          ? "Mark as Disbursed (Re-disburse)"
+                                          : "Cancel Request"}
+                                        <ChevronDown className="h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-full">
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          setDisputeResolution("disbursed")
+                                        }
+                                      >
+                                        Mark as Disbursed (Re-disburse)
+                                      </DropdownMenuItem>
+                                      {/* <DropdownMenuItem
+                                        onClick={() =>
+                                          setDisputeResolution("cancelled")
+                                        }
+                                      >
+                                        Cancel Request
+                                      </DropdownMenuItem> */}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+
+                                <div>
+                                  <Label htmlFor="dispute-comments">
+                                    Resolution Comments
+                                  </Label>
+                                  <Textarea
+                                    id="dispute-comments"
+                                    placeholder="Provide details about the resolution..."
+                                    value={disputeComments}
+                                    onChange={(e) =>
+                                      setDisputeComments(e.target.value)
+                                    }
+                                    className="mt-1.5 min-h-[120px]"
+                                  />
+                                </div>
+
+                                <Button
+                                  onClick={handleResolveDispute}
+                                  disabled={
+                                    isResolvingDispute ||
+                                    !disputeComments.trim()
+                                  }
+                                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                >
+                                  {isResolvingDispute ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Resolving Dispute...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ShieldCheck className="mr-2 h-4 w-4" />
+                                      Resolve Dispute
                                     </>
                                   )}
                                 </Button>

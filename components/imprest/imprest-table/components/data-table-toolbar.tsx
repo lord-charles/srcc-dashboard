@@ -12,7 +12,7 @@ interface DataTableToolbarProps<TData> {
   table: Table<TData>;
 }
 
-const statuses: { label: string; value: ImprestStatus; }[] = [
+const statuses: { label: string; value: ImprestStatus }[] = [
   {
     label: "Pending HOD",
     value: "pending_hod",
@@ -20,6 +20,10 @@ const statuses: { label: string; value: ImprestStatus; }[] = [
   {
     label: "Pending Accountant",
     value: "pending_accountant",
+  },
+  {
+    label: "Pending Accounting Approval",
+    value: "pending_accounting_approval",
   },
   {
     label: "Approved",
@@ -32,6 +36,18 @@ const statuses: { label: string; value: ImprestStatus; }[] = [
   {
     label: "Disbursed",
     value: "disbursed",
+  },
+  {
+    label: "Pending Acknowledgment",
+    value: "pending_acknowledgment",
+  },
+  {
+    label: "Disputed",
+    value: "disputed",
+  },
+  {
+    label: "Resolved Dispute",
+    value: "resolved_dispute",
   },
   {
     label: "Accounted",
@@ -53,7 +69,9 @@ export function DataTableToolbar<TData>({
       <div className="flex flex-1 items-center space-x-2">
         <Input
           placeholder="Filter by employee..."
-          value={(table.getColumn("employeeName")?.getFilterValue() as string) ?? ""}
+          value={
+            (table.getColumn("employeeName")?.getFilterValue() as string) ?? ""
+          }
           onChange={(event) =>
             table.getColumn("employeeName")?.setFilterValue(event.target.value)
           }
