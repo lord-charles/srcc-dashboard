@@ -638,7 +638,7 @@ export function MyImprestStats({ imprests }: { imprests: any }) {
                 <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
                   {stats.upcomingDeadlines &&
                   stats.upcomingDeadlines.length > 0 ? (
-                    stats.upcomingDeadlines.map((imprest, i) => (
+                    stats.upcomingDeadlines.slice(0, 2).map((imprest, i) => (
                       <div
                         key={i}
                         className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"

@@ -314,6 +314,7 @@ export interface Project {
   contractStartDate: string;
   contractEndDate: string;
   client: string;
+  department: string;
   status: "active" | "completed" | "cancelled" | "on-hold";
   createdBy: User | null;
   updatedBy: User | null;
