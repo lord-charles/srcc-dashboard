@@ -66,6 +66,20 @@ interface ApprovalFlow {
   updatedAt: string;
 }
 
+export interface PaymentDetails {
+  paidBy: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  paidAt: string;
+  transactionId: string;
+  paymentMethod: string;
+  reference?: string;
+  paymentAdviceUrl: string;
+}
+
 export interface Claim {
   _id: string;
   projectId: {
@@ -135,4 +149,5 @@ export interface Claim {
   };
   approvalFlow: ApprovalFlow;
   currentLevelDeadline?: string;
+  payment?: PaymentDetails;
 }

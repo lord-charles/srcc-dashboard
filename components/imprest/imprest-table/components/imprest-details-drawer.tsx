@@ -1548,17 +1548,26 @@ export function ImprestDetailsDrawer({
                                     (receipt, index) => (
                                       <div
                                         key={index}
-                                        className="flex items-center justify-between p-3 bg-muted/30 rounded-md group hover:bg-muted/50 transition-colors"
+                                        className="flex items-center justify-between p-3 bg-muted/30 rounded-md group hover:bg-muted/50 transition-colors border border-dashed border-primary/20 gap-4"
                                       >
                                         <div className="flex items-center flex-1">
                                           <div className="p-2 bg-primary/10 rounded mr-3">
                                             <ReceiptIcon className="h-4 w-4 text-primary" />
                                           </div>
                                           <div className="flex-1">
-                                            <p className="font-medium text-sm">
-                                              {receipt.description}
-                                            </p>
+                                            <div className="flex items-center gap-2">
+                                              <p className="font-medium text-sm">
+                                                {receipt.description}
+                                              </p>
+                                              <Badge
+                                                variant="outline"
+                                                className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200"
+                                              >
+                                                Ready to View
+                                              </Badge>
+                                            </div>
                                             <p className="text-xs text-muted-foreground">
+                                              Uploaded:{" "}
                                               {formatDate(receipt.uploadedAt)}
                                             </p>
                                           </div>
@@ -1573,22 +1582,26 @@ export function ImprestDetailsDrawer({
                                           <Tooltip>
                                             <TooltipTrigger asChild>
                                               <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8  px-3 opacity-100 bg-primary/5 hover:bg-primary/10 border-primary/20 text-primary"
                                                 asChild
                                               >
                                                 <a
                                                   href={receipt.receiptUrl}
                                                   target="_blank"
                                                   rel="noopener noreferrer"
+                                                  className="flex items-center gap-1.5"
                                                 >
-                                                  <Download className="h-4 w-4" />
+                                                  <Download className="h-3.5 w-3.5" />
+                                                  <span className="text-xs font-medium">
+                                                    Download
+                                                  </span>
                                                 </a>
                                               </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                              View Receipt
+                                              Click to view or download receipt
                                             </TooltipContent>
                                           </Tooltip>
                                         </TooltipProvider>

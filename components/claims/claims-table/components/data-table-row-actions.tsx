@@ -42,6 +42,16 @@ export function DataTableRowActions<TData>({
   const { toast } = useToast();
 
   const handleDelete = async () => {
+    // Check if claim is cancelled before allowing deletion
+    if (claim.status !== "cancelled") {
+      toast({
+        title: "Cannot Delete Claim",
+        description: "Claim must be cancelled before it can be deleted.",
+        variant: "destructive",
+      });
+      setIsDeleteDialogOpen(false);
+      return;
+    }
     try {
       setIsDeleting(true);
       const { deleteClaim } = await import("@/services/claims.service");

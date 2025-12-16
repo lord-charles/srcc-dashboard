@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Claim, ClaimStatus } from "@/types/claim";
+import { Claim, ClaimStatus, PaymentDetails } from "@/types/claim";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,8 @@ const getStatusColor = (status: ClaimStatus) => {
   switch (status) {
     case "approved":
       return "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800";
+    case "paid":
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
     case "pending_checker_approval":
     // case "pending_manager_approval":
     case "pending_finance_approval":
@@ -110,6 +112,10 @@ const getStatusIcon = (status: ClaimStatus) => {
     case "approved":
       return (
         <CheckCircle2 className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
+      );
+    case "paid":
+      return (
+        <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400" />
       );
     case "pending_checker_approval":
     // case "pending_manager_approval":
@@ -199,7 +205,7 @@ export function ClaimDetailsDrawer({
       setApprovalConsent(false);
     }
   };
-
+  console.log("claim", claim.payment);
   const isApprovalPending = claim.status.startsWith("pending_");
   // const currentStep = claim.approvalFlow?.steps.find(step => step.nextStatus === claim.status);
   const currentStep = claim.approvalFlow?.steps.find((step) =>
@@ -410,6 +416,15 @@ export function ClaimDetailsDrawer({
                       >
                         <DollarSign className="h-4 w-4 mr-2" />
                         Mark as Paid
+                      </TabsTrigger>
+                    )}
+                    {claim.status === "paid" && (
+                      <TabsTrigger
+                        value="payment-details"
+                        className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-none border-b-2 border-transparent data-[state=active]:border-primary px-4 py-3 h-full"
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Payment Details
                       </TabsTrigger>
                     )}
                     <TabsTrigger
@@ -1646,6 +1661,171 @@ export function ClaimDetailsDrawer({
                                       </>
                                     )}
                                   </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </TabsContent>
+                      )}
+
+                      {/* Payment Details Tab */}
+                      {claim.status === "paid" && claim.payment && (
+                        <TabsContent
+                          value="payment-details"
+                          className="mt-0 space-y-6"
+                        >
+                          <Card className="overflow-hidden border shadow-sm">
+                            <CardHeader className="bg-green-50 dark:bg-green-950/40 px-6 py-4 flex flex-row items-center space-y-0 gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                              <CardTitle className="text-lg font-semibold text-green-700 dark:text-green-400">
+                                Payment Completed
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                              <div className="space-y-6">
+                                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                                  <div className="flex items-center mb-3">
+                                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
+                                    <h3 className="text-base font-medium text-green-700 dark:text-green-400">
+                                      Payment Successfully Processed
+                                    </h3>
+                                  </div>
+                                  <p className="text-sm text-green-600 dark:text-green-300">
+                                    This claim has been marked as paid and the
+                                    payment has been processed.
+                                  </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div className="space-y-4">
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                        <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+                                        Payment Amount
+                                      </div>
+                                      <p className="font-semibold text-lg text-green-600 dark:text-green-400">
+                                        {formatCurrency(
+                                          claim.amount || 0,
+                                          claim.currency
+                                        )}
+                                      </p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                        <Receipt className="h-3.5 w-3.5 mr-1.5" />
+                                        Payment Method
+                                      </div>
+                                      <p className="font-medium capitalize">
+                                        {claim.payment.paymentMethod.replace(
+                                          "_",
+                                          " "
+                                        )}
+                                      </p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                        <Tag className="h-3.5 w-3.5 mr-1.5" />
+                                        Transaction ID
+                                      </div>
+                                      <p className="font-medium font-mono text-sm bg-muted px-2 py-1 rounded">
+                                        {claim.payment.transactionId}
+                                      </p>
+                                    </div>
+
+                                    {claim.payment.reference && (
+                                      <div className="space-y-1">
+                                        <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                          <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                          Payment Reference
+                                        </div>
+                                        <p className="font-medium">
+                                          {claim.payment.reference}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                        <CalendarIcon className="h-3.5 w-3.5 mr-1.5" />
+                                        Payment Date
+                                      </div>
+                                      <p className="font-medium">
+                                        {formatDate(claim.payment.paidAt)}
+                                      </p>
+                                      <p className="text-sm text-muted-foreground">
+                                        {formatTime(claim.payment.paidAt)}
+                                      </p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                        <User className="h-3.5 w-3.5 mr-1.5" />
+                                        Processed By
+                                      </div>
+                                      <p className="font-medium">
+                                        {typeof claim.payment.paidBy ===
+                                        "object"
+                                          ? `${claim.payment.paidBy.firstName} ${claim.payment.paidBy.lastName}`
+                                          : claim.payment.paidBy}
+                                      </p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                        <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                        Payment Advice
+                                      </div>
+                                      <a
+                                        href={claim.payment.paymentAdviceUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                      >
+                                        <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                        View Payment Advice Document
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <Separator />
+
+                                <div className="bg-muted/30 p-4 rounded-lg">
+                                  <h4 className="font-medium mb-3 flex items-center">
+                                    <Info className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400" />
+                                    Payment Summary
+                                  </h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        Claimant
+                                      </span>
+                                      <p className="font-medium">
+                                        {claim.claimantId?.firstName}{" "}
+                                        {claim.claimantId?.lastName}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        Contract
+                                      </span>
+                                      <p className="font-medium">
+                                        {claim.contractId?.contractNumber}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">
+                                        Project
+                                      </span>
+                                      <p className="font-medium">
+                                        {claim.projectId?.name}
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>

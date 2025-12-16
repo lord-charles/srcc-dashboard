@@ -51,6 +51,7 @@ export function ClaimDetailsDialog({
 }: ClaimDetailsDialogProps) {
   const statusIconMap = {
     approved: CheckCircle2,
+    paid: CheckCircle2,
     rejected: XCircle,
     pending: Clock,
   } as const;
@@ -59,7 +60,7 @@ export function ClaimDetailsDialog({
     statusIconMap[claim.status as keyof typeof statusIconMap] ?? Clock;
 
   const statusVariant =
-    claim.status === "approved"
+    claim.status === "approved" || claim.status === "paid"
       ? "default"
       : claim.status === "rejected"
       ? "destructive"
@@ -112,6 +113,7 @@ export function ClaimDetailsDialog({
                 "milestones",
                 "audit",
                 claim.documents?.length && "documents",
+                claim.status === "paid" && claim.payment && "payment",
               ]
                 .filter(Boolean)
                 .map((tab) => (
@@ -271,6 +273,110 @@ export function ClaimDetailsDialog({
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+          )}
+
+          {/* Payment Details */}
+          {claim.status === "paid" && claim.payment && (
+            <TabsContent value="payment" className="p-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <CardTitle className="text-green-700">
+                      Payment Completed
+                    </CardTitle>
+                  </div>
+                  <CardDescription>
+                    This claim has been successfully paid and processed.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <span className="text-muted-foreground">
+                          Amount Paid
+                        </span>
+                        <span className="font-semibold text-green-600">
+                          {formatCurrency(claim.amount, claim.currency)}
+                        </span>
+
+                        <span className="text-muted-foreground">
+                          Payment Method
+                        </span>
+                        <span className="font-medium capitalize">
+                          {claim.payment.paymentMethod.replace("_", " ")}
+                        </span>
+
+                        <span className="text-muted-foreground">
+                          Transaction ID
+                        </span>
+                        <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                          {claim.payment.transactionId}
+                        </span>
+
+                        {claim.payment.reference && (
+                          <>
+                            <span className="text-muted-foreground">
+                              Reference
+                            </span>
+                            <span className="font-medium">
+                              {claim.payment.reference}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <span className="text-muted-foreground">
+                          Payment Date
+                        </span>
+                        <span className="font-medium">
+                          {formatDate(claim.payment.paidAt)}
+                        </span>
+
+                        <span className="text-muted-foreground">
+                          Processed By
+                        </span>
+                        <span className="font-medium">
+                          {typeof claim.payment.paidBy === "object"
+                            ? `${claim.payment.paidBy.firstName} ${claim.payment.paidBy.lastName}`
+                            : claim.payment.paidBy}
+                        </span>
+
+                        <span className="text-muted-foreground">
+                          Payment Advice
+                        </span>
+                        <a
+                          href={claim.payment.paymentAdviceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                        >
+                          <FileText className="h-3 w-3" />
+                          View Document
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-green-700 dark:text-green-400">
+                        Payment Status: Completed
+                      </span>
+                    </div>
+                    <p className="text-sm text-green-600 dark:text-green-300">
+                      The payment for this claim has been successfully processed
+                      and completed.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           )}
         </Tabs>
