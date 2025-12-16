@@ -8,7 +8,6 @@ import EmployeeDetailsPage from "@/components/users/employee-details";
 
 async function Page({ params }) {
   const userId = params.user; // Extract the employee ID from the params
-console.log(userId);
   try {
     const employee = await getEmployeeById(userId); // Fetch employee details
 

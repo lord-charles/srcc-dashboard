@@ -126,11 +126,6 @@ export function RegisterEmployeeComponent() {
     mode: "onChange",
   });
 
-  // Debug form values
-  // const formValues = watch();
-  // console.log("Form values:", formValues);
-  // console.log("Form errors:", errors);
-
   const onSubmit = async (data: EmployeeFormData) => {
     try {
       toast({

@@ -64,8 +64,6 @@ export function LoginForm({
         redirect: false,
       });
 
-      console.log(result);
-
       if (result?.error) {
         try {
           const errorData = JSON.parse(result.error);

@@ -20,7 +20,6 @@ export async function createInvoice(invoiceData: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.log("Failed to create invoice:", error.response.data);
     throw error;
   }
 }
@@ -120,7 +119,6 @@ export async function submitInvoice(id: string) {
   }
 }
 
-
 export async function recordPayment(
   invoiceId: string,
   paymentData: Record<string, any>
@@ -138,12 +136,10 @@ export async function recordPayment(
       await handleUnauthorized();
     }
     throw new Error(
-      error.response?.data?.message || 'Failed to record payment'
+      error.response?.data?.message || "Failed to record payment"
     );
   }
 }
-
-
 
 export async function attachActualInvoice(
   invoiceId: string,
@@ -162,7 +158,7 @@ export async function attachActualInvoice(
       await handleUnauthorized();
     }
     throw new Error(
-      error.response?.data?.message || 'Failed to attach actual invoice URL'
+      error.response?.data?.message || "Failed to attach actual invoice URL"
     );
   }
 }

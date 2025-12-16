@@ -123,7 +123,6 @@ export function NewImprestDrawer({
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const { toast } = useToast();
-  console.log(uploadedUrls);
   // Initialize the form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),

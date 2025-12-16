@@ -56,7 +56,6 @@ export function AcknowledgmentDialog({
       setReceived("");
       setComments("");
     } catch (error: any) {
-      console.log(error);
       toast({
         title: "acknowledging failed",
         description: error || "Failed to acknowledging receipt",

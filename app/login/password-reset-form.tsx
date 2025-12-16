@@ -35,7 +35,6 @@ export function PasswordResetForm({
   );
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  console.log(email);
   const validateEmail = (email: string) =>
     /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(email);
 

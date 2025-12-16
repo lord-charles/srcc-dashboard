@@ -39,7 +39,6 @@ export default function LoginPage() {
     password?: string;
     type: UserType;
   }) => {
-    // console.log(data);
     setCredentials({ email: data.email, password: data.password || "" });
     setUserType(data.type);
     setView("verification-hub");

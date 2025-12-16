@@ -1,7 +1,6 @@
 "use server";
 
 import axios, { AxiosError } from "axios";
-import { Advance, PaginatedAdvances } from "@/types/advance";
 import { cookies } from "next/headers";
 import { Project, TeamMember } from "@/types/project";
 import { redirect } from "next/navigation";
@@ -87,7 +86,6 @@ export async function getProjects() {
     );
     return response.data;
   } catch (error: any) {
-    console.log(error.response?.data);
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
@@ -206,13 +204,11 @@ export async function deleteTeamMember(
   teamMemberId: string
 ): Promise<boolean> {
   try {
-    console.log(projectId, teamMemberId);
     const config = await getAxiosConfig();
     const res = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/team-members/${teamMemberId}`,
       config
     );
-    console.log(res.data);
     return true;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {

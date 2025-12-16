@@ -261,12 +261,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
     isInternal: boolean
   ) => {
     try {
-      console.log("Validating form state:", formState);
-
       // Validate required fields
       for (const category of formState?.categories) {
-        console.log("Validating category:", category);
-
         if (!category?.name?.trim()) {
           throw new Error(`Category name is required`);
         }
@@ -275,8 +271,6 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
         }
 
         for (const [index, item] of category?.items?.entries() || []) {
-          console.log(`Validating item ${index}:`, item);
-
           if (!item?.name?.trim()) {
             throw new Error(
               `Item name is required in category "${category?.name}"`
@@ -327,8 +321,6 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
         notes: formState.notes?.trim() || "",
       };
 
-      console.log("Final validated data:", data);
-
       // Validate using zod schema
       const schema = isInternal ? internalBudgetSchema : externalBudgetSchema;
       return schema.parse(data);
@@ -345,10 +337,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   const handleCreateInternalBudget = async () => {
     try {
       setIsSubmittingInternal(true);
-      console.log("Creating internal budget with state:", internalFormState);
 
       const validatedData = validateBudgetData(internalFormState, true);
-      console.log("Validated internal budget data:", validatedData);
 
       await createInternalBudget(validatedData);
 
@@ -379,10 +369,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   const handleUpdateInternalBudget = async () => {
     try {
       setIsSubmittingInternal(true);
-      console.log("Updating internal budget with state:", internalFormState);
 
       const validatedData = validateBudgetData(internalFormState, true);
-      console.log("Validated internal budget data:", validatedData);
 
       await updateInternalBudget(validatedData, budget._id);
 
@@ -414,10 +402,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   const handleCreateExternalBudget = async () => {
     try {
       setIsSubmittingExternal(true);
-      console.log("Creating external budget with state:", externalFormState);
 
       const validatedData = validateBudgetData(externalFormState, false);
-      console.log("Validated external budget data:", validatedData);
 
       await createExternalBudget(validatedData);
 
@@ -449,10 +435,8 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   const handleUpdateExternalBudget = async () => {
     try {
       setIsSubmittingExternal(true);
-      console.log("Updating external budget with state:", externalFormState);
 
       const validatedData = validateBudgetData(externalFormState, false);
-      console.log("Validated external budget data:", validatedData);
 
       await updateExternalBudget(validatedData, budget._id);
 

@@ -110,7 +110,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     setPaymentForm({});
   };
   const closePaymentDrawer = () => setShowPaymentDrawer(null);
-  console.log(invoices);
   const openAttachDrawer = (invoiceId: string) => {
     setShowAttachDrawer(invoiceId);
     setAttachUrl("");

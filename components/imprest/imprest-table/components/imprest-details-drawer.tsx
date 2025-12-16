@@ -349,7 +349,6 @@ export function ImprestDetailsDrawer({
       });
       onClose();
     } catch (error: any) {
-      console.log(error);
       toast({
         title: "Approval failed",
         description: error.message || "Failed to approve imprest accounting",

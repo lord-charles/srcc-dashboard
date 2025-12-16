@@ -31,7 +31,6 @@ export async function registerConsultant(formData: FormData): Promise<any> {
     );
     return response.data;
   } catch (error: any) {
-    console.log(error.response?.data);
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
@@ -118,7 +117,6 @@ export async function registerOrganization(formData: FormData): Promise<any> {
     );
     return response.data;
   } catch (error: any) {
-    console.log(error.response?.data);
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
@@ -298,7 +296,6 @@ export async function getOrganization(id: string): Promise<any> {
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${id}`,
       config
     );
-    console.log("Organization response:", response.data);
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -336,7 +333,6 @@ export async function getConsultant(id: string): Promise<any> {
       `${process.env.NEXT_PUBLIC_API_URL}/user/${id}`,
       config
     );
-    console.log("Consultant response:", response.data);
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {

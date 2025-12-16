@@ -1462,7 +1462,6 @@ export default function ConsultantRegistrationForm() {
                           </Label>
                           <FileUpload
                             onChange={(files) => {
-                              console.log("CV updated:", files);
                               setCvDocument(files);
                             }}
                           />
@@ -1475,10 +1474,6 @@ export default function ConsultantRegistrationForm() {
                           <FileUpload2
                             value={certificatesCopy}
                             onChange={(files: File[]) => {
-                              console.log(
-                                "Academic Certificates updated:",
-                                files
-                              );
                               setCertificatesCopy(files);
                             }}
                           />

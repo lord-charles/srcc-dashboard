@@ -14,12 +14,6 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          // console.log(
-          //   "Attempting login with URL:",
-          //   `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-          //   credentials?.type
-          // );
-
           const res = await axios.post(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
@@ -79,10 +73,7 @@ export const authOptions: NextAuthOptions = {
               hasProject: data.user?.hasProject,
             };
           }
-          console.log("Login failed: Invalid response", {
-            status: res.status,
-            data,
-          });
+
           return null;
         } catch (error: any) {
           // Check for our custom verification error from the backend

@@ -94,7 +94,6 @@ export async function submitImprestAccounting(
       formData,
       multipartConfig
     );
-    console.log(response.data);
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
@@ -108,7 +107,6 @@ export async function submitImprestAccounting(
 export async function getAllImprests(): Promise<Imprest[]> {
   try {
     const config = await getAxiosConfig();
-    console.log("config", config);
 
     const response = await axios.get<Imprest[]>(`${API_URL}/imprest`, config);
     return response.data;
@@ -116,8 +114,6 @@ export async function getAllImprests(): Promise<Imprest[]> {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    const config = await getAxiosConfig();
-    console.log("config", config);
     console.error("Error fetching imprests:", error.response.data);
     throw error?.response?.data?.message || error;
   }

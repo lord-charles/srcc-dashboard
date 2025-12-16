@@ -28,8 +28,6 @@ export default function EmployeeModule({
   const searchParams = useSearchParams();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  console.log(organizations);
-
   const projectId = searchParams.get("projectId");
   const projectName = searchParams.get("projectName");
 

@@ -183,7 +183,6 @@ export function ClaimDetailsDrawer({
   const [paymentReference, setPaymentReference] = useState("");
   const [approvalConsent, setApprovalConsent] = useState(false);
   const { toast } = useToast();
-  console.log(claim);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : uncontrolledOpen;
   const onOpenChange = isControlled
