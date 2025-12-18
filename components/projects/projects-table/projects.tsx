@@ -47,6 +47,7 @@ export default function ProjectTable({ projects }: any) {
     );
   }, [session?.user?.roles, session?.user?.hasProject]);
 
+  
   const table = useReactTable({
     data: projects,
     columns,

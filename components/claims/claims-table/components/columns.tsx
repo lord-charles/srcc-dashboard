@@ -110,6 +110,26 @@ export const columns: ColumnDef<Claim>[] = [
     size: 0,
     cell: () => null,
   },
+  // Hidden accessor column used for filtering by department (school)
+  {
+    id: "department",
+    header: "Department",
+    accessorFn: (row) => row?.projectId?.department || "",
+    filterFn: (row, id, value) => {
+      const cellValue = row.getValue(id) as string;
+      // Support multi-select (array of values) from faceted filter
+      if (Array.isArray(value)) {
+        return value.length === 0 ? true : value.includes(cellValue);
+      }
+      // Fallback to substring match when a single string is provided
+      return String(cellValue || "")
+        .toLowerCase()
+        .includes(String(value || "").toLowerCase());
+    },
+    enableSorting: false,
+    size: 0,
+    cell: () => null,
+  },
   {
     id: "claimant",
     header: ({ column }) => (
@@ -128,6 +148,17 @@ export const columns: ColumnDef<Claim>[] = [
         </div>
       );
     },
+  },
+  {
+    id: "school",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="School" />
+    ),
+    cell: ({ row }) => {
+      const project = row.original?.projectId;
+      return <span className="font-medium">{project?.department || "N/A"}</span>;
+    },
+    enableSorting: false,
   },
   {
     accessorKey: "amount",
@@ -210,7 +241,9 @@ export const columns: ColumnDef<Claim>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as ClaimStatus;
       return (
-        <Badge className={getStatusColor(status)}>{formatStatus(status)}</Badge>
+        <Badge className={`${getStatusColor(status)} text-[10px] px-2 py-0.5 leading-tight`}>
+          {formatStatus(status)}
+        </Badge>
       );
     },
     filterFn: (row, id, value) => {

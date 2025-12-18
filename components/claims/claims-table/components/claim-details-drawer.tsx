@@ -205,7 +205,8 @@ export function ClaimDetailsDrawer({
       setApprovalConsent(false);
     }
   };
-  console.log("claim", claim.payment);
+
+  
   const isApprovalPending = claim.status.startsWith("pending_");
   // const currentStep = claim.approvalFlow?.steps.find(step => step.nextStatus === claim.status);
   const currentStep = claim.approvalFlow?.steps.find((step) =>

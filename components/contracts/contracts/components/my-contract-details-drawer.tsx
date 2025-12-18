@@ -35,7 +35,7 @@ import {
   FileCheck,
   ChevronDown,
 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Drawer,
   DrawerClose,
@@ -122,6 +122,7 @@ export function MyContractDetailsDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [claimsHistory, setClaimsHistory] = useState<any[]>([]);
   const [isLoadingClaims, setIsLoadingClaims] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const hasContractDetails =
@@ -220,6 +221,7 @@ export function MyContractDetailsDrawer({
   const handleSubmitClaim = async () => {
     const totalAmount = calculateTotalClaimAmount();
     if (totalAmount <= 0) {
+      setSubmitError("Please select at least one milestone to claim");
       toast({
         title: "Invalid Claim Amount",
         description: "Please select at least one milestone to claim",
@@ -242,6 +244,7 @@ export function MyContractDetailsDrawer({
       });
 
     try {
+      setSubmitError(null);
       setIsSubmitting(true);
       await createClaim({
         projectId: contract?.projectId._id,
@@ -259,10 +262,12 @@ export function MyContractDetailsDrawer({
       setSelectedMilestones({});
       onClose?.();
     } catch (error: any) {
+      const message =
+        error?.message || "An error occurred while submitting your claim";
+      setSubmitError(message);
       toast({
         title: "Failed to Submit Claim",
-        description:
-          error.message || "An error occurred while submitting your claim",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -461,13 +466,14 @@ export function MyContractDetailsDrawer({
           </Button>
         )}
       </DrawerTrigger>
-      <DrawerContent className="h-[95vh] max-h-[95vh]">
+      <DrawerContent className="h-[99vh] max-h-[99vh]">
         <div className="mx-auto w-full max-w-5xl h-full flex flex-col">
-          <DrawerHeader className="flex-none border-b pb-4">
+          <DrawerHeader className="flex-none">
             <div className="flex items-center justify-between">
               <DrawerTitle className="text-2xl font-bold flex items-center">
                 <FileText className="mr-3 h-6 w-6 text-primary" />
-                Contract Details
+                Contract Details - {contract.contractNumber}
+
               </DrawerTitle>
               <Badge
                 variant="outline"
@@ -476,9 +482,7 @@ export function MyContractDetailsDrawer({
                 {contract.status}
               </Badge>
             </div>
-            <DrawerDescription className="mt-2">
-              {contract.contractNumber} • {contract.description}
-            </DrawerDescription>
+       
           </DrawerHeader>
 
           <div className="flex-1 overflow-hidden">
@@ -1126,6 +1130,25 @@ export function MyContractDetailsDrawer({
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
+                              {submitError && (
+                                <Alert variant="destructive" className="mb-4">
+                                  <AlertCircle className="h-4 w-4" />
+                                  <div className="flex w-full items-start justify-between gap-2">
+                                    <div>
+                                      <AlertTitle>Submission Error</AlertTitle>
+                                      <AlertDescription>{submitError}</AlertDescription>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setSubmitError(null)}
+                                    >
+                                      Dismiss
+                                    </Button>
+                                  </div>
+                                </Alert>
+                              )}
                               <div className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <Card className="bg-primary/5 border-none">

@@ -59,10 +59,13 @@ export const getColumns = (
     {
       id: "combinedSearch",
       header: "Search",
-      accessorFn: (row) =>
-        `${row.name || ""} ${row.description || ""} ${row.client || ""} ${
-          row.projectManagerId.firstName || ""
-        } ${row.projectManagerId.lastName || ""}`,
+      accessorFn: (row) => {
+        const createdBy = row.createdBy || {};
+        const firstName = (createdBy as any)?.firstName || "";
+        const lastName = (createdBy as any)?.lastName || "";
+        const email = (createdBy as any)?.email || "";
+        return `${row.name || ""} ${row.description || ""} ${row.client || ""} ${firstName} ${lastName} ${email}`;
+      },
       filterFn: customIncludesStringFilter,
       enableHiding: true,
       enableSorting: false,
@@ -180,6 +183,15 @@ export const getColumns = (
             <span className="font-medium">{department}</span>
           </div>
         );
+      },
+      filterFn: (row, id, value) => {
+        // value is an array from faceted multi-select
+        if (Array.isArray(value)) {
+          return value.length === 0 ? true : value.includes(row.getValue(id));
+        }
+        // fallback substring match
+        const v = String(row.getValue(id) || "").toLowerCase();
+        return v.includes(String(value || "").toLowerCase());
       },
     },
     {

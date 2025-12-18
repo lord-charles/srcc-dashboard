@@ -50,6 +50,7 @@ import {
   generateContractOtp,
   verifyContractOtp,
 } from "@/services/contracts.service";
+import { createClaim } from "@/services/contracts.service";
 import { Spinner } from "../ui/spinner";
 import {
   Dialog,
@@ -64,6 +65,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface MyContractsProps {
   initialData?: any[];
@@ -75,6 +77,10 @@ const MyContracts = ({
   isLoading = false,
 }: MyContractsProps) => {
   const [selectedContract, setSelectedContract] = useState<any | null>(null);
+  const [quickClaimOpen, setQuickClaimOpen] = useState(false);
+  const [quickClaimSubmitting, setQuickClaimSubmitting] = useState(false);
+  const [quickClaimError, setQuickClaimError] = useState<string | null>(null);
+  const [quickSelectedMilestones, setQuickSelectedMilestones] = useState<Record<string, { amount: number; percentage: number }>>({});
   const [otpValue, setOtpValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -85,6 +91,64 @@ const MyContracts = ({
   const [showFilters, setShowFilters] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+
+  // Quick claim helpers
+  const calculateQuickMaxPerMilestone = (contract: any) => {
+    if (!contract?.projectId?.milestones?.length) return 0;
+    return contract.contractValue / contract.projectId.milestones.length;
+  };
+  const handleQuickMilestoneAmountChange = (milestoneId: string, value: string, contract: any) => {
+    const maxPerMilestone = calculateQuickMaxPerMilestone(contract);
+    const amount = Math.max(0, Number(value) || 0);
+    const percentage = maxPerMilestone > 0 ? Math.min(100, (amount / maxPerMilestone) * 100) : 0;
+    setQuickSelectedMilestones((prev) => ({ ...prev, [milestoneId]: { amount, percentage } }));
+  };
+  const calculateQuickTotal = () => Object.values(quickSelectedMilestones).reduce((sum, v) => sum + (v.amount || 0), 0);
+  const handleQuickSubmitClaim = async () => {
+    if (!selectedContract) return;
+    const totalAmount = calculateQuickTotal();
+    if (totalAmount <= 0) {
+      setQuickClaimError("Please enter a positive amount for at least one milestone");
+      toast({
+        title: "Invalid Claim Amount",
+        description: "Please enter a positive amount for at least one milestone",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const milestones = Object.entries(quickSelectedMilestones)
+      .filter(([_, v]) => (v.amount || 0) > 0)
+      .map(([milestoneId, v]) => {
+        const m = selectedContract?.projectId?.milestones?.find((mi: any) => mi._id === milestoneId);
+        return {
+          milestoneId,
+          title: m?.title || "",
+          percentageClaimed: v.percentage,
+        };
+      });
+
+    try {
+      setQuickClaimError(null);
+      setQuickClaimSubmitting(true);
+      await createClaim({
+        projectId: selectedContract?.projectId?._id,
+        contractId: selectedContract._id,
+        amount: totalAmount,
+        currency: selectedContract.currency,
+        milestones,
+      });
+      toast({ title: "Claim Submitted", description: "Your claim has been submitted successfully" });
+      setQuickSelectedMilestones({});
+      setQuickClaimOpen(false);
+    } catch (error: any) {
+      const message = error?.message || "An error occurred while submitting your claim";
+      setQuickClaimError(message);
+      toast({ title: "Failed to Submit Claim", description: message, variant: "destructive" });
+    } finally {
+      setQuickClaimSubmitting(false);
+    }
+  };
   const handleGenerateOtp = async (contractId: string) => {
     if (otpGenerating) return;
 
@@ -708,12 +772,7 @@ const MyContracts = ({
                           </div>
                           <div className="pt-1.5 border-t border-gray-100 dark:border-gray-800">
                             <div className="flex justify-between items-center text-xs mb-1.5">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-gray-600 dark:text-gray-400">
-                                  Health Score:
-                                </span>
-                                {renderHealthScore(healthScore)}
-                              </div>
+                         
                               <span
                                 className={`font-medium ${
                                   daysRemaining < 30
@@ -785,9 +844,7 @@ const MyContracts = ({
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Timeline
                         </th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                          Health
-                        </th>
+                    
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Actions
                         </th>
@@ -848,9 +905,7 @@ const MyContracts = ({
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Timeline
                         </th>
-                        <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                          Health
-                        </th>
+                  
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Actions
                         </th>
@@ -872,8 +927,6 @@ const MyContracts = ({
                               100
                           )
                         );
-                        const healthScore = getContractHealthScore(contract);
-
                         return (
                           <tr
                             key={contract._id}
@@ -884,7 +937,10 @@ const MyContracts = ({
                                 <div className="font-medium text-gray-900 dark:text-white group-hover:text-primary transition-colors">
                                   {contract.contractNumber}
                                 </div>
-                                <div className="text-gray-500 dark:text-gray-400 text-xs mt-1 max-w-xs truncate">
+                                <div
+                                  className="text-gray-500 dark:text-gray-400 text-xs mt-1 max-w-xs truncate group-hover:whitespace-normal"
+                                  title={contract.description}
+                                >
                                   {contract.description}
                                 </div>
                               </div>
@@ -939,14 +995,7 @@ const MyContracts = ({
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-1.5">
-                                {renderHealthScore(healthScore)}
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  ({healthScore}/100)
-                                </span>
-                              </div>
-                            </td>
+                 
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <MyContractDetailsDrawer
@@ -971,6 +1020,39 @@ const MyContracts = ({
                                   onGenerateOtp={handleGenerateOtp}
                                   otpGenerating={otpGenerating}
                                 />
+                                {
+                                  contract.status === "active" &&
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 text-xs"
+                                  onClick={() => {
+                                    setSelectedContract(contract);
+                                    setQuickSelectedMilestones({});
+                                    setQuickClaimError(null);
+                                    setQuickClaimOpen(true);
+                                  }}
+                                >
+                                
+
+                                  Submit Claim
+                                </Button>
+                                }
+
+                                {contract.status?.toLowerCase() === "pending_acceptance" && (
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="h-8 text-xs"
+                                    onClick={() => {
+                                      setSelectedContract(contract);
+                                      handleGenerateOtp(contract._id);
+                                    }}
+                                    disabled={otpGenerating}
+                                  >
+                                    Accept
+                                  </Button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -1054,6 +1136,95 @@ const MyContracts = ({
                 "Verify"
               )}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick Submit Claim Dialog */}
+      <Dialog open={quickClaimOpen} onOpenChange={setQuickClaimOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Submit Claim</DialogTitle>
+            <DialogDescription>
+              Quickly submit a claim against contract {selectedContract?.contractNumber}.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!selectedContract?.projectId?.milestones?.length ? (
+            <div className="text-sm text-muted-foreground">
+              This contract has no milestones available for quick claim. Open details to submit a full claim.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {quickClaimError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{quickClaimError}</AlertDescription>
+                </Alert>
+              )}
+              <div className="text-sm text-muted-foreground">
+                Maximum per milestone: {(
+                  calculateQuickMaxPerMilestone(selectedContract)
+                ).toLocaleString()} {selectedContract?.currency}
+              </div>
+              <div className="max-h-64 overflow-y-auto space-y-3 pr-1">
+                {selectedContract.projectId.milestones.map((m: any) => {
+                  const data = quickSelectedMilestones[m._id] || { amount: 0, percentage: 0 };
+                  const disabled = !m.completed; // follow drawer behavior
+                  return (
+                    <div key={m._id} className={`p-3 rounded border ${disabled ? 'opacity-50' : ''}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-sm">{m.title}</div>
+                        {disabled && (
+                          <Badge variant="outline" className="text-xs">Not Active</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="Amount"
+                          value={data.amount || ''}
+                          onChange={(e) => handleQuickMilestoneAmountChange(m._id, e.target.value, selectedContract)}
+                          disabled={disabled}
+                        />
+                        <span className="text-xs text-muted-foreground w-16 text-right">{Math.round(data.percentage)}%</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div className="text-muted-foreground">Total</div>
+                <div className="font-medium">
+                  {calculateQuickTotal().toLocaleString()} {selectedContract?.currency}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="sm:justify-between">
+            <Button variant="outline" onClick={() => setQuickClaimOpen(false)} disabled={quickClaimSubmitting}>
+              Cancel
+            </Button>
+            {!selectedContract?.projectId?.milestones?.length ? (
+              <Button
+                onClick={() => {
+                  // open full details drawer for claims tab
+                  setQuickClaimOpen(false);
+                  setSelectedContract(selectedContract);
+                }}
+              >
+                Open Details
+              </Button>
+            ) : (
+              <Button onClick={handleQuickSubmitClaim} disabled={quickClaimSubmitting}>
+                {quickClaimSubmitting ? (
+                  <div className="flex items-center space-x-2"><Spinner /><span>Submitting...</span></div>
+                ) : (
+                  'Submit Claim'
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

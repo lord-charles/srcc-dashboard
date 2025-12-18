@@ -69,6 +69,16 @@ const statuses: { value: ClaimStatus; label: string }[] = [
   },
 ];
 
+const departments: { value: string; label: string }[] = [
+  { value: "SRCC", label: "SRCC" },
+  { value: "SU", label: "SU" },
+  { value: "SBS", label: "SBS" },
+  { value: "ILAB", label: "ILAB" },
+  { value: "SERC", label: "SERC" },
+  { value: "SIMS", label: "SIMS" },
+  { value: "SHSS", label: "SHSS" },
+];
+
 export function DataTableToolbar<TData>({
   table,
 }: DataTableToolbarProps<TData>) {
@@ -116,6 +126,13 @@ export function DataTableToolbar<TData>({
             column={table.getColumn("status")}
             title="Status"
             options={statuses}
+          />
+        )}
+        {table.getColumn("department") && (
+          <DataTableFacetedFilter
+            column={table.getColumn("department")}
+            title="Department"
+            options={departments}
           />
         )}
         {isFiltered && (

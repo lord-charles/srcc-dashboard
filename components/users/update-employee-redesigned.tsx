@@ -130,7 +130,7 @@ const consultantSchema = z.object({
 
 type ConsultantFormData = z.infer<typeof consultantSchema>;
 
-export function UpdateEmployeeComponent({ employee }: any) {
+export function UpdateEmployeeRedesignedComponent({ employee }: any) {
   const { toast } = useToast();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("personal");

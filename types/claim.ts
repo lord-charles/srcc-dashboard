@@ -86,6 +86,7 @@ export interface Claim {
     _id: string;
     name: string;
     description: string;
+    department?: string;
   };
   contractId: {
     _id: string;
