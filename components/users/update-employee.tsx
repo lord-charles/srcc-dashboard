@@ -694,7 +694,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
             <CardContent className="space-y-4">
               {skillFields.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
-                  No skills added yet. Click "Add Skill" to get started.
+                  No skills added yet. Click &quot;Add Skill&quot; to get started.
                 </p>
               ) : (
                 skillFields.map((field, index) => (
