@@ -1,0 +1,74 @@
+import { DefaultSession, DefaultUser } from "next-auth";
+import { JWT as DefaultJWT } from "next-auth/jwt";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      roles: string[];
+      firstName?: string;
+      lastName?: string;
+      employeeId?: string;
+      department?: string;
+      position?: string;
+      registrationStatus?: string;
+      phoneNumber?: string;
+      nationalId?: string;
+      token?: string;
+      type?: "user" | "organization";
+      organizationId?: string;
+      status?: string;
+      companyName?: string;
+      businessEmail?: string;
+      businessPhone?: string;
+      permissions?: string[];
+      hasProject?: boolean;
+    } & DefaultSession["user"];
+  }
+
+  interface User extends DefaultUser {
+    roles: string[];
+    firstName?: string;
+    lastName?: string;
+    employeeId?: string;
+    department?: string;
+    position?: string;
+    registrationStatus?: string;
+    phoneNumber?: string;
+    nationalId?: string;
+    token: string;
+    email?: string;
+    type?: "user" | "organization";
+    organizationId?: string;
+    status?: string;
+    companyName?: string;
+    businessEmail?: string;
+    businessPhone?: string;
+    permissions?: string[];
+    hasProject?: boolean;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT extends DefaultJWT {
+    id: string;
+    roles: string[];
+    firstName?: string;
+    lastName?: string;
+    employeeId?: string;
+    department?: string;
+    position?: string;
+    registrationStatus?: string;
+    phoneNumber?: string;
+    nationalId?: string;
+    accessToken?: string;
+    type?: "user" | "organization";
+    organizationId?: string;
+    status?: string;
+    companyName?: string;
+    businessEmail?: string;
+    businessPhone?: string;
+    permissions?: string[];
+    hasProject?: boolean;
+  }
+}
