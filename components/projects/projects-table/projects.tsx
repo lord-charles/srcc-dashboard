@@ -47,7 +47,10 @@ export default function ProjectTable({ projects }: any) {
     );
   }, [session?.user?.roles, session?.user?.hasProject]);
 
+<<<<<<< HEAD
   
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
   const table = useReactTable({
     data: projects,
     columns,

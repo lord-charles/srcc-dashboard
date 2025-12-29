@@ -131,7 +131,11 @@ export function CreateContractDialog({
   // Create form with initial values
   const defaultValues = useMemo(
     () => ({
+<<<<<<< HEAD
       description: `Consultant Contract for ${projectName}`,
+=======
+      description: `Team Member Contract for ${projectName}`,
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
       contractValue: userBudgetItem?.estimatedAmount || 0,
       currency: "KES",
       startDate: formatDateForInput(budgetStartDate),

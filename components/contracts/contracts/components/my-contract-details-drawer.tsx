@@ -35,7 +35,11 @@ import {
   FileCheck,
   ChevronDown,
 } from "lucide-react";
+<<<<<<< HEAD
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+=======
+import { Alert, AlertDescription } from "@/components/ui/alert";
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
 import {
   Drawer,
   DrawerClose,
@@ -122,7 +126,10 @@ export function MyContractDetailsDrawer({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [claimsHistory, setClaimsHistory] = useState<any[]>([]);
   const [isLoadingClaims, setIsLoadingClaims] = useState(false);
+<<<<<<< HEAD
   const [submitError, setSubmitError] = useState<string | null>(null);
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
   const { toast } = useToast();
 
   const hasContractDetails =
@@ -221,7 +228,10 @@ export function MyContractDetailsDrawer({
   const handleSubmitClaim = async () => {
     const totalAmount = calculateTotalClaimAmount();
     if (totalAmount <= 0) {
+<<<<<<< HEAD
       setSubmitError("Please select at least one milestone to claim");
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
       toast({
         title: "Invalid Claim Amount",
         description: "Please select at least one milestone to claim",
@@ -244,7 +254,10 @@ export function MyContractDetailsDrawer({
       });
 
     try {
+<<<<<<< HEAD
       setSubmitError(null);
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
       setIsSubmitting(true);
       await createClaim({
         projectId: contract?.projectId._id,
@@ -262,12 +275,19 @@ export function MyContractDetailsDrawer({
       setSelectedMilestones({});
       onClose?.();
     } catch (error: any) {
+<<<<<<< HEAD
       const message =
         error?.message || "An error occurred while submitting your claim";
       setSubmitError(message);
       toast({
         title: "Failed to Submit Claim",
         description: message,
+=======
+      toast({
+        title: "Failed to Submit Claim",
+        description:
+          error.message || "An error occurred while submitting your claim",
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
         variant: "destructive",
       });
     } finally {
@@ -466,6 +486,7 @@ export function MyContractDetailsDrawer({
           </Button>
         )}
       </DrawerTrigger>
+<<<<<<< HEAD
       <DrawerContent className="h-[99vh] max-h-[99vh]">
         <div className="mx-auto w-full max-w-5xl h-full flex flex-col">
           <DrawerHeader className="flex-none">
@@ -474,6 +495,15 @@ export function MyContractDetailsDrawer({
                 <FileText className="mr-3 h-6 w-6 text-primary" />
                 Contract Details - {contract.contractNumber}
 
+=======
+      <DrawerContent className="h-[95vh] max-h-[95vh]">
+        <div className="mx-auto w-full max-w-5xl h-full flex flex-col">
+          <DrawerHeader className="flex-none border-b pb-4">
+            <div className="flex items-center justify-between">
+              <DrawerTitle className="text-2xl font-bold flex items-center">
+                <FileText className="mr-3 h-6 w-6 text-primary" />
+                Contract Details
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
               </DrawerTitle>
               <Badge
                 variant="outline"
@@ -482,7 +512,13 @@ export function MyContractDetailsDrawer({
                 {contract.status}
               </Badge>
             </div>
+<<<<<<< HEAD
        
+=======
+            <DrawerDescription className="mt-2">
+              {contract.contractNumber} • {contract.description}
+            </DrawerDescription>
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
           </DrawerHeader>
 
           <div className="flex-1 overflow-hidden">
@@ -1130,6 +1166,7 @@ export function MyContractDetailsDrawer({
                               </CardTitle>
                             </CardHeader>
                             <CardContent>
+<<<<<<< HEAD
                               {submitError && (
                                 <Alert variant="destructive" className="mb-4">
                                   <AlertCircle className="h-4 w-4" />
@@ -1149,6 +1186,8 @@ export function MyContractDetailsDrawer({
                                   </div>
                                 </Alert>
                               )}
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                               <div className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <Card className="bg-primary/5 border-none">

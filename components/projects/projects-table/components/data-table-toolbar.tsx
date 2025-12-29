@@ -24,7 +24,11 @@ export function DataTableToolbar<TData>({
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
         <Input
+<<<<<<< HEAD
           placeholder="Filter by project name, client, project owner..."
+=======
+          placeholder="Filter by project name, client, project manager..."
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
           value={
             (table.getColumn("combinedSearch")?.getFilterValue() as string) ?? ""
           }
@@ -40,6 +44,7 @@ export function DataTableToolbar<TData>({
             options={statuses}
           />
         )}
+<<<<<<< HEAD
         {table.getColumn("department") && (
           <DataTableFacetedFilter
             column={table.getColumn("department")}
@@ -55,6 +60,8 @@ export function DataTableToolbar<TData>({
             ]}
           />
         )}
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
 
         {isFiltered && (
           <Button

@@ -50,7 +50,10 @@ import {
   generateContractOtp,
   verifyContractOtp,
 } from "@/services/contracts.service";
+<<<<<<< HEAD
 import { createClaim } from "@/services/contracts.service";
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
 import { Spinner } from "../ui/spinner";
 import {
   Dialog,
@@ -65,7 +68,10 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+<<<<<<< HEAD
 import { Alert, AlertDescription } from "@/components/ui/alert";
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
 
 interface MyContractsProps {
   initialData?: any[];
@@ -77,10 +83,13 @@ const MyContracts = ({
   isLoading = false,
 }: MyContractsProps) => {
   const [selectedContract, setSelectedContract] = useState<any | null>(null);
+<<<<<<< HEAD
   const [quickClaimOpen, setQuickClaimOpen] = useState(false);
   const [quickClaimSubmitting, setQuickClaimSubmitting] = useState(false);
   const [quickClaimError, setQuickClaimError] = useState<string | null>(null);
   const [quickSelectedMilestones, setQuickSelectedMilestones] = useState<Record<string, { amount: number; percentage: number }>>({});
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
   const [otpValue, setOtpValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -91,6 +100,7 @@ const MyContracts = ({
   const [showFilters, setShowFilters] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+<<<<<<< HEAD
 
   // Quick claim helpers
   const calculateQuickMaxPerMilestone = (contract: any) => {
@@ -149,6 +159,8 @@ const MyContracts = ({
       setQuickClaimSubmitting(false);
     }
   };
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
   const handleGenerateOtp = async (contractId: string) => {
     if (otpGenerating) return;
 
@@ -772,7 +784,16 @@ const MyContracts = ({
                           </div>
                           <div className="pt-1.5 border-t border-gray-100 dark:border-gray-800">
                             <div className="flex justify-between items-center text-xs mb-1.5">
+<<<<<<< HEAD
                          
+=======
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  Health Score:
+                                </span>
+                                {renderHealthScore(healthScore)}
+                              </div>
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                               <span
                                 className={`font-medium ${
                                   daysRemaining < 30
@@ -844,7 +865,13 @@ const MyContracts = ({
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Timeline
                         </th>
+<<<<<<< HEAD
                     
+=======
+                        <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
+                          Health
+                        </th>
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Actions
                         </th>
@@ -905,7 +932,13 @@ const MyContracts = ({
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Timeline
                         </th>
+<<<<<<< HEAD
                   
+=======
+                        <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
+                          Health
+                        </th>
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Actions
                         </th>
@@ -927,6 +960,11 @@ const MyContracts = ({
                               100
                           )
                         );
+<<<<<<< HEAD
+=======
+                        const healthScore = getContractHealthScore(contract);
+
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                         return (
                           <tr
                             key={contract._id}
@@ -937,10 +975,14 @@ const MyContracts = ({
                                 <div className="font-medium text-gray-900 dark:text-white group-hover:text-primary transition-colors">
                                   {contract.contractNumber}
                                 </div>
+<<<<<<< HEAD
                                 <div
                                   className="text-gray-500 dark:text-gray-400 text-xs mt-1 max-w-xs truncate group-hover:whitespace-normal"
                                   title={contract.description}
                                 >
+=======
+                                <div className="text-gray-500 dark:text-gray-400 text-xs mt-1 max-w-xs truncate">
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                                   {contract.description}
                                 </div>
                               </div>
@@ -995,7 +1037,18 @@ const MyContracts = ({
                                 </span>
                               </div>
                             </td>
+<<<<<<< HEAD
                  
+=======
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1.5">
+                                {renderHealthScore(healthScore)}
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  ({healthScore}/100)
+                                </span>
+                              </div>
+                            </td>
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <MyContractDetailsDrawer
@@ -1020,6 +1073,7 @@ const MyContracts = ({
                                   onGenerateOtp={handleGenerateOtp}
                                   otpGenerating={otpGenerating}
                                 />
+<<<<<<< HEAD
                                 {
                                   contract.status === "active" &&
                                 <Button
@@ -1053,6 +1107,8 @@ const MyContracts = ({
                                     Accept
                                   </Button>
                                 )}
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
                               </div>
                             </td>
                           </tr>
@@ -1139,6 +1195,7 @@ const MyContracts = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+<<<<<<< HEAD
 
       {/* Quick Submit Claim Dialog */}
       <Dialog open={quickClaimOpen} onOpenChange={setQuickClaimOpen}>
@@ -1228,6 +1285,8 @@ const MyContracts = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+=======
+>>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
     </div>
   );
 };
