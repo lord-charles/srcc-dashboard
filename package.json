@@ -10,10 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
-<<<<<<< HEAD
     "@ducanh2912/next-pwa": "^10.2.9",
-=======
->>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-avatar": "^1.1.2",

@@ -110,7 +110,6 @@ export const columns: ColumnDef<Claim>[] = [
     size: 0,
     cell: () => null,
   },
-<<<<<<< HEAD
   // Hidden accessor column used for filtering by department (school)
   {
     id: "department",
@@ -131,8 +130,6 @@ export const columns: ColumnDef<Claim>[] = [
     size: 0,
     cell: () => null,
   },
-=======
->>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
   {
     id: "claimant",
     header: ({ column }) => (
@@ -153,7 +150,6 @@ export const columns: ColumnDef<Claim>[] = [
     },
   },
   {
-<<<<<<< HEAD
     id: "school",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="School" />
@@ -165,8 +161,6 @@ export const columns: ColumnDef<Claim>[] = [
     enableSorting: false,
   },
   {
-=======
->>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
     accessorKey: "amount",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Amount" />
@@ -247,13 +241,9 @@ export const columns: ColumnDef<Claim>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as ClaimStatus;
       return (
-<<<<<<< HEAD
         <Badge className={`${getStatusColor(status)} text-[10px] px-2 py-0.5 leading-tight`}>
           {formatStatus(status)}
         </Badge>
-=======
-        <Badge className={getStatusColor(status)}>{formatStatus(status)}</Badge>
->>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
       );
     },
     filterFn: (row, id, value) => {

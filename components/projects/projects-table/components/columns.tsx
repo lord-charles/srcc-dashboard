@@ -4,11 +4,8 @@ import { ColumnDef, Row } from "@tanstack/react-table";
 import { Project } from "@/types/project";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import { useSession } from "next-auth/react";
-// no icon imports needed for Created By column
+import {  formatDate } from "@/lib/utils";
 
 const customIncludesStringFilter = (
   row: Row<Project>,
@@ -59,7 +56,6 @@ export const getColumns = (
     {
       id: "combinedSearch",
       header: "Search",
-<<<<<<< HEAD
       accessorFn: (row) => {
         const createdBy = row.createdBy || {};
         const firstName = (createdBy as any)?.firstName || "";
@@ -67,12 +63,6 @@ export const getColumns = (
         const email = (createdBy as any)?.email || "";
         return `${row.name || ""} ${row.description || ""} ${row.client || ""} ${firstName} ${lastName} ${email}`;
       },
-=======
-      accessorFn: (row) =>
-        `${row.name || ""} ${row.description || ""} ${row.client || ""} ${
-          row.projectManagerId.firstName || ""
-        } ${row.projectManagerId.lastName || ""}`,
->>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
       filterFn: customIncludesStringFilter,
       enableHiding: true,
       enableSorting: false,
@@ -191,7 +181,6 @@ export const getColumns = (
           </div>
         );
       },
-<<<<<<< HEAD
       filterFn: (row, id, value) => {
         // value is an array from faceted multi-select
         if (Array.isArray(value)) {
@@ -201,8 +190,6 @@ export const getColumns = (
         const v = String(row.getValue(id) || "").toLowerCase();
         return v.includes(String(value || "").toLowerCase());
       },
-=======
->>>>>>> 53902b35964e59c30e770eedfce882b6fbcd68f3
     },
     {
       accessorKey: "status",
