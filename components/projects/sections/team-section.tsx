@@ -47,6 +47,7 @@ import {
   FileSignature,
   Users,
   UserCog,
+  UsersRound,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import {
@@ -54,6 +55,7 @@ import {
   ContractFormValues,
 } from "@/components/contracts/create-contract-dialog";
 import { EditContractDialog } from "@/components/contracts/edit-contract-dialog";
+import { CoachesSection } from "./coaches-section";
 
 export interface TeamSectionProps {
   teamMembers: TeamMember[];
@@ -267,7 +269,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 
       <CardContent>
         <Tabs defaultValue="members" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-0">
+          <TabsList className="grid w-full grid-cols-3 mb-0">
             <TabsTrigger value="members" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Team Members
@@ -276,6 +278,17 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
               <UserCog className="h-4 w-4" />
               Project Management
             </TabsTrigger>
+                <TabsTrigger
+                        value="coaches"
+                        className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
+                      >
+                        <UsersRound
+                          className="-ms-0.5 me-1.5 opacity-60"
+                          size={16}
+                          strokeWidth={2}
+                        />
+                        Coaches
+                      </TabsTrigger>
           </TabsList>
 
           <TabsContent value="members" className="space-y-2">
@@ -744,6 +757,9 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
               </div>
             </div>
           </TabsContent>
+                <TabsContent value="coaches">
+                  <CoachesSection projectId={projectData._id} projectData={projectData} />
+                </TabsContent>
         </Tabs>
       </CardContent>
       {selectedMember && (

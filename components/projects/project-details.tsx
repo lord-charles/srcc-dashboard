@@ -53,6 +53,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       [
         "overview",
         "team",
+        "coaches",
         "financial",
         "risk",
         "milestones",
@@ -118,6 +119,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             />
             Team
           </TabsTrigger>
+      
           <TabsTrigger
             value="financial"
             className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
@@ -220,6 +222,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           projectData={projectData}
         />
       </TabsContent>
+
+
 
       <TabsContent value="financial">
         <FinancialSection

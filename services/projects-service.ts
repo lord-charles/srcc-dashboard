@@ -16,6 +16,207 @@ export interface GetAdvancesParams {
   employeeId?: string;
 }
 
+// Coaches and related roles
+export interface CoachContractPayload {
+  rate: number;
+  rateUnit: 'per_session' | 'per_hour';
+  currency?: 'KES' | 'USD';
+  notes?: string;
+}
+
+export interface AddCoachPayload {
+  userId: string;
+  startDate?: string;
+  endDate?: string;
+  responsibilities?: string[];
+  contract: CoachContractPayload;
+}
+
+export async function addCoach(
+  projectId: string,
+  milestoneId: string,
+  data: AddCoachPayload,
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/coaches`,
+      data,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function updateCoach(
+  projectId: string,
+  milestoneId: string,
+  coachUserId: string,
+  data: Partial<AddCoachPayload>,
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/coaches/${coachUserId}`,
+      data,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function deleteCoach(
+  projectId: string,
+  milestoneId: string,
+  coachUserId: string,
+): Promise<boolean> {
+  try {
+    const config = await getAxiosConfig();
+    await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/coaches/${coachUserId}`,
+      config,
+    );
+    return true;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function addCoachManager(
+  projectId: string,
+  userId: string,
+  responsibilities: string[] = [],
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-managers`,
+      { userId, responsibilities },
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function updateCoachManager(
+  projectId: string,
+  managerUserId: string,
+  responsibilities: string[],
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-managers/${managerUserId}`,
+      { responsibilities },
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function deleteCoachManager(
+  projectId: string,
+  managerUserId: string,
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-managers/${managerUserId}`,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function addCoachAssistant(
+  projectId: string,
+  userId: string,
+  responsibilities: string[] = [],
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-assistants`,
+      { userId, responsibilities },
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function updateCoachAssistant(
+  projectId: string,
+  assistantUserId: string,
+  responsibilities: string[],
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-assistants/${assistantUserId}`,
+      { responsibilities },
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
+export async function deleteCoachAssistant(
+  projectId: string,
+  assistantUserId: string,
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-assistants/${assistantUserId}`,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data?.message || error;
+  }
+}
+
 export interface ProjectDocumentPayload {
   name: string;
   url: string;

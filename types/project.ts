@@ -13,6 +13,37 @@ export interface TeamMember {
   _id: string;
 }
 
+export interface CoachContract {
+  rate: number;
+  rateUnit: 'per_session' | 'per_hour';
+  currency: 'KES' | 'USD';
+  notes?: string;
+}
+
+export interface CoachAssignment {
+  _id: string;
+  userId: User;
+  milestoneId: string;
+  startDate?: string;
+  endDate?: string;
+  responsibilities: string[];
+  contract: CoachContract;
+}
+
+export interface CoachManager {
+  _id: string;
+  userId: User;
+  assignedDate: string;
+  responsibilities: string[];
+}
+
+export interface CoachAssistant {
+  _id: string;
+  userId: User;
+  assignedDate: string;
+  responsibilities: string[];
+}
+
 export interface RiskAssessment {
   factors: string[];
   mitigationStrategies: string[];
@@ -321,6 +352,9 @@ export interface Project {
   projectManagerId: User;
   assistantProjectManagers?: AssistantProjectManager[];
   teamMembers: TeamMember[];
+  coaches?: CoachAssignment[];
+  coachManagers?: CoachManager[];
+  coachAssistants?: CoachAssistant[];
   procurementMethod: string;
   projectProposalUrl: string;
   signedContractUrl: string;
