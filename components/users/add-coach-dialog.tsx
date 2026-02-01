@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,7 +26,14 @@ interface AddCoachDialogProps {
   returnUrl?: string;
 }
 
-export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user, returnUrl }: AddCoachDialogProps) {
+export function AddCoachDialog({
+  open,
+  onOpenChange,
+  projectId,
+  milestones,
+  user,
+  returnUrl,
+}: AddCoachDialogProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(user?._id || "");
@@ -27,8 +41,10 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [rate, setRate] = useState<string>("");
-  const [rateUnit, setRateUnit] = useState<'per_session' | 'per_hour'>("per_session");
-  const [currency, setCurrency] = useState<'KES' | 'USD'>("KES");
+  const [rateUnit, setRateUnit] = useState<"per_session" | "per_hour">(
+    "per_session",
+  );
+  const [currency, setCurrency] = useState<"KES" | "USD">("KES");
   const [respInput, setRespInput] = useState("");
   const [responsibilities, setResponsibilities] = useState<string[]>([]);
 
@@ -40,11 +56,27 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
 
   const handleSubmit = async () => {
     if (!userId || !milestoneId) {
-      toast({ title: "Missing fields", description: "User ID and milestone are required", variant: "destructive" });
+      toast({
+        title: "Missing fields",
+        description: "User ID and milestone are required",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!rate || Number(rate) <= 0) {
+      toast({
+        title: "Invalid rate",
+        description: "Please enter a valid rate",
+        variant: "destructive",
+      });
       return;
     }
     if (endDate && startDate && endDate < startDate) {
-      toast({ title: "Invalid dates", description: "End date must be after start date", variant: "destructive" });
+      toast({
+        title: "Invalid dates",
+        description: "End date must be after start date",
+        variant: "destructive",
+      });
       return;
     }
     const payload: AddCoachPayload = {
@@ -58,7 +90,10 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
     setIsLoading(true);
     try {
       await addCoach(projectId, milestoneId, payload);
-      toast({ title: "Coach added", description: "Coach assigned to milestone successfully" });
+      toast({
+        title: "Coach added",
+        description: "Coach assigned to milestone successfully",
+      });
       if (returnUrl) {
         window.location.href = returnUrl;
       } else {
@@ -66,7 +101,11 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
         setTimeout(() => window.location.reload(), 50);
       }
     } catch (e: any) {
-      toast({ title: "Error", description: e?.message || "Failed to add coach", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to add coach",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -77,15 +116,26 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add Coach</DialogTitle>
-          <DialogDescription>Assign a coach to a specific milestone with a rate-based contract.</DialogDescription>
+          <DialogDescription>
+            Assign a coach to a specific milestone with a rate-based contract.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 py-2">
           <div className="grid gap-1">
             <Label htmlFor="userId">{user ? "User" : "User ID"}</Label>
             {user ? (
-              <Input id="userId" value={`${user.firstName} ${user.lastName} (${user.email})`} disabled />
+              <Input
+                id="userId"
+                value={`${user.firstName} ${user.lastName} (${user.email})`}
+                disabled
+              />
             ) : (
-              <Input id="userId" placeholder="507f1f77bcf86cd799439011" value={userId} onChange={(e) => setUserId(e.target.value)} />
+              <Input
+                id="userId"
+                placeholder="507f1f77bcf86cd799439011"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+              />
             )}
           </div>
           <div className="grid gap-1">
@@ -97,51 +147,77 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
               onChange={(e) => setMilestoneId(e.target.value)}
               disabled={!milestones || milestones.length === 0}
             >
-              {(!milestones || milestones.length === 0) ? (
+              {!milestones || milestones.length === 0 ? (
                 <option value="">No milestones available</option>
               ) : (
                 milestones.map((m) => (
-                  <option key={m._id} value={m._id}>{m.title}</option>
+                  <option key={m._id} value={m._id}>
+                    {m.title}
+                  </option>
                 ))
               )}
             </select>
             {(!milestones || milestones.length === 0) && (
-              <p className="text-xs text-muted-foreground">No milestones yet. Create a milestone first, then add a coach.</p>
+              <p className="text-xs text-muted-foreground">
+                No milestones yet. Create a milestone first, then add a coach.
+              </p>
             )}
           </div>
           <div className="grid gap-1">
             <Label htmlFor="start">Start Date</Label>
-            <Input id="start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Input
+              id="start"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
           </div>
           <div className="grid gap-1">
             <Label htmlFor="end">End Date</Label>
-            <Input id="end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <Input
+              id="end"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
           </div>
           <div className="grid gap-1">
             <Label>Responsibilities</Label>
             <div className="flex gap-2">
-              <Input placeholder="Add and press Enter" value={respInput} onChange={(e) => setRespInput(e.target.value)} onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
+              <Input
+                placeholder="Add and press Enter"
+                value={respInput}
+                onChange={(e) => setRespInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const v = respInput.trim();
+                    if (v && !responsibilities.includes(v)) {
+                      setResponsibilities((prev) => [...prev, v]);
+                      setRespInput("");
+                    }
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                onClick={() => {
                   const v = respInput.trim();
                   if (v && !responsibilities.includes(v)) {
                     setResponsibilities((prev) => [...prev, v]);
                     setRespInput("");
                   }
-                }
-              }} />
-              <Button type="button" onClick={() => {
-                const v = respInput.trim();
-                if (v && !responsibilities.includes(v)) {
-                  setResponsibilities((prev) => [...prev, v]);
-                  setRespInput("");
-                }
-              }}>Add</Button>
+                }}
+              >
+                Add
+              </Button>
             </div>
             {responsibilities.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-1 text-xs">
                 {responsibilities.map((r) => (
-                  <span key={r} className="px-2 py-1 rounded border">{r}</span>
+                  <span key={r} className="px-2 py-1 rounded border">
+                    {r}
+                  </span>
                 ))}
               </div>
             )}
@@ -149,18 +225,34 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
           <div className="grid sm:grid-cols-3 gap-3">
             <div className="grid gap-1">
               <Label htmlFor="rate">Rate</Label>
-              <Input id="rate" type="number" placeholder="1000" value={rate} onChange={(e) => setRate(e.target.value)} />
+              <Input
+                id="rate"
+                type="number"
+                placeholder="1000"
+                value={rate}
+                onChange={(e) => setRate(e.target.value)}
+              />
             </div>
             <div className="grid gap-1">
               <Label htmlFor="rateUnit">Rate Unit</Label>
-              <select id="rateUnit" className="border rounded h-9 px-2" value={rateUnit} onChange={(e) => setRateUnit(e.target.value as any)}>
+              <select
+                id="rateUnit"
+                className="border rounded h-9 px-2"
+                value={rateUnit}
+                onChange={(e) => setRateUnit(e.target.value as any)}
+              >
                 <option value="per_session">per session</option>
                 <option value="per_hour">per hour</option>
               </select>
             </div>
             <div className="grid gap-1">
               <Label htmlFor="currency">Currency</Label>
-              <select id="currency" className="border rounded h-9 px-2" value={currency} onChange={(e) => setCurrency(e.target.value as any)}>
+              <select
+                id="currency"
+                className="border rounded h-9 px-2"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as any)}
+              >
                 <option value="KES">KES</option>
                 <option value="USD">USD</option>
               </select>
@@ -168,8 +260,13 @@ export function AddCoachDialog({ open, onOpenChange, projectId, milestones, user
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isLoading || !milestones || milestones.length === 0}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading || !milestones || milestones.length === 0}
+          >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Add Coach
           </Button>

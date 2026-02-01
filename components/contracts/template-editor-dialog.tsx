@@ -23,6 +23,7 @@ interface TemplateEditorDialogProps {
     contentType: string;
     content: string;
     variables?: string[];
+    category?: string;
   } | null;
   onSave: (editedContent: string) => void;
   isLoading?: boolean;
@@ -35,6 +36,13 @@ interface TemplateEditorDialogProps {
     startDate: string;
     endDate: string;
     description: string;
+    // Coach-specific data
+    isCoach?: boolean;
+    coachRate?: number;
+    coachRateUnit?: "per_session" | "per_hour";
+    coachTitle?: string; // Mr, Ms, Dr, etc.
+    coachFirstName?: string;
+    coachLastName?: string;
   };
 }
 
@@ -57,7 +65,6 @@ export function TemplateEditorDialog({
 
       const startDate = new Date(contractData.startDate);
       const endDate = new Date(contractData.endDate);
-
       const currentDate = new Date();
 
       // Format dates in different ways
@@ -68,14 +75,21 @@ export function TemplateEditorDialog({
           day: "numeric",
         });
 
+      const formatShortDate = (date: Date) =>
+        date.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+
       const formatMonthYear = (date: Date) =>
         date.toLocaleDateString("en-US", {
           year: "numeric",
           month: "long",
         });
 
-      // Comprehensive replacements for both {var} and {{var}} formats
-      const replacements: Record<string, string> = {
+      // Common replacements for both team members and coaches
+      const commonReplacements: Record<string, string> = {
         // Project Name
         "{{projectName}}": contractData.projectName,
         "{{project_name}}": contractData.projectName,
@@ -84,54 +98,20 @@ export function TemplateEditorDialog({
         "{projectName}": contractData.projectName,
         "{project_name}": contractData.projectName,
 
-        // Team Member Name (the contractor)
-        "{{teamMemberName}}": contractData.teamMemberName,
-        "{{team_member_name}}": contractData.teamMemberName,
-        "{{contractorName}}": contractData.teamMemberName,
-        "{{contractor_name}}": contractData.teamMemberName,
-
-        "{name}": contractData.teamMemberName,
-        "{Name}": contractData.teamMemberName,
-        "{{name}}": contractData.teamMemberName,
-
-        "{{Name of Staff}}": contractData.teamMemberName,
-        "{Name of Staff}": contractData.teamMemberName,
-        "{{staffName}}": contractData.teamMemberName,
-        "{staffName}": contractData.teamMemberName,
-
-        // Email
-        "{{teamMemberEmail}}": contractData.teamMemberEmail,
-        "{{team_member_email}}": contractData.teamMemberEmail,
-        "{email}": contractData.teamMemberEmail,
-        "{{email}}": contractData.teamMemberEmail,
-
-        // Contract Value / Amount
-        "{{contractValue}}": contractData.contractValue.toLocaleString(),
-        "{{contract_value}}": contractData.contractValue.toLocaleString(),
-        "{amount}": `${
-          contractData.currency
-        } ${contractData.contractValue.toLocaleString()}`,
-        "{{amount}}": `${
-          contractData.currency
-        } ${contractData.contractValue.toLocaleString()}`,
-        "{amount with currency}": `${
-          contractData.currency
-        } ${contractData.contractValue.toLocaleString()}`,
-        "{{amount with currency}}": `${
-          contractData.currency
-        } ${contractData.contractValue.toLocaleString()}`,
-
         // Currency
         "{{currency}}": contractData.currency,
         "{currency}": contractData.currency,
+        "{Currency}": contractData.currency,
 
         // Dates - Full format
         "{{startDate}}": formatLongDate(startDate),
         "{{start_date}}": formatLongDate(startDate),
         "{startDate}": formatLongDate(startDate),
+        "{Start Date}": formatLongDate(startDate),
         "{{endDate}}": formatLongDate(endDate),
         "{{end_date}}": formatLongDate(endDate),
         "{endDate}": formatLongDate(endDate),
+        "{End Date}": formatLongDate(endDate),
         "{{currentDate}}": formatLongDate(currentDate),
         "{{current_date}}": formatLongDate(currentDate),
         "{Date}": formatLongDate(currentDate),
@@ -152,17 +132,108 @@ export function TemplateEditorDialog({
         "{{Department}}": "Research and Consultancy",
         "{department}": "Research and Consultancy",
         "{{department}}": "Research and Consultancy",
-
-        // Contract Reference
-        "{Contract Ref. No}": "SRCC-" + new Date().getFullYear() + "-XXXXX",
-        "{{Contract Ref. No}}": "SRCC-" + new Date().getFullYear() + "-XXXXX",
-
-        // NOTE: {name} and {role} after "Yours sincerely" are left as placeholders
-        // to be filled manually with the staff member signing the contract
       };
 
+      // Coach-specific replacements
+      if (contractData.isCoach) {
+        const coachReplacements: Record<string, string> = {
+          // Coach Name variations
+          "{Coach Name}": contractData.teamMemberName,
+          "{{Coach Name}}": contractData.teamMemberName,
+          "{coach_name}": contractData.teamMemberName,
+          "{{coach_name}}": contractData.teamMemberName,
+          "{name}": contractData.teamMemberName,
+          "{Name}": contractData.teamMemberName,
+          "{{name}}": contractData.teamMemberName,
+
+          // Coach Title (Mr, Ms, Dr, etc.)
+          "{Coach Title}": contractData.coachTitle || "Mr/Ms",
+          "{{Coach Title}}": contractData.coachTitle || "Mr/Ms",
+          "{coach_title}": contractData.coachTitle || "Mr/Ms",
+
+          // Coach Last Name
+          "{Coach Last Name}":
+            contractData.coachLastName ||
+            contractData.teamMemberName.split(" ").pop() ||
+            "",
+          "{{Coach Last Name}}":
+            contractData.coachLastName ||
+            contractData.teamMemberName.split(" ").pop() ||
+            "",
+          "{coach_last_name}":
+            contractData.coachLastName ||
+            contractData.teamMemberName.split(" ").pop() ||
+            "",
+
+          // Rate and Rate Unit
+          "{Rate}": contractData.coachRate?.toString() || "XXX",
+          "{{Rate}}": contractData.coachRate?.toString() || "XXX",
+          "{rate}": contractData.coachRate?.toString() || "XXX",
+          "{{rate}}": contractData.coachRate?.toString() || "XXX",
+
+          "{Rate Unit}":
+            contractData.coachRateUnit === "per_session" ? "session" : "hour",
+          "{{Rate Unit}}":
+            contractData.coachRateUnit === "per_session" ? "session" : "hour",
+          "{rate_unit}":
+            contractData.coachRateUnit === "per_session" ? "session" : "hour",
+          "{{rate_unit}}":
+            contractData.coachRateUnit === "per_session" ? "session" : "hour",
+
+          // Email
+          "{{coachEmail}}": contractData.teamMemberEmail,
+          "{coach_email}": contractData.teamMemberEmail,
+          "{email}": contractData.teamMemberEmail,
+          "{{email}}": contractData.teamMemberEmail,
+
+          // Contract Reference for coaches
+          "{Contract Ref. No}": `EM/COACHING/${formatShortDate(currentDate).replace(/\//g, "/")}/2025`,
+          "{{Contract Ref. No}}": `EM/COACHING/${formatShortDate(currentDate).replace(/\//g, "/")}/2025`,
+        };
+
+        Object.assign(commonReplacements, coachReplacements);
+      } else {
+        // Team Member/Consultant-specific replacements
+        const teamMemberReplacements: Record<string, string> = {
+          // Team Member Name (the contractor)
+          "{{teamMemberName}}": contractData.teamMemberName,
+          "{{team_member_name}}": contractData.teamMemberName,
+          "{{contractorName}}": contractData.teamMemberName,
+          "{{contractor_name}}": contractData.teamMemberName,
+
+          "{name}": contractData.teamMemberName,
+          "{Name}": contractData.teamMemberName,
+          "{{name}}": contractData.teamMemberName,
+
+          "{{Name of Staff}}": contractData.teamMemberName,
+          "{Name of Staff}": contractData.teamMemberName,
+          "{{staffName}}": contractData.teamMemberName,
+          "{staffName}": contractData.teamMemberName,
+
+          // Email
+          "{{teamMemberEmail}}": contractData.teamMemberEmail,
+          "{{team_member_email}}": contractData.teamMemberEmail,
+          "{email}": contractData.teamMemberEmail,
+          "{{email}}": contractData.teamMemberEmail,
+
+          // Contract Value / Amount
+          "{{contractValue}}": contractData.contractValue.toLocaleString(),
+          "{{contract_value}}": contractData.contractValue.toLocaleString(),
+          "{amount}": `${contractData.currency} ${contractData.contractValue.toLocaleString()}`,
+          "{{amount}}": `${contractData.currency} ${contractData.contractValue.toLocaleString()}`,
+          "{amount with currency}": `${contractData.currency} ${contractData.contractValue.toLocaleString()}`,
+          "{{amount with currency}}": `${contractData.currency} ${contractData.contractValue.toLocaleString()}`,
+
+          // Contract Reference for team members
+          "{Contract Ref. No}": "SRCC-" + new Date().getFullYear() + "-XXXXX",
+          "{{Contract Ref. No}}": "SRCC-" + new Date().getFullYear() + "-XXXXX",
+        };
+
+        Object.assign(commonReplacements, teamMemberReplacements);
+      }
+
       // Replace all variables
-      Object.entries(replacements).forEach(([key, value]) => {
+      Object.entries(commonReplacements).forEach(([key, value]) => {
         // Escape special regex characters in the key
         const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         populated = populated.replace(new RegExp(escapedKey, "g"), value);
@@ -170,7 +241,7 @@ export function TemplateEditorDialog({
 
       return populated;
     },
-    [contractData]
+    [contractData],
   );
 
   useEffect(() => {
@@ -186,11 +257,16 @@ export function TemplateEditorDialog({
 
   if (!template) return null;
 
+  const isCoachTemplate = template.category === "coach";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle>Edit Contract Template: {template.name}</DialogTitle>
+          <DialogTitle>
+            Edit {isCoachTemplate ? "Coach" : "Team Member"} Contract Template:{" "}
+            {template.name}
+          </DialogTitle>
           <DialogDescription>
             {template.version && `Version ${template.version} • `}
             {template.contentType.toUpperCase()} Format
@@ -198,6 +274,21 @@ export function TemplateEditorDialog({
               <div className="mt-2 text-sm">
                 <span className="font-medium">Available variables:</span>{" "}
                 {template.variables.map((v) => `{{${v}}}`).join(", ")}
+              </div>
+            )}
+            {isCoachTemplate && (
+              <div className="mt-2 text-sm text-blue-600">
+                <span className="font-medium">Coach Template Variables:</span>{" "}
+                {"{Coach Name}"}, {"{Coach Title}"}, {"{Coach Last Name}"},{" "}
+                {"{Rate}"}, {"{Rate Unit}"}, {"{Currency}"}, {"{Date}"},{" "}
+                {"{End Date}"}
+              </div>
+            )}
+            {!isCoachTemplate && (
+              <div className="mt-2 text-sm text-green-600">
+                <span className="font-medium">Team Member Variables:</span>{" "}
+                {"{Name of Staff}"}, {"{amount with currency}"},{" "}
+                {"{Project Name}"}, {"{Date}"}, {"{Department}"}
               </div>
             )}
           </DialogDescription>

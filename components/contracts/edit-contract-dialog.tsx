@@ -73,6 +73,7 @@ interface EditContractDialogProps {
     contentType: string;
     content: string;
     variables?: string[];
+    category?: string;
   }>;
 }
 
@@ -159,6 +160,13 @@ export function EditContractDialog({
     startDate: form.watch("startDate") || "",
     endDate: form.watch("endDate") || "",
     description: form.watch("description") || "",
+    // Coach-specific data (we'll assume it could be a coach contract)
+    isCoach: false, // TODO: Determine if this is a coach contract
+    coachRate: undefined,
+    coachRateUnit: undefined,
+    coachTitle: "Mr/Ms",
+    coachFirstName: contract.contractedUserId.firstName,
+    coachLastName: contract.contractedUserId.lastName,
   };
 
   return (
@@ -264,7 +272,7 @@ export function EditContractDialog({
                           type="date"
                           className={cn(
                             "w-full",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                           {...field}
                         />
@@ -287,7 +295,7 @@ export function EditContractDialog({
                           type="date"
                           className={cn(
                             "w-full",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                           {...field}
                         />
@@ -384,8 +392,8 @@ export function EditContractDialog({
                               {contract?.status === "pending_signature"
                                 ? "Pending Signature"
                                 : contract?.status === "active"
-                                ? "Active"
-                                : contract?.status}
+                                  ? "Active"
+                                  : contract?.status}
                             </SelectItem>
                           )}
                       </SelectContent>

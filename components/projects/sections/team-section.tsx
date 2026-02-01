@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,6 +55,7 @@ import {
 } from "@/components/contracts/create-contract-dialog";
 import { EditContractDialog } from "@/components/contracts/edit-contract-dialog";
 import { CoachesSection } from "./coaches-section";
+import { TeamMemberCard } from "./team-member-card";
 
 export interface TeamSectionProps {
   teamMembers: TeamMember[];
@@ -78,7 +78,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
   const [contractMemberId, setContractMemberId] = useState<string>("");
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
-    null
+    null,
   );
   const [isUpdatingContract, setIsUpdatingContract] = useState(false);
   const [templates, setTemplates] = useState<
@@ -107,14 +107,14 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
   const isUserInInternalBudget = (email?: string): boolean => {
     if (!email) return false;
     const salaryCategory = projectData.budgetId.internalCategories?.find(
-      (cat: any) => cat.name === "2237"
+      (cat: any) => cat.name === "2237",
     );
     return (
       salaryCategory?.items?.some((item: any) => item.name.includes(email)) ??
       false
     );
   };
-  const getMemberContract = (memberId: string) => {
+  const getMemberContract = (memberId: string): Contract | null => {
     if (
       !projectData?.teamMemberContracts ||
       projectData.teamMemberContracts.length === 0
@@ -122,8 +122,10 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       return null;
     }
 
-    return projectData.teamMemberContracts.find(
-      (contract) => contract?.contractedUserId._id === memberId
+    return (
+      projectData.teamMemberContracts.find(
+        (contract) => contract?.contractedUserId._id === memberId,
+      ) || null
     );
   };
 
@@ -140,6 +142,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         projectId: projectData._id,
         contractedUserId: contractMemberId,
         status: values.status,
+        ...(values.milestoneId ? { milestoneId: values.milestoneId } : {}),
         ...(values.templateId ? { templateId: values.templateId } : {}),
         ...(values.editedTemplateContent
           ? { editedTemplateContent: values.editedTemplateContent }
@@ -278,17 +281,17 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
               <UserCog className="h-4 w-4" />
               Project Management
             </TabsTrigger>
-                <TabsTrigger
-                        value="coaches"
-                        className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
-                      >
-                        <UsersRound
-                          className="-ms-0.5 me-1.5 opacity-60"
-                          size={16}
-                          strokeWidth={2}
-                        />
-                        Coaches
-                      </TabsTrigger>
+            <TabsTrigger
+              value="coaches"
+              className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
+            >
+              <UsersRound
+                className="-ms-0.5 me-1.5 opacity-60"
+                size={16}
+                strokeWidth={2}
+              />
+              Coaches
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="members" className="space-y-2">
@@ -311,220 +314,110 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
               </Button>
             </div>
             <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-              {teamMembers.map((member) => (
-                <div
-                  key={member._id}
-                  className="flex items-center justify-between space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage
-                        src={`https://avatar.vercel.sh/${member.userId?.email}`}
-                        alt={`${member.userId?.firstName} ${member.userId?.lastName}`}
-                      />
-                      <AvatarFallback>
-                        {getInitials(
-                          member.userId?.firstName,
-                          member.userId?.lastName
-                        )}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-sm font-medium leading-none">
-                        {member.userId?.firstName} {member.userId?.lastName}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        {member.userId?.email}
-                      </p>
-                      <div className="mt-1 flex flex-wrap gap-0.5">
-                        {member.responsibilities.map((responsibility) => (
-                          <Badge
-                            key={responsibility}
-                            variant="secondary"
-                            className="text-[8px]"
-                          >
-                            {responsibility}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <div className="mb-2">
-                      {getMemberContract(member.userId?._id) ? (
-                        <div className="">
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50  text-green-700 border-green-200 flex gap-1 items-center cursor-pointer hover:bg-green-100"
-                            onClick={() =>
-                              handleEditContract(
-                                getMemberContract(member.userId?._id)!
-                              )
-                            }
-                          >
-                            <FileSignature className="h-3 w-3" />
-                            <div className="text-[8px]">
-                              {
-                                getMemberContract(member.userId?._id)
-                                  ?.contractNumber
-                              }
-                            </div>
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="ml-2 text-xs cursor-pointer hover:bg-gray-100"
-                            style={{
-                              backgroundColor:
-                                getMemberContract(member.userId?._id)
-                                  ?.status === "active"
-                                  ? "rgb(240, 253, 244)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "draft"
-                                  ? "rgb(240, 249, 255)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "pending_signature"
-                                  ? "rgb(254, 249, 195)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "suspended"
-                                  ? "rgb(254, 242, 242)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "terminated"
-                                  ? "rgb(249, 250, 251)"
-                                  : "rgb(249, 250, 251)",
-                              color:
-                                getMemberContract(member.userId?._id)
-                                  ?.status === "active"
-                                  ? "rgb(22, 101, 52)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "draft"
-                                  ? "rgb(3, 105, 161)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "pending_signature"
-                                  ? "rgb(161, 98, 7)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "suspended"
-                                  ? "rgb(185, 28, 28)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "terminated"
-                                  ? "rgb(107, 114, 128)"
-                                  : "rgb(107, 114, 128)",
-                              borderColor:
-                                getMemberContract(member.userId?._id)
-                                  ?.status === "active"
-                                  ? "rgb(187, 247, 208)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "draft"
-                                  ? "rgb(186, 230, 253)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "pending_signature"
-                                  ? "rgb(254, 240, 138)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "suspended"
-                                  ? "rgb(254, 202, 202)"
-                                  : getMemberContract(member.userId?._id)
-                                      ?.status === "terminated"
-                                  ? "rgb(229, 231, 235)"
-                                  : "rgb(229, 231, 235)",
-                            }}
-                            onClick={() =>
-                              handleEditContract(
-                                getMemberContract(member.userId?._id)!
-                              )
-                            }
-                          >
-                            <div className="text-[8px]">
-                              {getMemberContract(member.userId?._id)?.status}
-                            </div>
-                          </Badge>
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-blue-600 border-blue-200 bg-blue-50"
-                          onClick={() =>
-                            handleOpenContractDialog(member.userId?._id)
-                          }
-                        >
-                          <FileSignature className="h-3 w-3 mr-1" />
-                          Award Contract
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-muted-foreground hover:text-foreground"
-                            >
-                              <CalendarDays className="h-4 w-4" />
-                              <span className="sr-only">Member since</span>
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Member since: {formatDate(member.startDate)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-foreground"
-                        onClick={() => {
-                          setSelectedMember(member);
-                          setShowEditDialog(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit team member</span>
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive/90"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Remove team member</span>
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently remove {member.userId?.firstName}{" "}
-                              {member.userId?.lastName} from the project.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() =>
+              {/* Group team members by milestone */}
+              {(() => {
+                const groupedMembers = new Map<string, TeamMember[]>();
+                const projectWideMembers: TeamMember[] = [];
+
+                teamMembers.forEach((member) => {
+                  if (member.milestoneId) {
+                    const key = member.milestoneId;
+                    if (!groupedMembers.has(key)) {
+                      groupedMembers.set(key, []);
+                    }
+                    groupedMembers.get(key)!.push(member);
+                  } else {
+                    projectWideMembers.push(member);
+                  }
+                });
+
+                return (
+                  <div className="col-span-full space-y-6">
+                    {/* Project-wide members */}
+                    {projectWideMembers.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3 text-blue-700">
+                          Project-wide Team Members
+                        </h3>
+                        <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+                          {projectWideMembers.map((member) => (
+                            <TeamMemberCard
+                              key={member._id}
+                              member={member}
+                              projectData={projectData}
+                              onEdit={() => {
+                                setSelectedMember(member);
+                                setShowEditDialog(true);
+                              }}
+                              onDelete={() =>
                                 handleDeleteTeamMember(member.userId?._id)
                               }
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              disabled={isDeleting}
-                            >
-                              {isDeleting ? "Removing..." : "Remove"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                              onCreateContract={() =>
+                                handleOpenContractDialog(member.userId?._id)
+                              }
+                              onEditContract={(contract) =>
+                                handleEditContract(contract)
+                              }
+                              getMemberContract={getMemberContract}
+                              isDeleting={isDeleting}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Milestone-specific members */}
+                    {Array.from(groupedMembers.entries()).map(
+                      ([milestoneId, members]) => {
+                        const milestone = projectData.milestones?.find(
+                          (m) => m._id === milestoneId,
+                        );
+                        return (
+                          <div key={milestoneId}>
+                            <h3 className="text-lg font-semibold mb-3 text-green-700">
+                              {milestone
+                                ? `${milestone.title} Team Members`
+                                : `Milestone ${milestoneId} Team Members`}
+                            </h3>
+                            <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+                              {members.map((member) => (
+                                <TeamMemberCard
+                                  key={member._id}
+                                  member={member}
+                                  projectData={projectData}
+                                  milestone={milestone}
+                                  onEdit={() => {
+                                    setSelectedMember(member);
+                                    setShowEditDialog(true);
+                                  }}
+                                  onDelete={() =>
+                                    handleDeleteTeamMember(member.userId?._id)
+                                  }
+                                  onCreateContract={() =>
+                                    handleOpenContractDialog(member.userId?._id)
+                                  }
+                                  onEditContract={(contract) =>
+                                    handleEditContract(contract)
+                                  }
+                                  getMemberContract={getMemberContract}
+                                  isDeleting={isDeleting}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      },
+                    )}
+
+                    {teamMembers.length === 0 && (
+                      <p className="col-span-full text-center text-sm text-muted-foreground py-8">
+                        No team members added yet. Click &quot;Add Member&quot;
+                        to get started.
+                      </p>
+                    )}
                   </div>
-                </div>
-              ))}
-              {teamMembers.length === 0 && (
-                <p className="col-span-full text-center text-sm text-muted-foreground py-8">
-                  No team members added yet. Click &quot;Add Member&quot; to get
-                  started.
-                </p>
-              )}
+                );
+              })()}
             </div>
           </TabsContent>
 
@@ -563,7 +456,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                         <AvatarFallback>
                           {getInitials(
                             projectData.projectManagerId.firstName,
-                            projectData.projectManagerId.lastName
+                            projectData.projectManagerId.lastName,
                           )}
                         </AvatarFallback>
                       </Avatar>
@@ -630,7 +523,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                           <AvatarFallback>
                             {getInitials(
                               assistant.userId?.firstName,
-                              assistant.userId?.lastName
+                              assistant.userId?.lastName,
                             )}
                           </AvatarFallback>
                         </Avatar>
@@ -652,7 +545,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                 >
                                   {responsibility}
                                 </Badge>
-                              )
+                              ),
                             )}
                           </div>
                         </div>
@@ -708,12 +601,10 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                   onClick={async () => {
                                     try {
                                       const { removeAssistantProjectManager } =
-                                        await import(
-                                          "@/services/projects-service"
-                                        );
+                                        await import("@/services/projects-service");
                                       await removeAssistantProjectManager(
                                         projectId,
-                                        assistant.userId._id
+                                        assistant.userId._id,
                                       );
                                       toast({
                                         title: "Assistant PM removed",
@@ -722,7 +613,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                       });
                                       setTimeout(
                                         () => window.location.reload(),
-                                        100
+                                        100,
                                       );
                                     } catch (error) {
                                       toast({
@@ -757,9 +648,12 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
               </div>
             </div>
           </TabsContent>
-                <TabsContent value="coaches">
-                  <CoachesSection projectId={projectData._id} projectData={projectData} />
-                </TabsContent>
+          <TabsContent value="coaches">
+            <CoachesSection
+              projectId={projectData._id}
+              projectData={projectData}
+            />
+          </TabsContent>
         </Tabs>
       </CardContent>
       {selectedMember && (
@@ -783,7 +677,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
             ?.userId?.firstName +
             " " +
             teamMembers.find(
-              (member) => member.userId?._id === contractMemberId
+              (member) => member.userId?._id === contractMemberId,
             )?.userId?.lastName || ""
         }
         teamMemberEmail={
@@ -791,6 +685,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
             ?.userId?.email || ""
         }
         internalCategories={projectData?.budgetId?.internalCategories || []}
+        milestones={projectData?.milestones || []}
         isSubmitting={isCreatingContract}
         templates={templates}
       />

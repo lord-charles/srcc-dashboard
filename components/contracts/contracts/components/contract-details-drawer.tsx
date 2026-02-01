@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import {
   Contract,
@@ -125,6 +125,194 @@ export function ContractDetailsDrawer({
   const onOpenChange = isControlled
     ? controlledOnOpenChange
     : setUncontrolledOpen;
+
+  // Function to replace template variables with actual contract values
+  const populateContractVariables = useCallback(
+    (content: string) => {
+      if (!content || !contract) return content;
+
+      let populated = content;
+
+      const startDate = contract.startDate
+        ? new Date(contract.startDate)
+        : new Date();
+      const endDate = contract.endDate
+        ? new Date(contract.endDate)
+        : new Date();
+      const currentDate = new Date();
+
+      // Format dates in different ways
+      const formatLongDate = (date: Date) =>
+        date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+      const formatShortDate = (date: Date) =>
+        date.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        });
+
+      // Determine if this is a coach contract by checking multiple indicators
+      const isCoachContract =
+        contract.contractNumber?.includes("COACHING") ||
+        contract.contractNumber?.includes("EM/COACHING") ||
+        contract.description?.toLowerCase().includes("coach") ||
+        contract.description?.toLowerCase().includes("adjunct coach");
+
+      // Extract name parts
+      const fullName =
+        `${contract.contractedUserId?.firstName || ""} ${contract.contractedUserId?.lastName || ""}`.trim();
+      const firstName = contract.contractedUserId?.firstName || "";
+      const lastName = contract.contractedUserId?.lastName || "";
+
+      // Common replacements for both contract types
+      const commonReplacements: Record<string, string> = {
+        // Project Name
+        "{{projectName}}": contract.projectId?.name || "Project",
+        "{{project_name}}": contract.projectId?.name || "Project",
+        "{{Project Name}}": contract.projectId?.name || "Project",
+        "{Project Name}": contract.projectId?.name || "Project",
+        "{projectName}": contract.projectId?.name || "Project",
+        "{project_name}": contract.projectId?.name || "Project",
+
+        // Currency
+        "{{currency}}": contract.currency || "KES",
+        "{currency}": contract.currency || "KES",
+        "{Currency}": contract.currency || "KES",
+
+        // Dates - Full format
+        "{{startDate}}": formatLongDate(startDate),
+        "{{start_date}}": formatLongDate(startDate),
+        "{startDate}": formatLongDate(startDate),
+        "{Start Date}": formatLongDate(startDate),
+        "{{endDate}}": formatLongDate(endDate),
+        "{{end_date}}": formatLongDate(endDate),
+        "{endDate}": formatLongDate(endDate),
+        "{End Date}": formatLongDate(endDate),
+        "{{currentDate}}": formatLongDate(currentDate),
+        "{{current_date}}": formatLongDate(currentDate),
+        "{Date}": formatLongDate(currentDate),
+        "{date}": formatLongDate(currentDate),
+
+        // Dates - Month Year format
+        "{month-start, year-start}": formatLongDate(startDate),
+        "{month-end, year-end}": formatLongDate(endDate),
+
+        // Description / Title
+        "{{description}}": contract.description || "",
+        "{description}": contract.description || "",
+        "{title}": contract.description || "",
+        "{{title}}": contract.description || "",
+
+        // Department
+        "{Department}": "Research and Consultancy",
+        "{{Department}}": "Research and Consultancy",
+        "{department}": "Research and Consultancy",
+        "{{department}}": "Research and Consultancy",
+
+        // Contract Reference
+        "{Contract Ref. No}": contract.contractNumber || "",
+        "{{Contract Ref. No}}": contract.contractNumber || "",
+      };
+
+      // Coach-specific replacements
+      if (isCoachContract) {
+        const coachReplacements: Record<string, string> = {
+          // Coach Name variations
+          "{Coach Name}": fullName,
+          "{{Coach Name}}": fullName,
+          "{coach_name}": fullName,
+          "{{coach_name}}": fullName,
+          "{name}": fullName,
+          "{Name}": fullName,
+          "{{name}}": fullName,
+
+          // Coach Title (infer from name or use default)
+          "{Coach Title}": firstName.toLowerCase().includes("dr")
+            ? "Dr"
+            : "Mr/Ms",
+          "{{Coach Title}}": firstName.toLowerCase().includes("dr")
+            ? "Dr"
+            : "Mr/Ms",
+          "{coach_title}": firstName.toLowerCase().includes("dr")
+            ? "Dr"
+            : "Mr/Ms",
+
+          // Coach Last Name
+          "{Coach Last Name}": lastName,
+          "{{Coach Last Name}}": lastName,
+          "{coach_last_name}": lastName,
+
+          // Rate and Rate Unit (we'll use placeholder values since we don't have this data in the contract)
+          "{Rate}": "XXX", // Placeholder - actual rate would need to be stored in contract
+          "{{Rate}}": "XXX",
+          "{rate}": "XXX",
+          "{{rate}}": "XXX",
+
+          "{Rate Unit}": "session", // Default assumption
+          "{{Rate Unit}}": "session",
+          "{rate_unit}": "session",
+          "{{rate_unit}}": "session",
+
+          // Email
+          "{{coachEmail}}": contract.contractedUserId?.email || "",
+          "{coach_email}": contract.contractedUserId?.email || "",
+          "{email}": contract.contractedUserId?.email || "",
+          "{{email}}": contract.contractedUserId?.email || "",
+        };
+
+        Object.assign(commonReplacements, coachReplacements);
+      } else {
+        // Team Member/Consultant-specific replacements
+        const teamMemberReplacements: Record<string, string> = {
+          // Team Member Name (the contractor)
+          "{{teamMemberName}}": fullName,
+          "{{team_member_name}}": fullName,
+          "{{contractorName}}": fullName,
+          "{{contractor_name}}": fullName,
+
+          "{name}": fullName,
+          "{Name}": fullName,
+          "{{name}}": fullName,
+
+          "{{Name of Staff}}": fullName,
+          "{Name of Staff}": fullName,
+          "{{staffName}}": fullName,
+          "{staffName}": fullName,
+
+          // Email
+          "{{teamMemberEmail}}": contract.contractedUserId?.email || "",
+          "{{team_member_email}}": contract.contractedUserId?.email || "",
+          "{email}": contract.contractedUserId?.email || "",
+          "{{email}}": contract.contractedUserId?.email || "",
+
+          // Contract Value / Amount
+          "{{contractValue}}": contract.contractValue?.toLocaleString() || "0",
+          "{{contract_value}}": contract.contractValue?.toLocaleString() || "0",
+          "{amount}": `${contract.currency || "KES"} ${contract.contractValue?.toLocaleString() || "0"}`,
+          "{{amount}}": `${contract.currency || "KES"} ${contract.contractValue?.toLocaleString() || "0"}`,
+          "{amount with currency}": `${contract.currency || "KES"} ${contract.contractValue?.toLocaleString() || "0"}`,
+          "{{amount with currency}}": `${contract.currency || "KES"} ${contract.contractValue?.toLocaleString() || "0"}`,
+        };
+
+        Object.assign(commonReplacements, teamMemberReplacements);
+      }
+
+      // Replace all variables
+      Object.entries(commonReplacements).forEach(([key, value]) => {
+        // Escape special regex characters in the key
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        populated = populated.replace(new RegExp(escapedKey, "g"), value);
+      });
+
+      return populated;
+    },
+    [contract],
+  );
 
   const handleOpenChange = (isOpen: boolean) => {
     onOpenChange?.(isOpen);
@@ -367,7 +555,7 @@ export function ContractDetailsDrawer({
               </div>
               
               <div class="contract-content">
-                ${contract.templateSnapshot.content}
+                ${populateContractVariables(contract.templateSnapshot.content)}
               </div>
 
               <div class="signature-section">
@@ -432,7 +620,7 @@ export function ContractDetailsDrawer({
                 variant="outline"
                 className={cn(
                   "border px-3 py-1",
-                  getStatusColor(contract.status)
+                  getStatusColor(contract.status),
                 )}
               >
                 {formatStatus(contract.status)}
@@ -562,7 +750,7 @@ export function ContractDetailsDrawer({
                                       new Date(contract.currentLevelDeadline) <
                                         new Date()
                                       ? "text-red-600 dark:text-red-400"
-                                      : ""
+                                      : "",
                                   )}
                                 >
                                   {formatDate(contract.currentLevelDeadline)}
@@ -594,7 +782,7 @@ export function ContractDetailsDrawer({
                                 <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
                                   {formatCurrency(
                                     contract.contractValue,
-                                    contract.currency
+                                    contract.currency,
                                   )}
                                 </p>
                               </div>
@@ -660,7 +848,7 @@ export function ContractDetailsDrawer({
                                 <ChevronDown
                                   className={cn(
                                     "h-4 w-4 text-indigo-600 dark:text-indigo-400 transition-transform duration-200",
-                                    isDocumentOpen && "rotate-180"
+                                    isDocumentOpen && "rotate-180",
                                   )}
                                 />
                               </div>
@@ -701,7 +889,7 @@ export function ContractDetailsDrawer({
                                         Date:{" "}
                                         {formatDate(
                                           contract.createdAt ||
-                                            contract.startDate
+                                            contract.startDate,
                                         )}
                                       </div>
                                     </div>
@@ -719,15 +907,19 @@ export function ContractDetailsDrawer({
                                         ?.contentType === "html" ? (
                                         <div
                                           dangerouslySetInnerHTML={{
-                                            __html:
+                                            __html: populateContractVariables(
                                               contract.templateSnapshot
                                                 ?.content || "",
+                                            ),
                                           }}
                                         />
                                       ) : (
                                         <div>
-                                          {contract.templateSnapshot?.content ||
-                                            "No content available"}
+                                          {populateContractVariables(
+                                            contract.templateSnapshot
+                                              ?.content ||
+                                              "No content available",
+                                          )}
                                         </div>
                                       )}
                                     </div>
@@ -771,12 +963,12 @@ export function ContractDetailsDrawer({
                                     className="absolute left-3/4 -translate-x-1/2 bottom-72 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-400 animate-bounce"
                                     onClick={() => {
                                       const el = document.getElementById(
-                                        "contract-scroll-container"
+                                        "contract-scroll-container",
                                       );
                                       if (el) {
                                         el.scrollBy({
                                           top: Math.round(
-                                            el.clientHeight * 0.85
+                                            el.clientHeight * 0.85,
                                           ),
                                           behavior: "smooth",
                                         });
@@ -878,7 +1070,7 @@ export function ContractDetailsDrawer({
                               <p className="font-semibold text-xl text-emerald-600 dark:text-emerald-400">
                                 {formatCurrency(
                                   contract.contractValue,
-                                  contract.currency
+                                  contract.currency,
                                 )}
                               </p>
                             </div>
@@ -1116,7 +1308,7 @@ export function ContractDetailsDrawer({
                                               </div>
                                             )}
                                           </div>
-                                        )
+                                        ),
                                       )}
                                     </div>
                                   </div>
@@ -1148,7 +1340,7 @@ export function ContractDetailsDrawer({
                                               </div>
                                             )}
                                           </div>
-                                        )
+                                        ),
                                       )}
                                     </div>
                                   </div>
@@ -1164,7 +1356,7 @@ export function ContractDetailsDrawer({
                                     <div className="text-sm font-medium">
                                       Approved on{" "}
                                       {formatDate(
-                                        contract.finalApproval.approvedAt
+                                        contract.finalApproval.approvedAt,
                                       )}
                                     </div>
                                   </div>
@@ -1181,7 +1373,7 @@ export function ContractDetailsDrawer({
                                     <div className="text-sm font-medium mb-2">
                                       Rejected on{" "}
                                       {formatDate(
-                                        contract.rejectionDetails.rejectedAt
+                                        contract.rejectionDetails.rejectedAt,
                                       )}
                                     </div>
                                     <div className="text-sm font-medium mb-2">
@@ -1222,7 +1414,7 @@ export function ContractDetailsDrawer({
                                       "pb-5",
                                       index !==
                                         (contract?.amendments?.length || 2) -
-                                          1 && "border-b"
+                                          1 && "border-b",
                                     )}
                                   >
                                     <div className="flex items-center mb-3">
@@ -1266,14 +1458,14 @@ export function ContractDetailsDrawer({
                                             </span>
                                             <span className="font-medium">
                                               {amendment.changedFields.join(
-                                                ", "
+                                                ", ",
                                               )}
                                             </span>
                                           </div>
                                         )}
                                     </div>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           </CardContent>

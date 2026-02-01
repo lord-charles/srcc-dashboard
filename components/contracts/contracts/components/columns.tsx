@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 const customIncludesStringFilter = (
   row: Row<Contract>,
   columnId: string,
-  filterValue: string
+  filterValue: string,
 ) => {
   const value = row.getValue(columnId) as string;
   return value?.toLowerCase().includes((filterValue as string).toLowerCase());
@@ -24,7 +24,7 @@ const shouldShowActions = (roles: string[] | undefined): boolean => {
 };
 
 export const getColumns = (
-  roles: string[] | undefined
+  roles: string[] | undefined,
 ): ColumnDef<Contract>[] => {
   const baseColumns: ColumnDef<Contract>[] = [
     {
@@ -119,7 +119,7 @@ export const getColumns = (
     {
       accessorKey: "contractValue",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Contract Value" />
+        <DataTableColumnHeader column={column} title="Value/Rate" />
       ),
       cell: ({ row }) => {
         const amount = row.getValue("contractValue") as number;
@@ -165,10 +165,10 @@ export const getColumns = (
               status === "active"
                 ? "bg-green-100 text-green-800"
                 : status === "completed"
-                ? "bg-blue-100 text-blue-800"
-                : status === "terminated"
-                ? "bg-red-100 text-red-800"
-                : "bg-yellow-100 text-yellow-800"
+                  ? "bg-blue-100 text-blue-800"
+                  : status === "terminated"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-yellow-100 text-yellow-800"
             }
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}

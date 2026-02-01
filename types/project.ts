@@ -7,6 +7,7 @@ export interface User {
 
 export interface TeamMember {
   userId: User;
+  milestoneId?: string;
   startDate: string;
   endDate: string;
   responsibilities: string[];
@@ -15,8 +16,8 @@ export interface TeamMember {
 
 export interface CoachContract {
   rate: number;
-  rateUnit: 'per_session' | 'per_hour';
-  currency: 'KES' | 'USD';
+  rateUnit: "per_session" | "per_hour";
+  currency: "KES" | "USD";
   notes?: string;
 }
 
@@ -320,6 +321,7 @@ export interface Contract {
   startDate?: string;
   endDate?: string;
   projectId: string;
+  milestoneId?: string;
   contractedUserId: ContractedUser;
   amendments: ContractAmendment[];
   createdAt: string;

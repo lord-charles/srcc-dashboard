@@ -28,6 +28,7 @@ import ModernBudgetDisplay from "./sections/modern-budget-display";
 import ProjectOverview from "./sections/project-overview";
 import ContractsTable from "./sections/team-contracts-table";
 import { ProjectClaimsSection } from "./sections/project-claims-section";
+import { TeamMemberCard } from "./sections/team-member-card";
 
 interface ProjectDetailsProps {
   project?: Project;
@@ -42,7 +43,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 }) => {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(
-    searchParams.get("tab") || "overview"
+    searchParams.get("tab") || "overview",
   );
   const router = useRouter();
 
@@ -119,7 +120,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             />
             Team
           </TabsTrigger>
-      
+
           <TabsTrigger
             value="financial"
             className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
@@ -222,8 +223,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           projectData={projectData}
         />
       </TabsContent>
-
-
 
       <TabsContent value="financial">
         <FinancialSection

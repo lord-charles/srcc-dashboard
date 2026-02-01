@@ -12,16 +12,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { addTeamMember } from "@/services/projects-service";
+import {
+  addTeamMember,
+  addTeamMemberToMilestone,
+} from "@/services/projects-service";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ProjectMilestone } from "@/types/project";
 
 interface AddTeamMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectId: string;
   projectName?: string;
+  milestones?: ProjectMilestone[];
   user?: {
     _id: string;
     firstName: string;
@@ -36,6 +41,7 @@ export function AddTeamMemberDialog({
   onOpenChange,
   projectId,
   projectName,
+  milestones = [],
   user,
   returnUrl,
 }: AddTeamMemberDialogProps) {
@@ -45,8 +51,9 @@ export function AddTeamMemberDialog({
 
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(
-    new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+    new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
   );
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string>("");
   const [responsibilities, setResponsibilities] = useState<string[]>([]);
   const [respInput, setRespInput] = useState("");
 
@@ -71,17 +78,31 @@ export function AddTeamMemberDialog({
 
     setIsLoading(true);
     try {
-      await addTeamMember(projectId, {
+      const memberData = {
         userId: user?._id,
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
-        responsibilities: responsibilities.length > 0 ? responsibilities : ["team_member"],
-      });
+        responsibilities:
+          responsibilities.length > 0 ? responsibilities : ["team_member"],
+      };
 
-      toast({
-        title: "Success",
-        description: `Added ${user?.firstName} ${user?.lastName} to ${projectName}`,
-      });
+      if (selectedMilestoneId) {
+        await addTeamMemberToMilestone(
+          projectId,
+          selectedMilestoneId,
+          memberData,
+        );
+        toast({
+          title: "Success",
+          description: `Added ${user?.firstName} ${user?.lastName} to milestone in ${projectName}`,
+        });
+      } else {
+        await addTeamMember(projectId, memberData);
+        toast({
+          title: "Success",
+          description: `Added ${user?.firstName} ${user?.lastName} to ${projectName}`,
+        });
+      }
 
       onOpenChange(false);
       if (returnUrl) {
@@ -112,6 +133,30 @@ export function AddTeamMemberDialog({
             <Label htmlFor="email">Email</Label>
             <Input id="email" value={user?.email} disabled />
           </div>
+
+          {milestones.length > 0 && (
+            <div className="grid gap-2">
+              <Label htmlFor="milestone">Milestone (Optional)</Label>
+              <select
+                id="milestone"
+                className="border rounded h-9 px-2"
+                value={selectedMilestoneId}
+                onChange={(e) => setSelectedMilestoneId(e.target.value)}
+              >
+                <option value="">Project-wide (No specific milestone)</option>
+                {milestones.map((milestone) => (
+                  <option key={milestone._id} value={milestone._id}>
+                    {milestone.title}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Select a milestone to assign this member to specific project
+                phases, or leave blank for project-wide assignment.
+              </p>
+            </div>
+          )}
+
           <div className="grid gap-2">
             <Label htmlFor="start-date">Start Date</Label>
             <Input
@@ -119,7 +164,9 @@ export function AddTeamMemberDialog({
               type="date"
               value={startDate ? startDate.toISOString().split("T")[0] : ""}
               onChange={(e) =>
-                setStartDate(e.target.value ? new Date(e.target.value) : undefined)
+                setStartDate(
+                  e.target.value ? new Date(e.target.value) : undefined,
+                )
               }
             />
           </div>
@@ -130,7 +177,9 @@ export function AddTeamMemberDialog({
               type="date"
               value={endDate ? endDate.toISOString().split("T")[0] : ""}
               onChange={(e) =>
-                setEndDate(e.target.value ? new Date(e.target.value) : undefined)
+                setEndDate(
+                  e.target.value ? new Date(e.target.value) : undefined,
+                )
               }
             />
           </div>
@@ -169,13 +218,20 @@ export function AddTeamMemberDialog({
             {responsibilities.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-1">
                 {responsibilities.map((r) => (
-                  <div key={r} className="flex items-center gap-2 rounded border px-2 py-1 text-sm">
+                  <div
+                    key={r}
+                    className="flex items-center gap-2 rounded border px-2 py-1 text-sm"
+                  >
                     <span>{r}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => setResponsibilities((prev) => prev.filter((x) => x !== r))}
+                      onClick={() =>
+                        setResponsibilities((prev) =>
+                          prev.filter((x) => x !== r),
+                        )
+                      }
                     >
                       ✕
                     </Button>
@@ -183,7 +239,9 @@ export function AddTeamMemberDialog({
                 ))}
               </div>
             )}
-            <p className="text-xs text-muted-foreground">Examples: Frontend Development, UI/UX Design, Code Review</p>
+            <p className="text-xs text-muted-foreground">
+              Examples: Frontend Development, UI/UX Design, Code Review
+            </p>
           </div>
         </div>
         <DialogFooter>
@@ -192,7 +250,7 @@ export function AddTeamMemberDialog({
           </Button>
           <Button onClick={handleAddMember} disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Add to Project
+            Add to {selectedMilestoneId ? "Milestone" : "Project"}
           </Button>
         </DialogFooter>
       </DialogContent>

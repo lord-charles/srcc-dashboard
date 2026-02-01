@@ -63,6 +63,7 @@ const formSchema = z.object({
   status: z.string().min(1, {
     message: "Please select a status.",
   }),
+  milestoneId: z.string().optional().nullable(),
   templateId: z.string().optional().nullable(),
   editedTemplateContent: z.string().optional(),
   attachments: z.array(attachmentSchema).optional(),
@@ -78,6 +79,11 @@ interface CreateContractDialogProps {
   teamMemberName: string;
   teamMemberEmail: string;
   internalCategories: any[];
+  milestones?: Array<{
+    _id: string;
+    title: string;
+    description: string;
+  }>;
   isSubmitting: boolean;
   templates?: Array<{
     _id: string;
@@ -86,7 +92,14 @@ interface CreateContractDialogProps {
     contentType: string;
     content: string;
     variables?: string[];
+    category?: string;
   }>; // optional list of templates
+  isCoach?: boolean; // Flag to indicate if this is for a coach
+  coachContractData?: {
+    rate: number;
+    currency: string;
+    rateUnit: "per_session" | "per_hour";
+  }; // Coach's embedded contract data
 }
 
 export function CreateContractDialog({
@@ -97,55 +110,111 @@ export function CreateContractDialog({
   teamMemberName,
   teamMemberEmail,
   internalCategories,
+  milestones = [],
   isSubmitting,
   templates = [],
+  isCoach = false,
+  coachContractData,
 }: CreateContractDialogProps) {
   const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<
     (typeof templates)[0] | null
   >(null);
 
-  // Find user in internal budget (code 2237)
-  const salaryCategory = internalCategories?.find((cat) => cat.name === "2237");
-  const userBudgetItem = salaryCategory?.items?.find((item: any) =>
-    item.name.includes(teamMemberEmail)
-  );
+  // Find user in internal budget (code 2237) - only for team members, not coaches
+  const salaryCategory = !isCoach
+    ? internalCategories?.find((cat) => cat.name === "2237")
+    : null;
+  const userBudgetItem = !isCoach
+    ? salaryCategory?.items?.find((item: any) =>
+        item.name.includes(teamMemberEmail),
+      )
+    : null;
+
+  // For coaches, we don't require budget allocation - use coach contract data instead
+  const canCreateContract = isCoach || !!userBudgetItem;
 
   // Extract budget details if user is found - memoize to prevent recalculation
-  const budgetStartDate = useMemo(
-    () => userBudgetItem?.startDate || new Date().toISOString().split("T")[0],
-    [userBudgetItem?.startDate]
-  );
+  const budgetStartDate = useMemo(() => {
+    if (isCoach) {
+      return new Date().toISOString().split("T")[0];
+    }
+    return userBudgetItem?.startDate || new Date().toISOString().split("T")[0];
+  }, [isCoach, userBudgetItem?.startDate]);
 
-  const budgetEndDate = useMemo(
-    () =>
+  const budgetEndDate = useMemo(() => {
+    if (isCoach) {
+      return new Date(new Date().setFullYear(new Date().getFullYear() + 1))
+        .toISOString()
+        .split("T")[0];
+    }
+    return (
       userBudgetItem?.endDate ||
       new Date(new Date().setFullYear(new Date().getFullYear() + 1))
         .toISOString()
-        .split("T")[0],
-    [userBudgetItem?.endDate]
-  );
+        .split("T")[0]
+    );
+  }, [isCoach, userBudgetItem?.endDate]);
 
-  const firstTemplateId = templates?.[0]?._id;
+  // Calculate default contract value
+  const defaultContractValue = useMemo(() => {
+    if (isCoach && coachContractData) {
+      // For coaches, use their rate * 10 as default (assuming 10 sessions/hours)
+      return coachContractData.rate * 10;
+    }
+    return userBudgetItem?.estimatedAmount || 0;
+  }, [isCoach, coachContractData, userBudgetItem?.estimatedAmount]);
+
+  // Get default currency
+  const defaultCurrency = useMemo(() => {
+    if (isCoach && coachContractData) {
+      return coachContractData.currency;
+    }
+    return "KES";
+  }, [isCoach, coachContractData]);
+
+  // Filter templates based on contract type
+  const filteredTemplates = useMemo(() => {
+    if (!templates) return [];
+
+    if (isCoach) {
+      // For coaches, show templates with category 'coach'
+      return templates.filter((t) => t.category === "coach");
+    } else {
+      // For team members, show templates with no category, 'team_member', or 'consultant'
+      return templates.filter(
+        (t) =>
+          !t.category ||
+          t.category === "team_member" ||
+          t.category === "consultant",
+      );
+    }
+  }, [templates, isCoach]);
+
+  const firstTemplateId = filteredTemplates?.[0]?._id;
 
   // Create form with initial values
   const defaultValues = useMemo(
     () => ({
-      description: `Consultant Contract for ${projectName}`,
-      contractValue: userBudgetItem?.estimatedAmount || 0,
-      currency: "KES",
+      description: isCoach
+        ? `Coach Contract for ${projectName}`
+        : `Consultant Contract for ${projectName}`,
+      contractValue: defaultContractValue,
+      currency: defaultCurrency,
       startDate: formatDateForInput(budgetStartDate),
       endDate: formatDateForInput(budgetEndDate),
       status: "draft",
       templateId: firstTemplateId || undefined,
     }),
     [
+      isCoach,
       projectName,
-      userBudgetItem?.estimatedAmount,
+      defaultContractValue,
+      defaultCurrency,
       budgetStartDate,
       budgetEndDate,
       firstTemplateId,
-    ]
+    ],
   );
 
   const form = useForm<ContractFormValues>({
@@ -180,7 +249,7 @@ export function CreateContractDialog({
   const handleViewTemplate = () => {
     const templateId = form.getValues("templateId");
     if (templateId) {
-      const template = templates.find((t) => t._id === templateId);
+      const template = filteredTemplates.find((t) => t._id === templateId);
       if (template) {
         setSelectedTemplate(template);
         setTemplateEditorOpen(true);
@@ -203,6 +272,14 @@ export function CreateContractDialog({
     startDate: form.watch("startDate") || "",
     endDate: form.watch("endDate") || "",
     description: form.watch("description") || "",
+    // Coach-specific data
+    isCoach,
+    coachRate: coachContractData?.rate,
+    coachRateUnit: coachContractData?.rateUnit,
+    coachTitle:
+      teamMemberName.split(" ")[0] === teamMemberName ? "Mr/Ms" : "Mr/Ms", // Could be enhanced to detect title
+    coachFirstName: teamMemberName.split(" ")[0],
+    coachLastName: teamMemberName.split(" ").slice(1).join(" "),
   };
 
   return (
@@ -210,11 +287,13 @@ export function CreateContractDialog({
       <DrawerContent className="h-[calc(100vh-3rem)] mx-auto p-0 flex flex-col">
         <DrawerHeader className="px-6 pt-6">
           <DrawerTitle>
-            {userBudgetItem ? "Create New Contract" : "Cannot Create Contract"}
+            {canCreateContract
+              ? "Create New Contract"
+              : "Cannot Create Contract"}
           </DrawerTitle>
           <DrawerDescription>
-            {userBudgetItem ? (
-              `Create a contract for team member ${teamMemberName} on project ${projectName}.`
+            {canCreateContract ? (
+              `Create a contract for ${isCoach ? "coach" : "team member"} ${teamMemberName} on project ${projectName}.`
             ) : (
               <span className="text-destructive">
                 Cannot create contract - {teamMemberName} is not allocated in
@@ -260,11 +339,13 @@ export function CreateContractDialog({
                           type="number"
                           placeholder="0"
                           {...field}
-                          disabled
+                          disabled={!isCoach} // Only disable for team members (budget-based)
                         />
                       </FormControl>
                       <FormDescription>
-                        Fixed as per budget allocation
+                        {isCoach
+                          ? `Based on coach rate (${coachContractData?.rate || 0} ${coachContractData?.currency || "KES"} per ${coachContractData?.rateUnit === "per_session" ? "session" : "hour"})`
+                          : "Fixed as per budget allocation"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -312,13 +393,15 @@ export function CreateContractDialog({
                           type="date"
                           className={cn(
                             "w-full",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        Fixed as per budget allocation
+                        {isCoach
+                          ? "Contract start date"
+                          : "Fixed as per budget allocation"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -335,20 +418,62 @@ export function CreateContractDialog({
                           type="date"
                           className={cn(
                             "w-full",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        Fixed as per budget allocation
+                        {isCoach
+                          ? "Contract end date"
+                          : "Fixed as per budget allocation"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              {templates && templates.length > 0 && (
+
+              {milestones && milestones.length > 0 && (
+                <FormField
+                  control={form.control}
+                  name="milestoneId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Milestone (Optional)</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select milestone (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">
+                            No specific milestone
+                          </SelectItem>
+                          {milestones.map((milestone) => (
+                            <SelectItem
+                              key={milestone._id}
+                              value={milestone._id}
+                            >
+                              {milestone.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Link this contract to a specific project milestone
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {filteredTemplates && filteredTemplates.length > 0 && (
                 <FormField
                   control={form.control}
                   name="templateId"
@@ -366,7 +491,7 @@ export function CreateContractDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {templates.map((t) => (
+                            {filteredTemplates.map((t) => (
                               <SelectItem key={t._id} value={t._id}>
                                 {t.name}
                                 {t.version ? ` (v${t.version})` : ""}
@@ -490,12 +615,12 @@ export function CreateContractDialog({
                               }));
                               try {
                                 const url = await cloudinaryService.uploadFile(
-                                  files[0]
+                                  files[0],
                                 );
                                 form.setValue(
                                   `attachments.${index}.url` as const,
                                   url,
-                                  { shouldValidate: true }
+                                  { shouldValidate: true },
                                 );
                               } catch (e: any) {
                                 // no toast here; parent handles toasts
@@ -551,8 +676,10 @@ export function CreateContractDialog({
             <Button
               type="submit"
               form="create-contract-form"
-              disabled={isSubmitting || !userBudgetItem}
-              className={!userBudgetItem ? "cursor-not-allowed opacity-50" : ""}
+              disabled={isSubmitting || !canCreateContract}
+              className={
+                !canCreateContract ? "cursor-not-allowed opacity-50" : ""
+              }
             >
               {isSubmitting ? (
                 <div className="flex items-center space-x-2">

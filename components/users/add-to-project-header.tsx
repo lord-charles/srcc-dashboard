@@ -39,7 +39,10 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
 
   useEffect(() => {
     const load = async () => {
-      if (isCoach && projectId) {
+      if (
+        (isCoach || (!isProjectManager && !isAssistantPM && !isCoachManager)) &&
+        projectId
+      ) {
         try {
           const proj = await getProject(projectId);
           setMilestones(proj?.milestones || []);
@@ -47,7 +50,7 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
       }
     };
     load();
-  }, [isCoach, projectId]);
+  }, [isCoach, isProjectManager, isAssistantPM, isCoachManager, projectId]);
 
   const handleAddUser = async () => {
     if (!selectedUser || !projectId) return;
@@ -147,6 +150,7 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
           onOpenChange={setShowDialog}
           projectId={projectId}
           projectName={projectName}
+          milestones={milestones as any}
           user={selectedUser!}
           returnUrl={returnUrl || undefined}
         />

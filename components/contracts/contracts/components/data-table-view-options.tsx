@@ -22,7 +22,7 @@ export function DataTableViewOptions<TData>({
   table,
 }: DataTableViewOptionsProps<TData>) {
   useEffect(() => {
-    const columnsToHide = ["combinedName"];
+    const columnsToHide = ["combinedName", "description"];
     columnsToHide.forEach((columnId) => {
       const column = table.getColumn(columnId);
       if (column && column.getIsVisible()) {
@@ -51,7 +51,7 @@ export function DataTableViewOptions<TData>({
           .getAllColumns()
           .filter(
             (column) =>
-              typeof column.accessorFn !== "undefined" && column.getCanHide()
+              typeof column.accessorFn !== "undefined" && column.getCanHide(),
           )
           .map((column) => {
             return (

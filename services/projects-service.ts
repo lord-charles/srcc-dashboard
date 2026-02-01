@@ -19,8 +19,8 @@ export interface GetAdvancesParams {
 // Coaches and related roles
 export interface CoachContractPayload {
   rate: number;
-  rateUnit: 'per_session' | 'per_hour';
-  currency?: 'KES' | 'USD';
+  rateUnit: "per_session" | "per_hour";
+  currency?: "KES" | "USD";
   notes?: string;
 }
 
@@ -224,14 +224,14 @@ export interface ProjectDocumentPayload {
 
 export async function addProjectDocument(
   projectId: string,
-  document: ProjectDocumentPayload
+  document: ProjectDocumentPayload,
 ): Promise<Project> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/documents`,
       document,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -244,14 +244,14 @@ export async function addProjectDocument(
 
 export async function updateProject(
   projectId: string,
-  data: Partial<Project>
+  data: Partial<Project>,
 ): Promise<Project> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -283,7 +283,7 @@ export async function getProjects() {
 
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/projects`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -300,7 +300,7 @@ export async function getProjectById(id: string) {
     const config = await getAxiosConfig();
     const { data } = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
-      config
+      config,
     );
     return data;
   } catch (error) {
@@ -326,7 +326,7 @@ export const createProject = async (data: any) => {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/projects`,
       data,
-      config
+      config,
     );
 
     return response.data;
@@ -345,7 +345,7 @@ export async function deleteProject(id: string): Promise<boolean> {
     const config = await getAxiosConfig();
     await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
-      config
+      config,
     );
     return true;
   } catch (error: any) {
@@ -368,7 +368,7 @@ export async function getProject(id: string): Promise<Project> {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -382,14 +382,14 @@ export async function getProject(id: string): Promise<Project> {
 export async function updateTeamMember(
   projectId: string,
   teamMemberId: string,
-  data: UpdateTeamMemberPayload
+  data: UpdateTeamMemberPayload,
 ): Promise<TeamMember> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/team-members/${teamMemberId}`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -402,13 +402,13 @@ export async function updateTeamMember(
 
 export async function deleteTeamMember(
   projectId: string,
-  teamMemberId: string
+  teamMemberId: string,
 ): Promise<boolean> {
   try {
     const config = await getAxiosConfig();
     const res = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/team-members/${teamMemberId}`,
-      config
+      config,
     );
     return true;
   } catch (error: any) {
@@ -421,6 +421,7 @@ export async function deleteTeamMember(
 
 export interface AddTeamMemberPayload {
   userId?: string;
+  milestoneId?: string;
   startDate: string;
   endDate: string;
   responsibilities: string[];
@@ -428,14 +429,14 @@ export interface AddTeamMemberPayload {
 
 export async function addTeamMember(
   projectId: string,
-  data: AddTeamMemberPayload
+  data: AddTeamMemberPayload,
 ): Promise<TeamMember> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/team-members`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -446,16 +447,80 @@ export async function addTeamMember(
   }
 }
 
+// Milestone-specific team member methods
+export async function addTeamMemberToMilestone(
+  projectId: string,
+  milestoneId: string,
+  data: AddTeamMemberPayload,
+): Promise<TeamMember> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/team-members`,
+      data,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data.message || error;
+  }
+}
+
+export async function updateTeamMemberInMilestone(
+  projectId: string,
+  milestoneId: string,
+  teamMemberId: string,
+  data: AddTeamMemberPayload,
+): Promise<TeamMember> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/team-members/${teamMemberId}`,
+      data,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data.message || error;
+  }
+}
+
+export async function removeTeamMemberFromMilestone(
+  projectId: string,
+  milestoneId: string,
+  teamMemberId: string,
+): Promise<boolean> {
+  try {
+    const config = await getAxiosConfig();
+    await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/team-members/${teamMemberId}`,
+      config,
+    );
+    return true;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data.message || error;
+  }
+}
+
 export async function updateProjectManager(
   projectId: string,
-  projectManagerId: string
+  projectManagerId: string,
 ): Promise<Project | null> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/project-manager`,
       { projectManagerId },
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -471,14 +536,14 @@ export async function addAssistantProjectManager(
   projectId: string,
   userId: string,
   responsibilities: string[],
-  contractId?: string
+  contractId?: string,
 ): Promise<Project | null> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/assistant-project-managers`,
       { userId, responsibilities, contractId },
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -492,13 +557,13 @@ export async function addAssistantProjectManager(
 
 export async function removeAssistantProjectManager(
   projectId: string,
-  assistantUserId: string
+  assistantUserId: string,
 ): Promise<Project | null> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/assistant-project-managers/${assistantUserId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -531,22 +596,23 @@ export interface AddMilestonePayload {
   actualCost?: number;
 }
 
-export interface UpdateMilestonePayload
-  extends Partial<Omit<AddMilestonePayload, "completionDate" | "actualCost">> {
+export interface UpdateMilestonePayload extends Partial<
+  Omit<AddMilestonePayload, "completionDate" | "actualCost">
+> {
   completionDate?: string;
   actualCost?: number;
 }
 
 export async function addMilestone(
   projectId: string,
-  data: AddMilestonePayload
+  data: AddMilestonePayload,
 ): Promise<Project> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -560,14 +626,14 @@ export async function addMilestone(
 export async function updateMilestone(
   projectId: string,
   milestoneId: string,
-  data: UpdateMilestonePayload
+  data: UpdateMilestonePayload,
 ): Promise<Project> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -580,13 +646,13 @@ export async function updateMilestone(
 
 export async function deleteMilestone(
   projectId: string,
-  milestoneId: string
+  milestoneId: string,
 ): Promise<Project> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -603,7 +669,7 @@ export async function createContract(contractData: any): Promise<any> {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts`,
       contractData,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
