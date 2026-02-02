@@ -39,7 +39,7 @@ const calculateProgress = (start: string, end: string) => {
 };
 
 const calculateTotalMilestoneBudget = (
-  milestones: Array<{ budget: number }>
+  milestones: Array<{ budget: number }>,
 ) => {
   return milestones.reduce((total, milestone) => total + milestone?.budget, 0);
 };
@@ -47,10 +47,10 @@ const calculateTotalMilestoneBudget = (
 export function ProjectStatCards({ projectData }: { projectData: Project }) {
   const progress = calculateProgress(
     projectData?.contractStartDate,
-    projectData?.contractEndDate
+    projectData?.contractEndDate,
   );
   const totalMilestoneBudget = calculateTotalMilestoneBudget(
-    projectData?.milestones
+    projectData?.milestones,
   );
   const budgetUtilization =
     (projectData.amountSpent / projectData?.totalBudget) * 100;
@@ -67,7 +67,12 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
           <Briefcase className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{projectData?.name}</div>
+          <div
+            className="text-2xl font-bold truncate"
+            title={projectData?.name}
+          >
+            {projectData?.name}
+          </div>
           <p className="text-xs text-muted-foreground mt-2">
             Client: {projectData?.client}
           </p>
@@ -82,7 +87,6 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
           </div>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
@@ -115,7 +119,7 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
             {formatCurrency(
               (projectData?.budgetId?.totalInternalBudget || 0) +
                 (projectData?.budgetId?.totalExternalBudget || 0),
-              projectData?.currency
+              projectData?.currency,
             )}{" "}
             total budget
           </p>
@@ -145,7 +149,7 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
             Invoices: {projectData?.invoices?.length} (
             {
               projectData?.invoices?.filter(
-                (i) => i?.status === "pending_approval"
+                (i) => i?.status === "pending_approval",
               ).length
             }{" "}
             pending)

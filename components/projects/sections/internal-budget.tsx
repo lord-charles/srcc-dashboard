@@ -91,6 +91,7 @@ interface InternalBudgetProps {
   isEditMode: boolean;
   isSubmittingInternal: boolean;
   teamMembers: TeamMember[];
+  milestones: any[];
 }
 
 export const InternalBudget = ({
@@ -116,6 +117,7 @@ export const InternalBudget = ({
   isEditMode,
   isSubmittingInternal,
   teamMembers,
+  milestones,
 }: InternalBudgetProps) => {
   const { toast } = useToast();
 
@@ -158,6 +160,17 @@ export const InternalBudget = ({
                               <p className="text-sm text-muted-foreground">
                                 {item.description}
                               </p>
+                              {item.milestoneId && (
+                                <Badge
+                                  variant="secondary"
+                                  className="mt-1 text-[10px] h-4"
+                                >
+                                  Milestone:{" "}
+                                  {milestones?.find(
+                                    (m) => m._id === item.milestoneId,
+                                  )?.title || "Unknown"}
+                                </Badge>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="font-medium">
@@ -179,8 +192,6 @@ export const InternalBudget = ({
     );
   };
 
-
-
   return (
     <div className="items-center mb-4">
       <div className="flex items-center justify-between p-2">
@@ -192,9 +203,9 @@ export const InternalBudget = ({
                 (budget?.status === "approved"
                   ? "success"
                   : budget?.status === "draft" ||
-                    budget?.status === "revision_requested"
-                  ? "warning"
-                  : "secondary") as "default"
+                      budget?.status === "revision_requested"
+                    ? "warning"
+                    : "secondary") as "default"
               }
               className={`${
                 getStatusInfo(budget?.status).color
@@ -253,7 +264,7 @@ export const InternalBudget = ({
                       });
                       window.location.reload();
                       const closeButton = document.querySelector(
-                        "[data-dialog-close]"
+                        "[data-dialog-close]",
                       ) as HTMLButtonElement;
                       if (closeButton) closeButton.click();
                     } catch (error: any) {
@@ -345,7 +356,7 @@ export const InternalBudget = ({
                                           onClick={() =>
                                             handleRemoveCategory(
                                               categoryIndex,
-                                              "internal"
+                                              "internal",
                                             )
                                           }
                                         >
@@ -366,19 +377,19 @@ export const InternalBudget = ({
                                             selectedCode={category.name}
                                             onSelect={(
                                               code: string,
-                                              name: string
+                                              name: string,
                                             ) => {
                                               handleCategoryChange(
                                                 categoryIndex,
                                                 "name",
                                                 code,
-                                                "internal"
+                                                "internal",
                                               );
                                               handleCategoryChange(
                                                 categoryIndex,
                                                 "description",
                                                 name,
-                                                "internal"
+                                                "internal",
                                               );
                                             }}
                                           />
@@ -395,11 +406,11 @@ export const InternalBudget = ({
                                             placeholder="e.g., All HR related expenses"
                                             value={category.description}
                                             onChange={(e) =>
-                                              handleCategoryChange( 
+                                              handleCategoryChange(
                                                 categoryIndex,
                                                 "description",
                                                 e.target.value,
-                                                "internal"
+                                                "internal",
                                               )
                                             }
                                             readOnly={
@@ -407,7 +418,7 @@ export const InternalBudget = ({
                                               BUDGET_CODES &&
                                               BUDGET_CODES.some(
                                                 (code) =>
-                                                  code?.code === category?.name
+                                                  code?.code === category?.name,
                                               )
                                             }
                                           />
@@ -418,7 +429,7 @@ export const InternalBudget = ({
                                             category.items.map(
                                               (
                                                 item: any,
-                                                itemIndex: number
+                                                itemIndex: number,
                                               ) => (
                                                 <Card
                                                   key={itemIndex}
@@ -437,7 +448,7 @@ export const InternalBudget = ({
                                                             handleRemoveItem(
                                                               categoryIndex,
                                                               itemIndex,
-                                                              "internal"
+                                                              "internal",
                                                             )
                                                           }
                                                         >
@@ -466,14 +477,14 @@ export const InternalBudget = ({
                                                             <Select
                                                               value={item.name}
                                                               onValueChange={(
-                                                                value
+                                                                value,
                                                               ) =>
                                                                 handleItemChange(
                                                                   categoryIndex,
                                                                   itemIndex,
                                                                   "name",
                                                                   value,
-                                                                  "internal"
+                                                                  "internal",
                                                                 )
                                                               }
                                                             >
@@ -505,7 +516,7 @@ export const InternalBudget = ({
                                                                 ) : (
                                                                   teamMembers?.map(
                                                                     (
-                                                                      member: any
+                                                                      member: any,
                                                                     ) => (
                                                                       <SelectItem
                                                                         key={
@@ -531,7 +542,7 @@ export const InternalBudget = ({
                                                                         }
                                                                         )
                                                                       </SelectItem>
-                                                                    )
+                                                                    ),
                                                                   )
                                                                 )}
                                                               </SelectContent>
@@ -560,12 +571,62 @@ export const InternalBudget = ({
                                                                 itemIndex,
                                                                 "name",
                                                                 e.target.value,
-                                                                "internal"
+                                                                "internal",
                                                               )
                                                             }
                                                           />
                                                         )}
                                                       </div>
+                                                      {category.name ===
+                                                        "2237" && (
+                                                        <div className="grid gap-2">
+                                                          <Label
+                                                            htmlFor={`internal-item-milestone-${categoryIndex}-${itemIndex}`}
+                                                          >
+                                                            Milestone
+                                                          </Label>
+                                                          <Select
+                                                            value={
+                                                              item.milestoneId
+                                                            }
+                                                            onValueChange={(
+                                                              value,
+                                                            ) =>
+                                                              handleItemChange(
+                                                                categoryIndex,
+                                                                itemIndex,
+                                                                "milestoneId",
+                                                                value,
+                                                                "internal",
+                                                              )
+                                                            }
+                                                          >
+                                                            <SelectTrigger>
+                                                              <SelectValue placeholder="Select milestone" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                              {milestones?.map(
+                                                                (
+                                                                  milestone: any,
+                                                                ) => (
+                                                                  <SelectItem
+                                                                    key={
+                                                                      milestone._id
+                                                                    }
+                                                                    value={
+                                                                      milestone._id
+                                                                    }
+                                                                  >
+                                                                    {
+                                                                      milestone.title
+                                                                    }
+                                                                  </SelectItem>
+                                                                ),
+                                                              )}
+                                                            </SelectContent>
+                                                          </Select>
+                                                        </div>
+                                                      )}
 
                                                       <div className="grid gap-2">
                                                         <Label
@@ -585,7 +646,7 @@ export const InternalBudget = ({
                                                               itemIndex,
                                                               "description",
                                                               e.target.value,
-                                                              "internal"
+                                                              "internal",
                                                             )
                                                           }
                                                         />
@@ -602,16 +663,18 @@ export const InternalBudget = ({
                                                           id={`internal-item-amount-${categoryIndex}-${itemIndex}`}
                                                           type="number"
                                                           placeholder="e.g., 500000"
-                                                          value={item.estimatedAmount}
+                                                          value={
+                                                            item.estimatedAmount
+                                                          }
                                                           onChange={(e) =>
                                                             handleItemChange(
                                                               categoryIndex,
                                                               itemIndex,
                                                               "estimatedAmount",
                                                               Number(
-                                                                e.target.value
+                                                                e.target.value,
                                                               ),
-                                                              "internal"
+                                                              "internal",
                                                             )
                                                           }
                                                         />
@@ -626,14 +689,14 @@ export const InternalBudget = ({
                                                         <Select
                                                           value={item.frequency}
                                                           onValueChange={(
-                                                            value
+                                                            value,
                                                           ) =>
                                                             handleItemChange(
                                                               categoryIndex,
                                                               itemIndex,
                                                               "frequency",
                                                               value,
-                                                              "internal"
+                                                              "internal",
                                                             )
                                                           }
                                                         >
@@ -667,7 +730,9 @@ export const InternalBudget = ({
                                                           <Input
                                                             id={`internal-item-start-${categoryIndex}-${itemIndex}`}
                                                             type="date"
-                                                          value={formatDateForInput(item.startDate)}
+                                                            value={formatDateForInput(
+                                                              item.startDate,
+                                                            )}
                                                             className="z-50"
                                                             onChange={(e) =>
                                                               handleItemChange(
@@ -675,7 +740,7 @@ export const InternalBudget = ({
                                                                 itemIndex,
                                                                 "startDate",
                                                                 e.target.value,
-                                                                "internal"
+                                                                "internal",
                                                               )
                                                             }
                                                           />
@@ -689,15 +754,17 @@ export const InternalBudget = ({
                                                           <Input
                                                             id={`internal-item-end-${categoryIndex}-${itemIndex}`}
                                                             type="date"
-                                                            value={formatDateForInput(item.endDate)}
+                                                            value={formatDateForInput(
+                                                              item.endDate,
+                                                            )}
                                                             className="z-50"
                                                             onChange={(e) =>
-                                            handleItemChange(
+                                                              handleItemChange(
                                                                 categoryIndex,
                                                                 itemIndex,
                                                                 "endDate",
                                                                 e.target.value,
-                                                                "internal"
+                                                                "internal",
                                                               )
                                                             }
                                                           />
@@ -706,7 +773,7 @@ export const InternalBudget = ({
                                                     </div>
                                                   </div>
                                                 </Card>
-                                              )
+                                              ),
                                             )}
                                         </div>
 
@@ -718,7 +785,7 @@ export const InternalBudget = ({
                                           onClick={() =>
                                             handleAddItem(
                                               categoryIndex,
-                                              "internal"
+                                              "internal",
                                             )
                                           }
                                         >
@@ -730,7 +797,7 @@ export const InternalBudget = ({
                                   </div>
                                 </Card>
                               </Collapsible>
-                            )
+                            ),
                           )}
 
                         <Button

@@ -126,14 +126,46 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
       return null;
     }
 
-    // Find contract for this coach and milestone
-    return (
-      projectData.teamMemberContracts.find(
-        (contract) =>
-          contract?.contractedUserId._id === coachId &&
-          contract?.milestoneId === milestoneId,
-      ) || null
+    // 1. Try exact match (milestoneId matches)
+    const exactMatch = projectData.teamMemberContracts.find(
+      (contract) =>
+        contract?.contractedUserId?._id === coachId &&
+        contract?.milestoneId === milestoneId,
     );
+    if (exactMatch) return exactMatch;
+
+    // 2. Fallback for legacy contracts (no milestoneId)
+    // If we are looking for a specific milestone contract, and haven't found one,
+    // check if this is the earliest milestone for the coach.
+    if (milestoneId) {
+      const coachMilestoneIds =
+        projectData.coaches
+          ?.filter((c) => c.userId?._id === coachId && c.milestoneId)
+          ?.map((c) => c.milestoneId as string) || [];
+
+      if (coachMilestoneIds.length > 0) {
+        // Find if milestoneId is the first one in the project's milestones list among coach's assignments
+        const projectMilestoneIds = (projectData.milestones || []).map(
+          (m) => m._id,
+        );
+        const coachOrderedMilestones = projectMilestoneIds.filter((id) =>
+          coachMilestoneIds.includes(id),
+        );
+
+        if (coachOrderedMilestones[0] === milestoneId) {
+          // Return the contract that has no milestoneId
+          return (
+            projectData.teamMemberContracts.find(
+              (contract) =>
+                contract?.contractedUserId?._id === coachId &&
+                !contract?.milestoneId,
+            ) || null
+          );
+        }
+      }
+    }
+
+    return null;
   };
 
   const handleCreateContractSubmit = async (values: ContractFormValues) => {

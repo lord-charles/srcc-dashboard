@@ -41,6 +41,7 @@ const budgetItemSchema = z.object({
   frequency: z.string().min(1, "Frequency is required"),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
+  milestoneId: z.string().optional(),
 });
 
 const budgetCategorySchema = z.object({
@@ -79,6 +80,7 @@ interface BudgetItem {
   frequency: string;
   startDate: string;
   endDate: string;
+  milestoneId?: string;
 }
 
 interface BudgetCategory {
@@ -99,6 +101,7 @@ interface ModernBudgetDisplayProps {
   currency: string;
   projectId: string;
   teamMembers: TeamMember[];
+  milestones: any[];
 }
 
 const initialItemState = {
@@ -108,6 +111,7 @@ const initialItemState = {
   frequency: "monthly" as const,
   startDate: "",
   endDate: "",
+  milestoneId: "",
 };
 
 const initialCategoryState = (type: "internal" | "external") => ({
@@ -133,6 +137,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   currency,
   projectId,
   teamMembers,
+  milestones,
 }) => {
   const [activeTab, setActiveTab] = useState<BudgetTab>("internal");
   const [isInternalDrawerOpen, setIsInternalDrawerOpen] = useState(false);
@@ -144,10 +149,10 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   const router = useRouter();
 
   const [internalFormState, setInternalFormState] = useState<BudgetFormState>(
-    initialFormState("internal")
+    initialFormState("internal"),
   );
   const [externalFormState, setExternalFormState] = useState<BudgetFormState>(
-    initialFormState("external")
+    initialFormState("external"),
   );
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -240,9 +245,9 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
         acc +
         category.items?.reduce(
           (itemAcc, item) => itemAcc + (Number(item?.estimatedAmount) || 0),
-          0
+          0,
         ),
-      0
+      0,
     );
   };
 
@@ -258,7 +263,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
 
   const validateBudgetData = (
     formState: BudgetFormState,
-    isInternal: boolean
+    isInternal: boolean,
   ) => {
     try {
       // Validate required fields
@@ -273,32 +278,32 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
         for (const [index, item] of category?.items?.entries() || []) {
           if (!item?.name?.trim()) {
             throw new Error(
-              `Item name is required in category "${category?.name}"`
+              `Item name is required in category "${category?.name}"`,
             );
           }
           if (!item.description?.trim()) {
             throw new Error(
-              `Item description is required in category "${category.name}"`
+              `Item description is required in category "${category.name}"`,
             );
           }
           if (!item.estimatedAmount || item.estimatedAmount <= 0) {
             throw new Error(
-              `Item amount must be greater than 0 in category "${category.name}"`
+              `Item amount must be greater than 0 in category "${category.name}"`,
             );
           }
           if (!item.startDate) {
             throw new Error(
-              `Start date is required for item "${item.name}" in category "${category.name}"`
+              `Start date is required for item "${item.name}" in category "${category.name}"`,
             );
           }
           if (!item.endDate) {
             throw new Error(
-              `End date is required for item "${item.name}" in category "${category.name}"`
+              `End date is required for item "${item.name}" in category "${category.name}"`,
             );
           }
           if (new Date(item.startDate) > new Date(item.endDate)) {
             throw new Error(
-              `Start date must be before end date for item "${item.name}" in category "${category.name}"`
+              `Start date must be before end date for item "${item.name}" in category "${category.name}"`,
             );
           }
         }
@@ -466,7 +471,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
 
   const handleRemoveCategory = (
     index: number,
-    type: "internal" | "external"
+    type: "internal" | "external",
   ) => {
     if (type === "internal") {
       setInternalFormState((prev) => ({
@@ -484,7 +489,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
   const handleRemoveItem = (
     categoryIndex: number,
     itemIndex: number,
-    type: "internal" | "external"
+    type: "internal" | "external",
   ) => {
     if (type === "internal") {
       setInternalFormState((prev) => {
@@ -507,7 +512,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
 
   const handleAddItem = (
     categoryIndex: number,
-    type: "internal" | "external"
+    type: "internal" | "external",
   ) => {
     const newItem: BudgetItem = {
       name: "",
@@ -570,7 +575,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
     index: number,
     field: keyof Pick<BudgetCategory, "name" | "description">,
     value: string,
-    type: "internal" | "external"
+    type: "internal" | "external",
   ) => {
     if (type === "internal") {
       setInternalFormState((prev) => {
@@ -606,7 +611,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
       | "endDate"
     >,
     value: string | number,
-    type: "internal" | "external"
+    type: "internal" | "external",
   ) => {
     if (type === "internal") {
       setInternalFormState((prev) => {
@@ -678,7 +683,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                 <p className="text-2xl font-bold">
                   {formatCurrency(
                     (budget.totalInternalBudget || 0) +
-                      (budget.totalExternalBudget || 0)
+                      (budget.totalExternalBudget || 0),
                   )}
                 </p>
               </div>
@@ -736,6 +741,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
                 handleDeleteCategory={handleRemoveCategory}
                 handleDeleteItem={handleRemoveItem}
                 teamMembers={teamMembers}
+                milestones={milestones}
               />
             </TabsContent>
 

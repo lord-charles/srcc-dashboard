@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,18 +32,11 @@ import {
   updateContract,
   getContractTemplates,
 } from "@/services/contracts.service";
-import type {
-  Project,
-  TeamMember,
-  Contract,
-  AssistantProjectManager,
-} from "@/types/project";
+import type { Project, TeamMember, Contract } from "@/types/project";
 import {
   CalendarDays,
   Trash2,
   UserPlus,
-  Pencil,
-  FileSignature,
   Users,
   UserCog,
   UsersRound,
@@ -70,12 +63,17 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 }) => {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState("members");
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isCreatingContract, setIsCreatingContract] = useState(false);
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [contractMemberId, setContractMemberId] = useState<string>("");
+  const [selectedMemberMilestone, setSelectedMemberMilestone] = useState<
+    string | undefined
+  >(undefined);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null,
@@ -108,6 +106,22 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     };
     fetchTemplates();
   }, []);
+
+  // Sync active tab with URL search params
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("teamTab");
+    if (tabFromUrl && ["members", "managers", "coaches"].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set("teamTab", value);
+    router.replace(`${window.location.pathname}?${newSearchParams.toString()}`);
+  };
   const isUserInInternalBudget = (email?: string): boolean => {
     if (!email) return false;
     const salaryCategory = projectData.budgetId.internalCategories?.find(
@@ -118,7 +132,11 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       false
     );
   };
-  const getMemberContract = (memberId: string): Contract | null => {
+
+  const getMemberContract = (
+    memberId: string,
+    milestoneId?: string,
+  ): Contract | null => {
     if (
       !projectData?.teamMemberContracts ||
       projectData.teamMemberContracts.length === 0
@@ -126,11 +144,45 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       return null;
     }
 
-    return (
-      projectData.teamMemberContracts.find(
-        (contract) => contract?.contractedUserId._id === memberId,
-      ) || null
+    // 1. Try exact match (milestoneId matches)
+    const exactMatch = projectData.teamMemberContracts.find(
+      (contract) =>
+        contract?.contractedUserId?._id === memberId &&
+        contract?.milestoneId === milestoneId,
     );
+    if (exactMatch) return exactMatch;
+
+    // 2. Fallback for legacy contracts (no milestoneId)
+    // If we are looking for a specific milestone contract, and haven't found one,
+    // check if this is the earliest milestone for the user.
+    if (milestoneId) {
+      const userMilestones = projectData.teamMembers
+        .filter((m) => m.userId?._id === memberId && m.milestoneId)
+        .map((m) => m.milestoneId as string);
+
+      if (userMilestones.length > 0) {
+        // Find if milestoneId is the first one in the project's milestones list among user's assignments
+        const projectMilestoneIds = (projectData.milestones || []).map(
+          (m) => m._id,
+        );
+        const userOrderedMilestones = projectMilestoneIds.filter((id) =>
+          userMilestones.includes(id),
+        );
+
+        if (userOrderedMilestones[0] === milestoneId) {
+          // Return the contract that has no milestoneId
+          return (
+            projectData.teamMemberContracts.find(
+              (contract) =>
+                contract?.contractedUserId?._id === memberId &&
+                !contract?.milestoneId,
+            ) || null
+          );
+        }
+      }
+    }
+
+    return null;
   };
 
   const handleCreateContractSubmit = async (values: ContractFormValues) => {
@@ -146,7 +198,12 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         projectId: projectData._id,
         contractedUserId: contractMemberId,
         status: values.status,
-        ...(values.milestoneId ? { milestoneId: values.milestoneId } : {}),
+        // Use the milestone from the member's assignment, or allow override from form
+        ...(values.milestoneId
+          ? { milestoneId: values.milestoneId }
+          : selectedMemberMilestone
+            ? { milestoneId: selectedMemberMilestone }
+            : {}),
         ...(values.templateId ? { templateId: values.templateId } : {}),
         ...(values.editedTemplateContent
           ? { editedTemplateContent: values.editedTemplateContent }
@@ -177,11 +234,14 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     } finally {
       setIsCreatingContract(false);
       setShowContractDialog(false);
+      setSelectedMemberMilestone(undefined);
     }
   };
 
-  const handleOpenContractDialog = (memberId: string, email?: string) => {
+  const handleOpenContractDialog = (memberId: string, milestoneId?: string) => {
     setContractMemberId(memberId);
+    // Store the milestone ID for contract creation
+    setSelectedMemberMilestone(milestoneId);
     setShowContractDialog(true);
   };
 
@@ -275,7 +335,11 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       </CardHeader>
 
       <CardContent>
-        <Tabs defaultValue="members" className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-3 mb-0">
             <TabsTrigger value="members" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
@@ -357,12 +421,17 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                 handleDeleteTeamMember(member.userId?._id)
                               }
                               onCreateContract={() =>
-                                handleOpenContractDialog(member.userId?._id)
+                                handleOpenContractDialog(
+                                  member.userId?._id,
+                                  undefined,
+                                )
                               }
                               onEditContract={(contract) =>
                                 handleEditContract(contract)
                               }
-                              getMemberContract={getMemberContract}
+                              getMemberContract={(memberId) =>
+                                getMemberContract(memberId, undefined)
+                              }
                               isDeleting={isDeleting}
                             />
                           ))}
@@ -398,12 +467,17 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                     handleDeleteTeamMember(member.userId?._id)
                                   }
                                   onCreateContract={() =>
-                                    handleOpenContractDialog(member.userId?._id)
+                                    handleOpenContractDialog(
+                                      member.userId?._id,
+                                      milestoneId,
+                                    )
                                   }
                                   onEditContract={(contract) =>
                                     handleEditContract(contract)
                                   }
-                                  getMemberContract={getMemberContract}
+                                  getMemberContract={(memberId) =>
+                                    getMemberContract(memberId, milestoneId)
+                                  }
                                   isDeleting={isDeleting}
                                 />
                               ))}
@@ -692,6 +766,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         milestones={projectData?.milestones || []}
         isSubmitting={isCreatingContract}
         templates={templates}
+        defaultMilestoneId={selectedMemberMilestone}
       />
       {selectedContract && (
         <EditContractDialog

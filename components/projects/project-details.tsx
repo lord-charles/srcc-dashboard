@@ -28,7 +28,6 @@ import ModernBudgetDisplay from "./sections/modern-budget-display";
 import ProjectOverview from "./sections/project-overview";
 import ContractsTable from "./sections/team-contracts-table";
 import { ProjectClaimsSection } from "./sections/project-claims-section";
-import { TeamMemberCard } from "./sections/team-member-card";
 
 interface ProjectDetailsProps {
   project?: Project;
@@ -275,15 +274,53 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           currency={projectData.currency}
           projectId={projectData._id}
           teamMembers={projectData.teamMembers}
+          milestones={projectData.milestones || []}
         />
       </TabsContent>
 
       <TabsContent value="contracts">
-        <ContractsTable
-          contracts={projectData?.teamMemberContracts || []}
-          projectId={projectData._id}
-          projectMilestones={projectData.milestones || []}
-        />
+        <Tabs defaultValue="consultants" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="consultants">
+              Consultant Contracts (
+              {projectData?.teamMemberContracts?.filter(
+                (c) => !c.description?.toLowerCase().includes("coach"),
+              ).length || 0}
+              )
+            </TabsTrigger>
+            <TabsTrigger value="coaches">
+              Coach Contracts (
+              {projectData?.teamMemberContracts?.filter((c) =>
+                c.description?.toLowerCase().includes("coach"),
+              ).length || 0}
+              )
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="coaches">
+            <ContractsTable
+              contracts={
+                projectData?.teamMemberContracts?.filter((c) =>
+                  c.description?.toLowerCase().includes("coach"),
+                ) || []
+              }
+              projectId={projectData._id}
+              projectMilestones={projectData.milestones || []}
+            />
+          </TabsContent>
+
+          <TabsContent value="consultants">
+            <ContractsTable
+              contracts={
+                projectData?.teamMemberContracts?.filter(
+                  (c) => !c.description?.toLowerCase().includes("coach"),
+                ) || []
+              }
+              projectId={projectData._id}
+              projectMilestones={projectData.milestones || []}
+            />
+          </TabsContent>
+        </Tabs>
       </TabsContent>
 
       <TabsContent value="claims">

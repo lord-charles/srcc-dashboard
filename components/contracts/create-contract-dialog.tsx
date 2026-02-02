@@ -100,6 +100,7 @@ interface CreateContractDialogProps {
     currency: string;
     rateUnit: "per_session" | "per_hour";
   }; // Coach's embedded contract data
+  defaultMilestoneId?: string; // Default milestone to pre-select
 }
 
 export function CreateContractDialog({
@@ -115,20 +116,28 @@ export function CreateContractDialog({
   templates = [],
   isCoach = false,
   coachContractData,
+  defaultMilestoneId,
 }: CreateContractDialogProps) {
   const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<
     (typeof templates)[0] | null
   >(null);
-
+  console.log("internalCategories", internalCategories);
   // Find user in internal budget (code 2237) - only for team members, not coaches
-  const salaryCategory = !isCoach
-    ? internalCategories?.find((cat) => cat.name === "2237")
-    : null;
+  // We look through all categories named "2237" as budget items can be split across multiple instances of the same category code
   const userBudgetItem = !isCoach
-    ? salaryCategory?.items?.find((item: any) =>
-        item.name.includes(teamMemberEmail),
-      )
+    ? internalCategories
+        ?.filter((cat: any) => cat.name === "2237")
+        ?.flatMap((cat: any) => cat.items || [])
+        ?.find((item: any) => {
+          const emailMatch = item.name.includes(teamMemberEmail);
+          // If we have a defaultMilestoneId, we MUST match it
+          if (defaultMilestoneId) {
+            return emailMatch && item.milestoneId === defaultMilestoneId;
+          }
+          // Fallback for project-wide (no milestone) or legacy
+          return emailMatch;
+        })
     : null;
 
   // For coaches, we don't require budget allocation - use coach contract data instead
@@ -200,6 +209,7 @@ export function CreateContractDialog({
       endDate: formatDateForInput(budgetEndDate),
       status: "draft",
       templateId: firstTemplateId || undefined,
+      milestoneId: defaultMilestoneId || undefined,
     }),
     [
       isCoach,
@@ -209,6 +219,7 @@ export function CreateContractDialog({
       budgetStartDate,
       budgetEndDate,
       firstTemplateId,
+      defaultMilestoneId,
     ],
   );
 
@@ -290,10 +301,12 @@ export function CreateContractDialog({
             {canCreateContract ? (
               `Create a contract for ${isCoach ? "coach" : "team member"} ${teamMemberName} on project ${projectName}.`
             ) : (
-              <span className="text-destructive">
+              <span className="text-destructive font-semibold">
                 Cannot create contract - {teamMemberName} is not allocated in
-                the internal budget (code 2237). Please add them to the budget
-                first.
+                the internal budget (code 2237){" "}
+                {defaultMilestoneId ? "for the selected milestone" : ""}. Please
+                update the internal budget and link the amount to{" "}
+                {defaultMilestoneId ? "this milestone" : "the team member"}.
               </span>
             )}
           </DrawerDescription>

@@ -70,13 +70,13 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
   const { toast } = useToast();
   const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState(
-    projectData.department
+    projectData.department,
   );
   const [isUpdating, setIsUpdating] = useState(false);
 
   const progress = calculateProgress(
     projectData.contractStartDate,
-    projectData.contractEndDate
+    projectData.contractEndDate,
   );
   const budgetUtilization =
     projectData.totalBudget > 0
@@ -132,7 +132,7 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
     <div className="space-y-2">
       <Card>
         <div className="pb-3 px-4 pt-5">
-          <CardTitle>Project Details</CardTitle>
+          <CardTitle>{projectData?.name || "Project Details"} </CardTitle>
         </div>
         <div className="p-2">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -150,7 +150,7 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
               <Users className="h-5 w-5 text-muted-foreground" />
               <div className="flex items-center justify-between flex-1">
                 <div>
-                  <p className="text-sm font-medium">Project Manager</p>
+                  <p className="text-sm font-medium">Manager</p>
                   <p className="text-sm text-muted-foreground">
                     {projectData.projectManagerId
                       ? `${projectData.projectManagerId.firstName} ${projectData.projectManagerId.lastName}`
@@ -297,7 +297,7 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
                   <span>Overall Progress</span>
                   <span>
                     {isNaN(
-                      (progress + budgetUtilization + milestoneCompletion) / 3
+                      (progress + budgetUtilization + milestoneCompletion) / 3,
                     )
                       ? "0.0"
                       : (
@@ -310,7 +310,7 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
                 <Progress
                   value={
                     isNaN(
-                      (progress + budgetUtilization + milestoneCompletion) / 3
+                      (progress + budgetUtilization + milestoneCompletion) / 3,
                     )
                       ? 0
                       : (progress + budgetUtilization + milestoneCompletion) / 3

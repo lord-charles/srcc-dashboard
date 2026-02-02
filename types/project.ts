@@ -210,6 +210,7 @@ export interface BudgetItem {
   frequency: string;
   startDate: string;
   endDate: string;
+  milestoneId?: string;
 }
 
 export interface BudgetCategory {

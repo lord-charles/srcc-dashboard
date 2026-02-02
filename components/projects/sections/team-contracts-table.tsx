@@ -25,6 +25,13 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -40,6 +47,7 @@ import {
   ChevronRight,
   Trash2,
   Receipt,
+  MoreHorizontal,
 } from "lucide-react";
 import { Contract } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
@@ -84,6 +92,8 @@ const ContractsTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
   const [showCreateClaimDialog, setShowCreateClaimDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isUpdatingContract, setIsUpdatingContract] = useState(false);
   const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -170,16 +180,21 @@ const ContractsTable = ({
     setShowEditContractDialog(true);
   };
 
+  const handleViewContract = (contract: Contract) => {
+    setSelectedContract(contract);
+    setShowViewDialog(true);
+  };
+
+  const formatDateToISO = (dateString: string) => {
+    if (dateString.includes("T")) return dateString;
+    return new Date(dateString).toISOString();
+  };
+
   const handleUpdateContract = async (values: ContractFormValues) => {
     if (!selectedContract) return;
 
     try {
       setIsUpdatingContract(true);
-
-      const formatDateToISO = (dateString: string) => {
-        if (dateString.includes("T")) return dateString;
-        return new Date(dateString).toISOString();
-      };
 
       const contractData: any = {
         description: values.description,
@@ -208,8 +223,12 @@ const ContractsTable = ({
           description: "Contract has been updated successfully",
         });
 
-        // Delay reload to ensure any dialogs close first
-        setTimeout(() => window.location.reload(), 100);
+        // Refresh the contracts data
+        setRefreshTrigger((prev) => prev + 1);
+        // Optionally call a refresh function if passed as prop
+        if (typeof window !== "undefined" && window.location?.reload) {
+          setTimeout(() => window.location.reload(), 100);
+        }
       }
     } catch (error) {
       console.error("Failed to update contract:", error);
@@ -241,8 +260,12 @@ const ContractsTable = ({
           description: "Contract has been deleted successfully",
         });
 
-        // Delay reload to ensure any dialogs close first
-        setTimeout(() => window.location.reload(), 100);
+        // Refresh the contracts data
+        setRefreshTrigger((prev) => prev + 1);
+        // Optionally call a refresh function if passed as prop
+        if (typeof window !== "undefined" && window.location?.reload) {
+          setTimeout(() => window.location.reload(), 100);
+        }
       }
     } catch (error) {
       console.error("Failed to delete contract:", error);
@@ -339,223 +362,46 @@ const ContractsTable = ({
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setContractForClaim(contract);
-                            setShowCreateClaimDialog(true);
-                          }}
-                        >
-                          <Receipt className="h-3 w-3 mr-1" />
-                          Create Claim
-                        </Button>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setSelectedContract(contract)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl">
-                            <DialogHeader>
-                              <DialogTitle>Contract Details</DialogTitle>
-                            </DialogHeader>
-                            {selectedContract && (
-                              <Tabs defaultValue="details" className="w-full">
-                                <TabsList className="grid w-full grid-cols-2">
-                                  <TabsTrigger value="details">
-                                    Details
-                                  </TabsTrigger>
-                                  <TabsTrigger value="amendments">
-                                    Amendments
-                                  </TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="details">
-                                  <Card>
-                                    <CardHeader>
-                                      <CardTitle>
-                                        {selectedContract.contractNumber}
-                                      </CardTitle>
-                                      <CardDescription>
-                                        {selectedContract.description}
-                                      </CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                      <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                          <h4 className="font-semibold text-sm text-muted-foreground">
-                                            Contracted User
-                                          </h4>
-                                          <p className="font-medium">{`${selectedContract.contractedUserId.firstName} ${selectedContract.contractedUserId.lastName}`}</p>
-                                          <p className="text-sm text-muted-foreground">
-                                            {
-                                              selectedContract.contractedUserId
-                                                .email
-                                            }
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <h4 className="font-semibold text-sm text-muted-foreground">
-                                            Contract Value
-                                          </h4>
-                                          <p className="font-medium">{`${selectedContract.contractValue.toLocaleString()} ${
-                                            selectedContract.currency
-                                          }`}</p>
-                                        </div>
-                                        <div>
-                                          <h4 className="font-semibold text-sm text-muted-foreground">
-                                            Status
-                                          </h4>
-                                          <Badge
-                                            variant="outline"
-                                            className={getStatusColor(
-                                              selectedContract.status,
-                                            )}
-                                          >
-                                            {selectedContract.status}
-                                          </Badge>
-                                        </div>
-                                        <div>
-                                          <h4 className="font-semibold text-sm text-muted-foreground">
-                                            Duration
-                                          </h4>
-                                          <p className="font-medium">{`${formatDate(
-                                            selectedContract.startDate,
-                                          )} - ${formatDate(
-                                            selectedContract.endDate,
-                                          )}`}</p>
-                                        </div>
-                                        <div>
-                                          <h4 className="font-semibold text-sm text-muted-foreground">
-                                            Created At
-                                          </h4>
-                                          <p className="font-medium">
-                                            {formatDate(
-                                              selectedContract.createdAt,
-                                            )}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <h4 className="font-semibold text-sm text-muted-foreground">
-                                            Last Updated
-                                          </h4>
-                                          <p className="font-medium">
-                                            {formatDate(
-                                              selectedContract.updatedAt,
-                                            )}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <div className="flex justify-end space-x-2">
-                                        <Button
-                                          variant="outline"
-                                          onClick={() =>
-                                            handleEditContract(selectedContract)
-                                          }
-                                        >
-                                          <Edit className="h-4 w-4 mr-2" />
-                                          Edit Contract
-                                        </Button>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                </TabsContent>
-                                <TabsContent value="amendments">
-                                  <Card>
-                                    <CardHeader>
-                                      <CardTitle>Amendments History</CardTitle>
-                                      <CardDescription>
-                                        Record of changes made to this contract
-                                      </CardDescription>
-                                    </CardHeader>
-                                    <CardContent>
-                                      {selectedContract.amendments &&
-                                      selectedContract.amendments.length > 0 ? (
-                                        <div className="space-y-4">
-                                          {selectedContract.amendments.map(
-                                            (amendment, index) => (
-                                              <div
-                                                key={
-                                                  amendment._id ||
-                                                  `amendment-${index}`
-                                                }
-                                                className="border rounded-md p-4"
-                                              >
-                                                <div className="flex justify-between items-start">
-                                                  <div>
-                                                    <h4 className="font-medium">
-                                                      {amendment.description ||
-                                                        "Contract Amendment"}
-                                                    </h4>
-                                                    <p className="text-sm text-muted-foreground mt-1">
-                                                      {amendment.date
-                                                        ? formatDate(
-                                                            amendment.date,
-                                                          )
-                                                        : "Date not recorded"}
-                                                    </p>
-                                                  </div>
-                                                </div>
-                                                {amendment.changedFields &&
-                                                  amendment.changedFields
-                                                    .length > 0 && (
-                                                    <div className="mt-2">
-                                                      <p className="text-sm font-medium">
-                                                        Changed Fields:
-                                                      </p>
-                                                      <div className="flex flex-wrap gap-1 mt-1">
-                                                        {amendment.changedFields.map(
-                                                          (field) => (
-                                                            <Badge
-                                                              key={field}
-                                                              variant="secondary"
-                                                              className="text-xs"
-                                                            >
-                                                              {field}
-                                                            </Badge>
-                                                          ),
-                                                        )}
-                                                      </div>
-                                                    </div>
-                                                  )}
-                                              </div>
-                                            ),
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <p className="text-center text-muted-foreground py-4">
-                                          No amendments have been made to this
-                                          contract
-                                        </p>
-                                      )}
-                                    </CardContent>
-                                  </Card>
-                                </TabsContent>
-                              </Tabs>
-                            )}
-                          </DialogContent>
-                        </Dialog>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditContract(contract)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                          onClick={() => handleOpenDeleteDialog(contract)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setContractForClaim(contract);
+                              setShowCreateClaimDialog(true);
+                            }}
+                          >
+                            <Receipt className="mr-2 h-4 w-4" />
+                            Create Claim
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleViewContract(contract)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEditContract(contract)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600"
+                            onClick={() => handleOpenDeleteDialog(contract)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
@@ -624,6 +470,189 @@ const ContractsTable = ({
         />
       )}
 
+      {/* View Contract Details Dialog */}
+      <Dialog
+        open={showViewDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowViewDialog(false);
+            setSelectedContract(null);
+            // Refresh data when dialog closes
+            setRefreshTrigger((prev) => prev + 1);
+            if (typeof window !== "undefined" && window.location?.reload) {
+              setTimeout(() => window.location.reload(), 100);
+            }
+          }
+        }}
+      >
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Contract Details</DialogTitle>
+          </DialogHeader>
+          {selectedContract && (
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="amendments">Amendments</TabsTrigger>
+              </TabsList>
+              <TabsContent value="details">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{selectedContract.contractNumber}</CardTitle>
+                    <CardDescription>
+                      {selectedContract.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground">
+                          Contract Value
+                        </h4>
+                        <p className="text-lg font-medium">
+                          {selectedContract.contractValue.toLocaleString()}{" "}
+                          {selectedContract.currency}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground">
+                          Status
+                        </h4>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(selectedContract.status)}
+                        >
+                          {selectedContract.status}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground">
+                          Start Date
+                        </h4>
+                        <p className="text-sm">
+                          {formatDate(selectedContract.startDate)}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm text-muted-foreground">
+                          End Date
+                        </h4>
+                        <p className="text-sm">
+                          {formatDate(selectedContract.endDate)}
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm text-muted-foreground mb-2">
+                        Team Member
+                      </h4>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-medium text-blue-600">
+                            {selectedContract.contractedUserId.firstName.charAt(
+                              0,
+                            )}
+                            {selectedContract.contractedUserId.lastName.charAt(
+                              0,
+                            )}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {selectedContract.contractedUserId.firstName}{" "}
+                            {selectedContract.contractedUserId.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedContract.contractedUserId.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm text-muted-foreground mb-2">
+                        Description
+                      </h4>
+                      <p className="text-sm">{selectedContract.description}</p>
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowEditContractDialog(true);
+                          setShowViewDialog(false);
+                        }}
+                      >
+                        Edit Contract
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="amendments">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Amendments History</CardTitle>
+                    <CardDescription>
+                      Record of changes made to this contract
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedContract.amendments &&
+                    selectedContract.amendments.length > 0 ? (
+                      <div className="space-y-4">
+                        {selectedContract.amendments.map((amendment, index) => (
+                          <div
+                            key={amendment._id || `amendment-${index}`}
+                            className="border rounded-md p-4"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium">
+                                  {amendment.description ||
+                                    "Contract Amendment"}
+                                </h4>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {amendment.date
+                                    ? formatDate(amendment.date)
+                                    : "Date not recorded"}
+                                </p>
+                              </div>
+                            </div>
+                            {amendment.changedFields &&
+                              amendment.changedFields.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="text-sm font-medium">
+                                    Changed Fields:
+                                  </p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {amendment.changedFields.map((field) => (
+                                      <Badge
+                                        key={field}
+                                        variant="secondary"
+                                        className="text-xs"
+                                      >
+                                        {field}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-muted-foreground py-4">
+                        No amendments have been made to this contract
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Create Claim on Behalf Dialog */}
       {contractForClaim && (
         <CreateClaimOnBehalfDialog
@@ -661,11 +690,6 @@ const ContractsTable = ({
             </div>
           )}
           <DialogFooter className="flex justify-between">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={isDeletingContract}>
-                Cancel
-              </Button>
-            </DialogClose>
             <Button
               variant="destructive"
               onClick={handleDeleteContract}
