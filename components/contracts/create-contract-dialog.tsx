@@ -181,13 +181,8 @@ export function CreateContractDialog({
       // For coaches, show templates with category 'coach'
       return templates.filter((t) => t.category === "coach");
     } else {
-      // For team members, show templates with no category, 'team_member', or 'consultant'
-      return templates.filter(
-        (t) =>
-          !t.category ||
-          t.category === "team_member" ||
-          t.category === "consultant",
-      );
+      // For team members/consultants, show all templates EXCEPT those with category 'coach'
+      return templates.filter((t) => t.category !== "coach");
     }
   }, [templates, isCoach]);
 

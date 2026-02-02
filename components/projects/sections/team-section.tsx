@@ -92,12 +92,16 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     }>
   >([]);
 
-  // Fetch contract templates on mount
+  // Fetch contract templates on mount (excluding coach templates for team members)
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         const data = await getContractTemplates({ active: true });
-        setTemplates(data || []);
+        // Filter out coach templates for team members
+        const filteredData = (data || []).filter(
+          (t: any) => t.category !== "coach",
+        );
+        setTemplates(filteredData);
       } catch (error) {
         console.error("Failed to fetch contract templates:", error);
       }

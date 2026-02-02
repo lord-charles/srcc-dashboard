@@ -94,16 +94,13 @@ I accept the offer:
 `;
 
 export default async function ContractTemplatesSettingsPage() {
-  const allTemplates = await getContractTemplates({ active: true }).catch(
-    () => [] as any[],
-  );
+  // Fetch all templates without any filters to ensure we get existing templates
+  const allTemplates = await getContractTemplates().catch(() => [] as any[]);
 
   // Separate templates by category
+  // For team members/consultants: show all templates EXCEPT those with category "coach"
   const teamMemberTemplates = allTemplates.filter(
-    (t: any) =>
-      !t.category ||
-      t.category === "team_member" ||
-      t.category === "consultant",
+    (t: any) => t.category !== "coach",
   );
   const coachTemplates = allTemplates.filter(
     (t: any) => t.category === "coach",
@@ -231,9 +228,9 @@ export default async function ContractTemplatesSettingsPage() {
                   />
                   <input
                     name="category"
-                    defaultValue={t.category || ""}
+                    defaultValue={t.category || "team_member"}
                     className="w-full border rounded px-2 py-1 bg-background"
-                    placeholder="category"
+                    placeholder="team_member, consultant, or coach"
                   />
                   <SubmitButton pendingText="Saving...">Save</SubmitButton>
                 </form>
@@ -282,7 +279,7 @@ export default async function ContractTemplatesSettingsPage() {
                     id={`active-${t._id}`}
                     name="active"
                     type="checkbox"
-                    defaultChecked={t.active}
+                    defaultChecked={t.active !== false} // Default to true if undefined
                     className="h-4 w-4"
                   />
                   <label htmlFor={`active-${t._id}`}>Active</label>

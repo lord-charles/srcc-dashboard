@@ -72,13 +72,13 @@ const ContractsTable = ({
   const { toast } = useToast();
   const router = useRouter();
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
-    null
+    null,
   );
   const [contractToDelete, setContractToDelete] = useState<Contract | null>(
-    null
+    null,
   );
   const [contractForClaim, setContractForClaim] = useState<Contract | null>(
-    null
+    null,
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,12 +99,16 @@ const ContractsTable = ({
     }>
   >([]);
 
-  // Fetch contract templates on mount
+  // Fetch contract templates on mount (excluding coach templates for team members)
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
         const data = await getContractTemplates({ active: true });
-        setTemplates(data || []);
+        // Filter out coach templates for team members
+        const filteredData = (data || []).filter(
+          (t: any) => t.category !== "coach",
+        );
+        setTemplates(filteredData);
       } catch (error) {
         console.error("Failed to fetch contract templates:", error);
       }
@@ -150,7 +154,7 @@ const ContractsTable = ({
           .includes(searchTerm?.toLowerCase()) ||
         contract?.contractedUserId?.lastName
           ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase())
+          .includes(searchTerm?.toLowerCase()),
     );
   }, [contracts, searchTerm]);
 
@@ -410,7 +414,7 @@ const ContractsTable = ({
                                           <Badge
                                             variant="outline"
                                             className={getStatusColor(
-                                              selectedContract.status
+                                              selectedContract.status,
                                             )}
                                           >
                                             {selectedContract.status}
@@ -421,9 +425,9 @@ const ContractsTable = ({
                                             Duration
                                           </h4>
                                           <p className="font-medium">{`${formatDate(
-                                            selectedContract.startDate
+                                            selectedContract.startDate,
                                           )} - ${formatDate(
-                                            selectedContract.endDate
+                                            selectedContract.endDate,
                                           )}`}</p>
                                         </div>
                                         <div>
@@ -432,7 +436,7 @@ const ContractsTable = ({
                                           </h4>
                                           <p className="font-medium">
                                             {formatDate(
-                                              selectedContract.createdAt
+                                              selectedContract.createdAt,
                                             )}
                                           </p>
                                         </div>
@@ -442,7 +446,7 @@ const ContractsTable = ({
                                           </h4>
                                           <p className="font-medium">
                                             {formatDate(
-                                              selectedContract.updatedAt
+                                              selectedContract.updatedAt,
                                             )}
                                           </p>
                                         </div>
@@ -491,7 +495,7 @@ const ContractsTable = ({
                                                     <p className="text-sm text-muted-foreground mt-1">
                                                       {amendment.date
                                                         ? formatDate(
-                                                            amendment.date
+                                                            amendment.date,
                                                           )
                                                         : "Date not recorded"}
                                                     </p>
@@ -514,13 +518,13 @@ const ContractsTable = ({
                                                             >
                                                               {field}
                                                             </Badge>
-                                                          )
+                                                          ),
                                                         )}
                                                       </div>
                                                     </div>
                                                   )}
                                               </div>
-                                            )
+                                            ),
                                           )}
                                         </div>
                                       ) : (
