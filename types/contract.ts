@@ -28,7 +28,13 @@ export type ContractStatus =
   | "draft"
   | "pending_finance_approval"
   | "pending_md_approval"
+  | "pending_coach_admin_review"
+  | "pending_coach_manager_approval"
+  | "pending_coach_finance_approval"
+  | "pending_srcc_checker_approval"
+  | "pending_srcc_finance_approval"
   | "pending_signature"
+  | "pending_acceptance"
   | "active"
   | "suspended"
   | "terminated"
@@ -61,6 +67,11 @@ export interface FinalApproval {
 export interface ApprovalFlow {
   financeApprovals?: ApprovalEntry[];
   mdApprovals?: ApprovalEntry[];
+  coachAdminApprovals?: ApprovalEntry[];
+  coachManagerApprovals?: ApprovalEntry[];
+  coachFinanceApprovals?: ApprovalEntry[];
+  srccCheckerApprovals?: ApprovalEntry[];
+  srccFinanceApprovals?: ApprovalEntry[];
 }
 
 export interface Amendment {
@@ -111,6 +122,7 @@ export interface Contract {
   description: string;
   contractValue: number;
   currency: string;
+  type?: string;
   status: ContractStatus;
   createdBy: string;
   updatedBy: string;

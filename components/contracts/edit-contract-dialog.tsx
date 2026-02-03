@@ -54,6 +54,7 @@ const formSchema = z.object({
   status: z.string().min(1, {
     message: "Please select a status.",
   }),
+  milestoneId: z.string().optional().nullable(),
   templateId: z.string().optional().nullable(),
   editedTemplateContent: z.string().optional(),
 });
@@ -75,6 +76,10 @@ interface EditContractDialogProps {
     variables?: string[];
     category?: string;
   }>;
+  milestones?: Array<{
+    _id: string;
+    title: string;
+  }>;
 }
 
 export function EditContractDialog({
@@ -84,6 +89,7 @@ export function EditContractDialog({
   contract,
   isSubmitting,
   templates = [],
+  milestones = [],
 }: EditContractDialogProps) {
   const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<
@@ -106,6 +112,10 @@ export function EditContractDialog({
       startDate: formatDateForInput(contract?.startDate),
       endDate: formatDateForInput(contract?.endDate),
       status: contract?.status || "draft",
+      milestoneId:
+        (contract as any)?.milestoneId?._id ||
+        (contract as any)?.milestoneId ||
+        "none",
       templateId:
         (contract as any)?.templateId?._id ||
         (contract as any)?.templateId ||
@@ -117,6 +127,8 @@ export function EditContractDialog({
     if (contract) {
       const templateId =
         (contract as any)?.templateId?._id || (contract as any)?.templateId;
+      const milestoneId =
+        (contract as any)?.milestoneId?._id || (contract as any)?.milestoneId;
       form.reset({
         description: contract.description || "",
         contractValue: contract.contractValue || 0,
@@ -124,6 +136,7 @@ export function EditContractDialog({
         startDate: formatDateForInput(contract.startDate),
         endDate: formatDateForInput(contract.endDate),
         status: contract.status || "draft",
+        milestoneId: milestoneId || "none",
         templateId: templateId || "none",
       });
     }
@@ -308,6 +321,47 @@ export function EditContractDialog({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="milestoneId"
+                render={({ field }) => {
+                  const hasExistingMilestone =
+                    (contract as any)?.milestoneId != null &&
+                    (contract as any)?.milestoneId !== "none";
+
+                  return (
+                    <FormItem>
+                      <FormLabel>Linked Milestone</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || "none"}
+                        disabled={hasExistingMilestone}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a milestone" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">No Milestone</SelectItem>
+                          {milestones.map((m) => (
+                            <SelectItem key={m._id} value={m._id}>
+                              {m.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        {hasExistingMilestone
+                          ? "Milestone cannot be changed once assigned."
+                          : "Assign a milestone to this contract."}
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
 
               {templates && templates.length > 0 && (
                 <FormField

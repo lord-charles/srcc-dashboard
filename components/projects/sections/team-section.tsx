@@ -27,7 +27,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { deleteTeamMember, createContract } from "@/services/projects-service";
+import {
+  deleteTeamMember,
+  createContract,
+  updateTeamMember,
+} from "@/services/projects-service";
 import {
   updateContract,
   getContractTemplates,
@@ -144,11 +148,12 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       return null;
     }
 
-    // 1. Try exact match (milestoneId matches)
+    // 1. Try exact match (milestoneId matches and not a coach contract)
     const exactMatch = projectData.teamMemberContracts.find(
       (contract) =>
         contract?.contractedUserId?._id === memberId &&
-        contract?.milestoneId === milestoneId,
+        contract?.milestoneId === milestoneId &&
+        contract?.type !== "coach",
     );
     if (exactMatch) return exactMatch;
 
@@ -175,7 +180,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
             projectData.teamMemberContracts.find(
               (contract) =>
                 contract?.contractedUserId?._id === memberId &&
-                !contract?.milestoneId,
+                !contract?.milestoneId &&
+                contract?.type !== "coach",
             ) || null
           );
         }
@@ -263,6 +269,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         startDate: values.startDate,
         endDate: values.endDate,
         projectId: projectData._id,
+        milestoneId: values.milestoneId === "none" ? null : values.milestoneId,
         contractedUserId: selectedContract.contractedUserId,
         status: values.status,
       };
@@ -278,6 +285,30 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       const result = await updateContract(selectedContract._id, contractData);
 
       if (result) {
+        // Synchronize milestone transition if it's a project-wide member getting assigned a milestone
+        if (
+          !selectedContract.milestoneId &&
+          values.milestoneId &&
+          values.milestoneId !== "none"
+        ) {
+          const member = projectData.teamMembers?.find(
+            (m) =>
+              ((m.userId as any)?._id || m.userId) ===
+              ((selectedContract.contractedUserId as any)?._id ||
+                selectedContract.contractedUserId),
+          );
+          if (member) {
+            const userId = (member.userId as any)?._id || member.userId;
+            await updateTeamMember(projectData._id, userId, {
+              userId: userId,
+              milestoneId: values.milestoneId,
+              startDate: member.startDate.toString(),
+              endDate: member.endDate?.toString() || "",
+              responsibilities: member.responsibilities,
+            });
+          }
+        }
+
         toast({
           title: "Contract updated",
           description: "Contract has been updated successfully",
@@ -776,6 +807,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
           contract={selectedContract}
           isSubmitting={isUpdatingContract}
           templates={templates}
+          milestones={projectData.milestones}
         />
       )}
     </Card>

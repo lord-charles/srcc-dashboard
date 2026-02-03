@@ -323,6 +323,7 @@ export interface Contract {
   endDate?: string;
   projectId: string;
   milestoneId?: string;
+  type?: string;
   contractedUserId: ContractedUser;
   amendments: ContractAmendment[];
   createdAt: string;

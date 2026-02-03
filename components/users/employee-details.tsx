@@ -94,6 +94,7 @@ const availableRoles: any[] = [
   "srcc_finance",
   "reviewer",
   "approver",
+  "coach_finance",
 ];
 
 // Roles that require department assignment
@@ -107,6 +108,7 @@ const departmentRequiredRoles = [
   "director",
   "academic_director",
   "finance",
+  "coach_finance",
 ];
 
 // Available departments
@@ -135,7 +137,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
   // Role management states
   const [userRoles, setUserRoles] = useState<UserRole[]>(employee?.roles || []);
   const [userDepartment, setUserDepartment] = useState<string>(
-    employee?.department || ""
+    employee?.department || "",
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [isUpdatingRoles, setIsUpdatingRoles] = useState(false);
@@ -145,12 +147,12 @@ export default function EmployeeDetailsPage({ employee }: any) {
   const filteredAvailableRoles = availableRoles
     .filter((role: UserRole) => !userRoles.includes(role))
     .filter((role: UserRole) =>
-      role.toLowerCase().includes(searchTerm.toLowerCase())
+      role.toLowerCase().includes(searchTerm.toLowerCase()),
     );
 
   // Check if any role requires department
   const requiresDepartment = userRoles.some((role) =>
-    departmentRequiredRoles.includes(role)
+    departmentRequiredRoles.includes(role),
   );
 
   const handleAddRole = (role: UserRole) => {
@@ -341,8 +343,8 @@ export default function EmployeeDetailsPage({ employee }: any) {
                   (employee?.status === "active"
                     ? "success"
                     : employee?.status === "pending"
-                    ? "warning"
-                    : "destructive") as "default"
+                      ? "warning"
+                      : "destructive") as "default"
                 }
                 className="text-sm px-3 py-1"
               >
@@ -528,7 +530,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                               >
                                 {type}
                               </Badge>
-                            )
+                            ),
                           )
                         ) : (
                           <p className="font-medium ">Not specified</p>
@@ -619,7 +621,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                                 Date Issued:{" "}
                                 {format(
                                   new Date(cert.dateIssued),
-                                  "dd MMM yyyy"
+                                  "dd MMM yyyy",
                                 )}
                               </p>
                               {cert.expiryDate && (
@@ -627,12 +629,12 @@ export default function EmployeeDetailsPage({ employee }: any) {
                                   Expires:{" "}
                                   {format(
                                     new Date(cert.expiryDate),
-                                    "dd MMM yyyy"
+                                    "dd MMM yyyy",
                                   )}
                                 </p>
                               )}
                             </div>
-                          )
+                          ),
                         )
                       ) : (
                         <p>No certifications listed</p>
@@ -668,7 +670,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                               Academic Certificate {index + 1}
                             </span>
                           </a>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
@@ -835,7 +837,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                         {employee?.dateOfBirth
                           ? format(
                               new Date(employee.dateOfBirth),
-                              "dd MMM yyyy"
+                              "dd MMM yyyy",
                             )
                           : "Not provided"}
                       </p>
@@ -1073,7 +1075,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                             Required for:{" "}
                             {userRoles
                               .filter((r) =>
-                                departmentRequiredRoles.includes(r)
+                                departmentRequiredRoles.includes(r),
                               )
                               .join(", ")
                               .replace(/_/g, " ")}
@@ -1214,7 +1216,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                     {employee?.createdAt
                       ? format(
                           new Date(employee.createdAt),
-                          "dd MMM yyyy HH:mm"
+                          "dd MMM yyyy HH:mm",
                         )
                       : "N/A"}
                   </p>
@@ -1225,7 +1227,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
                     {employee?.updatedAt
                       ? format(
                           new Date(employee.updatedAt),
-                          "dd MMM yyyy HH:mm"
+                          "dd MMM yyyy HH:mm",
                         )
                       : "N/A"}
                   </p>

@@ -26,6 +26,7 @@ export interface CoachContractPayload {
 
 export interface AddCoachPayload {
   userId: string;
+  milestoneId?: string;
   startDate?: string;
   endDate?: string;
   responsibilities?: string[];
@@ -358,6 +359,7 @@ export async function deleteProject(id: string): Promise<boolean> {
 
 interface UpdateTeamMemberPayload {
   userId: string;
+  milestoneId?: string;
   startDate: string;
   endDate: string;
   responsibilities: string[];

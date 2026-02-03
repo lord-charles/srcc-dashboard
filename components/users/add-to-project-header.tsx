@@ -9,6 +9,7 @@ import { AddTeamMemberDialog } from "./add-team-member-dialog";
 import { AddAssistantPMDialog } from "./add-assistant-pm-dialog";
 import { AddCoachDialog } from "./add-coach-dialog";
 import { AddCoachManagerDialog } from "./add-coach-manager-dialog";
+import { AddCoachAssistantDialog } from "./add-coach-assistant-dialog";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/types/user";
 import { updateProjectManager, getProject } from "@/services/projects-service";
@@ -32,15 +33,22 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
   const isAssistantPM = searchParams.get("isAssistantPM") === "true";
   const isCoach = searchParams.get("isCoach") === "true";
   const isCoachManager = searchParams.get("isCoachManager") === "true";
+  const isCoachAssistant = searchParams.get("isCoachAssistant") === "true";
 
   const [showCoachDialog, setShowCoachDialog] = useState(false);
   const [showCoachManagerDialog, setShowCoachManagerDialog] = useState(false);
+  const [showCoachAssistantDialog, setShowCoachAssistantDialog] =
+    useState(false);
   const [milestones, setMilestones] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {
       if (
-        (isCoach || (!isProjectManager && !isAssistantPM && !isCoachManager)) &&
+        (isCoach ||
+          (!isProjectManager &&
+            !isAssistantPM &&
+            !isCoachManager &&
+            !isCoachAssistant)) &&
         projectId
       ) {
         try {
@@ -67,6 +75,8 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
         setShowAssistantPMDialog(true);
       } else if (isCoachManager) {
         setShowCoachManagerDialog(true);
+      } else if (isCoachAssistant) {
+        setShowCoachAssistantDialog(true);
       } else if (isCoach) {
         setShowCoachDialog(true);
       } else {
@@ -81,6 +91,7 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
     if (isProjectManager) return "Assign Project Manager";
     if (isAssistantPM) return "Add Assistant PM";
     if (isCoachManager) return "Add Coach Manager";
+    if (isCoachAssistant) return "Add Coach Assistant";
     if (isCoach) return "Add Coach";
     return "Add Members";
   };
@@ -89,6 +100,7 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
     if (isProjectManager) return "Assign as Project Manager";
     if (isAssistantPM) return "Add as Assistant PM";
     if (isCoachManager) return "Add as Coach Manager";
+    if (isCoachAssistant) return "Add as Coach Assistant";
     if (isCoach) return "Add as Coach";
     return "Add to Project";
   };
@@ -97,6 +109,7 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
     if (isProjectManager) return "assign them as project manager";
     if (isAssistantPM) return "add them as an assistant project manager";
     if (isCoachManager) return "add them as a coach manager";
+    if (isCoachAssistant) return "add them as a coach assistant";
     if (isCoach) return "add them as a coach to a milestone with a rate";
     return "add them to the project";
   };
@@ -159,6 +172,15 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
         <AddCoachManagerDialog
           open={showCoachManagerDialog}
           onOpenChange={setShowCoachManagerDialog}
+          projectId={projectId}
+          user={selectedUser as any}
+          returnUrl={returnUrl || undefined}
+        />
+      )}
+      {isCoachAssistant && selectedUser && (
+        <AddCoachAssistantDialog
+          open={showCoachAssistantDialog}
+          onOpenChange={setShowCoachAssistantDialog}
           projectId={projectId}
           user={selectedUser as any}
           returnUrl={returnUrl || undefined}

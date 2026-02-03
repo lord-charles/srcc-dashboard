@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   CoachAssignment,
   Project,
@@ -29,7 +29,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   deleteCoach,
   deleteCoachManager,
+  deleteCoachAssistant,
   createContract,
+  updateCoach,
 } from "@/services/projects-service";
 import {
   updateContract,
@@ -126,11 +128,12 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
       return null;
     }
 
-    // 1. Try exact match (milestoneId matches)
+    // 1. Try exact match (milestoneId matches and type is 'coach')
     const exactMatch = projectData.teamMemberContracts.find(
       (contract) =>
         contract?.contractedUserId?._id === coachId &&
-        contract?.milestoneId === milestoneId,
+        contract?.milestoneId === milestoneId &&
+        contract?.type === "coach",
     );
     if (exactMatch) return exactMatch;
 
@@ -158,7 +161,8 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
             projectData.teamMemberContracts.find(
               (contract) =>
                 contract?.contractedUserId?._id === coachId &&
-                !contract?.milestoneId,
+                !contract?.milestoneId &&
+                contract?.type === "coach",
             ) || null
           );
         }
@@ -186,13 +190,14 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
         description:
           values.description ||
           `Coach Contract for ${projectData.name} - ${coach.userId.firstName} ${coach.userId.lastName}`,
-        contractValue: values.contractValue || coach.contract.rate * 10, // Default to 10 sessions/hours
+        contractValue: values.contractValue || coach.contract.rate,
         currency: values.currency || coach.contract.currency,
         startDate: values.startDate.toString().split("T")[0],
         endDate: values.endDate.toString().split("T")[0],
         projectId: projectData._id,
         milestoneId: contractMilestoneId,
         contractedUserId: contractCoachId,
+        type: "coach",
         status: values.status,
         ...(values.templateId ? { templateId: values.templateId } : {}),
         ...(values.editedTemplateContent
@@ -251,7 +256,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
         startDate: values.startDate,
         endDate: values.endDate,
         projectId: projectData._id,
-        milestoneId: selectedContract.milestoneId,
+        milestoneId: values.milestoneId === "none" ? null : values.milestoneId,
         contractedUserId: selectedContract.contractedUserId,
         status: values.status,
       };
@@ -267,6 +272,33 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
       const result = await updateContract(selectedContract._id, contractData);
 
       if (result) {
+        // Synchronize milestone transition if it's a project-wide coach getting assigned a milestone
+        if (
+          !selectedContract.milestoneId &&
+          values.milestoneId &&
+          values.milestoneId !== "none"
+        ) {
+          const coachAssignment = projectData.coaches?.find(
+            (c) =>
+              ((c.userId as any)?._id || c.userId) ===
+              ((selectedContract.contractedUserId as any)?._id ||
+                selectedContract.contractedUserId),
+          );
+
+          if (coachAssignment) {
+            const coachUserId =
+              (coachAssignment.userId as any)?._id || coachAssignment.userId;
+            await updateCoach(
+              projectData._id,
+              coachAssignment.milestoneId || "",
+              coachUserId,
+              {
+                milestoneId: values.milestoneId,
+              },
+            );
+          }
+        }
+
         toast({
           title: "Coach contract updated",
           description: "Coach contract has been updated successfully",
@@ -348,12 +380,44 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
     }
   };
 
+  const handleRemoveCoachAssistant = async (assistant: any) => {
+    try {
+      const userId =
+        typeof assistant.userId === "string"
+          ? assistant.userId
+          : assistant.userId?._id || "";
+      if (!userId) throw new Error("Missing assistant user");
+      await deleteCoachAssistant(projectId, String(userId));
+      toast({
+        title: "Coach assistant removed",
+        description: "Coach assistant has been removed.",
+      });
+      setTimeout(() => window.location.reload(), 100);
+    } catch (e: any) {
+      toast({
+        title: "Error",
+        description: e?.message || "Failed to remove coach assistant",
+        variant: "destructive",
+      });
+    }
+  };
+
   const goToAddCoachManager = () => {
     const params = new URLSearchParams({
       projectId: projectData._id,
       projectName: projectData.name,
       returnUrl: `${window.location.pathname}?tab=team`,
       isCoachManager: "true",
+    });
+    router.push(`/users?${params.toString()}`);
+  };
+
+  const goToAddCoachAssistant = () => {
+    const params = new URLSearchParams({
+      projectId: projectData._id,
+      projectName: projectData.name,
+      returnUrl: `${window.location.pathname}?tab=team`,
+      isCoachAssistant: "true",
     });
     router.push(`/users?${params.toString()}`);
   };
@@ -365,6 +429,9 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
           Coaches by Milestone
         </div>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={goToAddCoachAssistant}>
+            Add Coach Assistant
+          </Button>
           <Button size="sm" variant="outline" onClick={goToAddCoachManager}>
             Add Coach Manager
           </Button>
@@ -412,9 +479,16 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback>{initials}</AvatarFallback>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage
+                        src={`https://avatar.vercel.sh/${u?.email}`}
+                        alt={`${u?.firstName} ${u?.lastName}`}
+                      />
+                      <AvatarFallback>
+                        <AvatarFallback>{initials}</AvatarFallback>
+                      </AvatarFallback>
                     </Avatar>
+
                     <div>
                       <div className="text-sm font-medium">{displayName}</div>
                       {assigned && (
@@ -469,6 +543,122 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleRemoveCoachManager(m)}
+                          >
+                            Remove
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* Coach Assistants */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold">Coach Assistants</h3>
+          <Button size="sm" variant="outline" onClick={goToAddCoachAssistant}>
+            Add
+          </Button>
+        </div>
+        {!projectData.coachAssistants ||
+        projectData.coachAssistants.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No coach assistants yet.
+          </p>
+        ) : (
+          <div className="grid gap-2">
+            {projectData.coachAssistants.map((m: any) => {
+              const u: any = m.userId;
+              const displayName =
+                u && typeof u === "object" && "firstName" in u
+                  ? `${u.firstName} ${u.lastName}`
+                  : typeof u === "string"
+                    ? u
+                    : u?._id || "Unknown";
+              const initials =
+                u && typeof u === "object" && "firstName" in u
+                  ? `${u.firstName?.[0] || ""}${u.lastName?.[0] || ""}`
+                  : typeof displayName === "string"
+                    ? displayName.slice(0, 2).toUpperCase()
+                    : "CA";
+              const assigned = m.assignedDate
+                ? new Date(m.assignedDate)
+                : undefined;
+              return (
+                <div
+                  key={m._id || displayName}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage
+                        src={`https://avatar.vercel.sh/${u?.email}`}
+                        alt={`${u?.firstName} ${u?.lastName}`}
+                      />
+                      <AvatarFallback>
+                        <AvatarFallback>{initials}</AvatarFallback>
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div>
+                      <div className="text-sm font-medium">{displayName}</div>
+                      {assigned && (
+                        <div className="text-xs text-muted-foreground">
+                          Assigned {assigned.toLocaleDateString()}
+                        </div>
+                      )}
+                      {Array.isArray(m.responsibilities) &&
+                        m.responsibilities.length > 0 && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {m.responsibilities.map((r: string) => (
+                              <Badge
+                                key={r}
+                                variant="secondary"
+                                className="text-[10px]"
+                              >
+                                {r}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={goToAddCoachAssistant}
+                    >
+                      Change
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Remove coach assistant?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleRemoveCoachAssistant(m)}
                           >
                             Remove
                           </AlertDialogAction>
@@ -583,6 +773,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
           contract={selectedContract}
           isSubmitting={isUpdatingContract}
           templates={templates}
+          milestones={projectData.milestones}
         />
       )}
     </div>

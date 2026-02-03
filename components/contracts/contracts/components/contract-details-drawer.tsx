@@ -7,6 +7,7 @@ import {
   ContractStatus,
   Amendment,
   ApprovalEntry,
+  ApprovalFlow,
 } from "@/types/contract";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -156,8 +157,9 @@ export function ContractDetailsDrawer({
           day: "2-digit",
         });
 
-      // Determine if this is a coach contract by checking multiple indicators
+      // Determine if this is a coach contract
       const isCoachContract =
+        contract.type === "coach" ||
         contract.contractNumber?.includes("COACHING") ||
         contract.contractNumber?.includes("EM/COACHING") ||
         contract.description?.toLowerCase().includes("coach") ||
@@ -324,7 +326,25 @@ export function ContractDetailsDrawer({
   };
 
   const isApprovalPending = contract.status.startsWith("pending_");
-  const currentLevel = isApprovalPending ? contract.status.split("_")[1] : null;
+  const getCurrentLevel = () => {
+    if (!isApprovalPending) return null;
+    const parts = contract.status.split("_");
+    if (contract.type === "coach") {
+      if (parts[1] === "coach" || parts[1] === "srcc") {
+        return `${parts[1]}_${parts[2]}`;
+      }
+    }
+    return parts[1];
+  };
+  const currentLevel = getCurrentLevel();
+
+  const formatLevel = (level: string | null) => {
+    if (!level) return "";
+    return level
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   const handleApprove = async () => {
     if (!comments.trim()) {
@@ -353,7 +373,9 @@ export function ContractDetailsDrawer({
       });
     } finally {
       setIsApproving(false);
-      window.location.reload();
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 1500);
     }
   };
 
@@ -391,10 +413,9 @@ export function ContractDetailsDrawer({
   // Determine which tabs to show
   const hasApprovalFlow =
     contract.approvalFlow &&
-    ((contract.approvalFlow.financeApprovals &&
-      contract.approvalFlow.financeApprovals.length > 0) ||
-      (contract.approvalFlow.mdApprovals &&
-        contract.approvalFlow.mdApprovals.length > 0) ||
+    (Object.values(contract.approvalFlow).some(
+      (arr) => Array.isArray(arr) && arr.length > 0,
+    ) ||
       contract.finalApproval ||
       contract.rejectionDetails);
 
@@ -1204,9 +1225,7 @@ export function ContractDetailsDrawer({
                             <div className="space-y-6">
                               <div>
                                 <label className="text-base font-medium block mb-2">
-                                  {currentLevel === "finance"
-                                    ? "Finance Approval Comments"
-                                    : "MD Approval Comments"}
+                                  {formatLevel(currentLevel)} Approval Comments
                                 </label>
                                 <Textarea
                                   placeholder="Enter your comments..."
@@ -1332,7 +1351,8 @@ export function ContractDetailsDrawer({
                                             <div className="text-sm font-medium text-muted-foreground mb-2">
                                               Approved on{" "}
                                               {formatDate(approval.approvedAt)}{" "}
-                                              by {approval.approverId.firstName}
+                                              by {approval.approverId.firstName}{" "}
+                                              {approval.approverId.lastName}
                                             </div>
                                             {approval.comments && (
                                               <div className="bg-background p-3 rounded-md border text-sm">
@@ -1345,6 +1365,70 @@ export function ContractDetailsDrawer({
                                     </div>
                                   </div>
                                 )}
+
+                              {contract?.approvalFlow &&
+                                [
+                                  {
+                                    key: "coachAdminApprovals",
+                                    label: "Coach Admin Review",
+                                  },
+                                  {
+                                    key: "coachManagerApprovals",
+                                    label: "Coach Manager Approval",
+                                  },
+                                  {
+                                    key: "coachFinanceApprovals",
+                                    label: "Coach Finance Approval",
+                                  },
+                                  {
+                                    key: "srccCheckerApprovals",
+                                    label: "SRCC Checker Approval",
+                                  },
+                                  {
+                                    key: "srccFinanceApprovals",
+                                    label: "SRCC Finance Approval",
+                                  },
+                                ].map((section) => {
+                                  const approvals = (
+                                    contract.approvalFlow as any
+                                  )[section.key] as ApprovalEntry[];
+                                  if (!approvals || approvals.length === 0)
+                                    return null;
+
+                                  return (
+                                    <div key={section.key}>
+                                      <h4 className="font-medium mb-3 flex items-center">
+                                        <ClipboardList className="h-4 w-4 mr-1" />
+                                        {section.label}
+                                      </h4>
+                                      <div className="space-y-3">
+                                        {approvals.map(
+                                          (approval: ApprovalEntry, index) => (
+                                            <div
+                                              key={index}
+                                              className="bg-muted/40 rounded-lg p-3"
+                                            >
+                                              <div className="text-sm font-medium text-muted-foreground mb-2">
+                                                Approved on{" "}
+                                                {formatDate(
+                                                  approval.approvedAt,
+                                                )}{" "}
+                                                by{" "}
+                                                {approval.approverId.firstName}{" "}
+                                                {approval.approverId.lastName}
+                                              </div>
+                                              {approval.comments && (
+                                                <div className="bg-background p-3 rounded-md border text-sm">
+                                                  {approval.comments}
+                                                </div>
+                                              )}
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
 
                               {contract.finalApproval && (
                                 <div>

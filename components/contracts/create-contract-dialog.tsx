@@ -122,7 +122,7 @@ export function CreateContractDialog({
   const [selectedTemplate, setSelectedTemplate] = useState<
     (typeof templates)[0] | null
   >(null);
-  console.log("internalCategories", internalCategories);
+
   // Find user in internal budget (code 2237) - only for team members, not coaches
   // We look through all categories named "2237" as budget items can be split across multiple instances of the same category code
   const userBudgetItem = !isCoach
@@ -168,8 +168,7 @@ export function CreateContractDialog({
   // Calculate default contract value
   const defaultContractValue = useMemo(() => {
     if (isCoach && coachContractData) {
-      // For coaches, use their rate * 10 as default (assuming 10 sessions/hours)
-      return coachContractData.rate * 10;
+      return coachContractData.rate;
     }
     return userBudgetItem?.estimatedAmount || 0;
   }, [isCoach, coachContractData, userBudgetItem?.estimatedAmount]);
