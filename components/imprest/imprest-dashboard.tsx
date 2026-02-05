@@ -171,7 +171,7 @@ export default function ImprestDashboard({
 
   // Get unique payment types for filtering
   const uniquePaymentTypes = Array.from(
-    new Set(imprestData.map((item) => item.paymentType))
+    new Set(imprestData.map((item) => item.paymentType)),
   );
 
   // Status filter handler
@@ -179,13 +179,13 @@ export default function ImprestDashboard({
     setStatusFilter((prev) =>
       prev.includes(status)
         ? prev.filter((s) => s !== status)
-        : [...prev, status]
+        : [...prev, status],
     );
   };
 
   const handlePaymentTypeFilter = (type: string) => {
     setPaymentTypeFilter((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   };
 
@@ -319,17 +319,17 @@ export default function ImprestDashboard({
   // Calculate summary statistics
   const pendingCount = imprestData.filter(
     (item) =>
-      item.status === "pending_hod" || item.status === "pending_accountant"
+      item.status === "pending_hod" || item.status === "pending_accountant",
   ).length;
   const approvedCount = imprestData.filter(
-    (item) => item.status === "approved"
+    (item) => item.status === "approved",
   ).length;
   const disbursedCount = imprestData.filter(
     (item) =>
-      item.status === "disbursed" || item.status === "pending_acknowledgment"
+      item.status === "disbursed" || item.status === "pending_acknowledgment",
   ).length;
   const rejectedCount = imprestData.filter(
-    (item) => item.status === "rejected"
+    (item) => item.status === "rejected",
   ).length;
 
   // Export data function
@@ -351,13 +351,13 @@ export default function ImprestDashboard({
   // Add these computed values
   const pendingItems = sortedData.filter(
     (item) =>
-      item.status === "pending_hod" || item.status === "pending_accountant"
+      item.status === "pending_hod" || item.status === "pending_accountant",
   );
   const approvedItems = sortedData.filter((item) => item.status === "approved");
   const rejectedItems = sortedData.filter((item) => item.status === "rejected");
   const disbursedItems = sortedData.filter(
     (item) =>
-      item.status === "disbursed" || item.status === "pending_acknowledgment"
+      item.status === "disbursed" || item.status === "pending_acknowledgment",
   );
 
   const pendingTotalPages = Math.ceil(pendingItems.length / itemsPerPage);
@@ -380,7 +380,7 @@ export default function ImprestDashboard({
   const handleAcknowledgeReceipt = async (
     id: string,
     received: boolean,
-    comments?: string
+    comments?: string,
   ) => {
     try {
       await acknowledgeImprestReceipt(id, { received, comments });
@@ -409,7 +409,7 @@ export default function ImprestDashboard({
   const itemsRequiringAttention = imprestData.filter(
     (item) =>
       item.status === "pending_acknowledgment" ||
-      item.status === "resolved_dispute"
+      item.status === "resolved_dispute",
   );
 
   // Handle acknowledgment from banner
@@ -444,16 +444,16 @@ export default function ImprestDashboard({
                   {itemsRequiringAttention.slice(0, 3).map((item) => (
                     <div
                       key={item._id}
-                      className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-amber-200 dark:border-amber-800"
+                      className="flex flex-col sm:flex-row items-start sm:items-center  p-3 bg-white dark:bg-gray-800 rounded-lg border border-amber-200 dark:border-amber-800"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0 flex items-center gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
                           {item.status === "pending_acknowledgment" ? (
                             <Clock className="h-4 w-4 text-amber-600" />
                           ) : (
                             <CheckCircle className="h-4 w-4 text-purple-600" />
                           )}
-                          <span className="font-medium text-sm truncate max-w-[200px]">
+                          <span className="font-medium text-sm truncate max-w-[140px] sm:max-w-[200px]">
                             {item.paymentReason}
                           </span>
                         </div>
@@ -470,18 +470,13 @@ export default function ImprestDashboard({
                             : "Resolved Dispute"}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: item.currency,
-                          }).format(item.amount)}
-                        </span>
+                      <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
+                    
                         {item.status === "pending_acknowledgment" ? (
                           <Button
                             size="sm"
                             onClick={() => handleBannerAcknowledge(item)}
-                            className="text-xs bg-amber-600 hover:bg-amber-700 text-white"
+                            className="text-xs bg-amber-600 hover:bg-amber-700 text-white whitespace-nowrap min-w-[88px]"
                           >
                             Acknowledge
                           </Button>
@@ -493,11 +488,16 @@ export default function ImprestDashboard({
                               setActiveTab("disbursed");
                               handleViewDetails(item);
                             }}
-                            className="text-xs"
+                            className="text-xs whitespace-nowrap"
                           >
                             View Details
                           </Button>
-                        )}
+                        )}    <span className="text-sm font-medium flex-shrink-0">
+                          {new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: item.currency,
+                          }).format(item.amount)}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -659,7 +659,7 @@ export default function ImprestDashboard({
               <PendingRequestsTab
                 pendingItems={pendingItems.slice(
                   pendingIndexOfFirstItem,
-                  pendingIndexOfLastItem
+                  pendingIndexOfLastItem,
                 )}
                 expandedRows={expandedRows}
                 sortConfig={sortConfig}
@@ -680,7 +680,7 @@ export default function ImprestDashboard({
               <ApprovedRequestsTab
                 approvedItems={approvedItems.slice(
                   approvedIndexOfFirstItem,
-                  approvedIndexOfLastItem
+                  approvedIndexOfLastItem,
                 )}
                 expandedRows={expandedRows}
                 sortConfig={sortConfig}
@@ -701,7 +701,7 @@ export default function ImprestDashboard({
               <DisbursedRequestsTab
                 disbursedItems={disbursedItems.slice(
                   disbursedIndexOfFirstItem,
-                  disbursedIndexOfLastItem
+                  disbursedIndexOfLastItem,
                 )}
                 expandedRows={expandedRows}
                 sortConfig={sortConfig}
@@ -722,7 +722,7 @@ export default function ImprestDashboard({
               <RejectedRequestsTab
                 rejectedItems={rejectedItems.slice(
                   rejectedIndexOfFirstItem,
-                  rejectedIndexOfLastItem
+                  rejectedIndexOfLastItem,
                 )}
                 expandedRows={expandedRows}
                 sortConfig={sortConfig}

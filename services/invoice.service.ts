@@ -4,8 +4,7 @@ import axios, { AxiosError } from "axios";
 import { Invoice } from "@/types/project";
 import { getAxiosConfig, handleUnauthorized } from "./dashboard.service";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://innova.cognitron.co.ke/srcc/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function createInvoice(invoiceData: any) {
   try {
@@ -13,7 +12,7 @@ export async function createInvoice(invoiceData: any) {
     const response = await axios.post<Invoice>(
       `${API_URL}/invoices`,
       invoiceData,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -29,7 +28,7 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
     const config = await getAxiosConfig();
     const response = await axios.get<Invoice>(
       `${API_URL}/invoices/${id}`,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -43,14 +42,14 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
 
 export async function updateInvoice(
   id: string,
-  invoiceData: Partial<Invoice>
+  invoiceData: Partial<Invoice>,
 ): Promise<Invoice | null> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.put<Invoice>(
       `${API_URL}/invoices/${id}`,
       invoiceData,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -73,7 +72,7 @@ export async function deleteInvoice(id: string): Promise<boolean> {
     }
     console.error("Failed to delete invoice:", error);
     throw new Error(
-      error.response?.data?.message || "Failed to delete invoice"
+      error.response?.data?.message || "Failed to delete invoice",
     );
   }
 }
@@ -84,7 +83,7 @@ export async function editInvoice(invoiceId: string, invoiceData: any) {
     const response = await axios.patch<Invoice>(
       `${API_URL}/invoices/${invoiceId}`,
       invoiceData,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -93,7 +92,7 @@ export async function editInvoice(invoiceId: string, invoiceData: any) {
         await handleUnauthorized();
       }
       throw new Error(
-        error.response?.data?.message || "Failed to edit invoice"
+        error.response?.data?.message || "Failed to edit invoice",
       );
     }
     throw error;
@@ -106,7 +105,7 @@ export async function submitInvoice(id: string) {
     const response = await axios.post<Invoice>(
       `${API_URL}/invoices/${id}/submit`,
       {},
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -114,21 +113,21 @@ export async function submitInvoice(id: string) {
       await handleUnauthorized();
     }
     throw new Error(
-      error.response?.data?.message || "Failed to submit invoice"
+      error.response?.data?.message || "Failed to submit invoice",
     );
   }
 }
 
 export async function recordPayment(
   invoiceId: string,
-  paymentData: Record<string, any>
+  paymentData: Record<string, any>,
 ): Promise<Invoice> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Invoice>(
       `${API_URL}/invoices/${invoiceId}/payments`,
       paymentData,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -136,21 +135,21 @@ export async function recordPayment(
       await handleUnauthorized();
     }
     throw new Error(
-      error.response?.data?.message || "Failed to record payment"
+      error.response?.data?.message || "Failed to record payment",
     );
   }
 }
 
 export async function attachActualInvoice(
   invoiceId: string,
-  url: string
+  url: string,
 ): Promise<Invoice> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch<Invoice>(
       `${API_URL}/invoices/${invoiceId}/actual-invoice`,
       { url },
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -158,7 +157,7 @@ export async function attachActualInvoice(
       await handleUnauthorized();
     }
     throw new Error(
-      error.response?.data?.message || "Failed to attach actual invoice URL"
+      error.response?.data?.message || "Failed to attach actual invoice URL",
     );
   }
 }

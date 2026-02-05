@@ -270,7 +270,7 @@ export default function ContractStats({
               const endDate = new Date(contract.endDate);
               if (!isNaN(endDate.getTime())) {
                 const daysUntilExpiration = Math.ceil(
-                  (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+                  (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
                 );
 
                 if (daysUntilExpiration > 0) {
@@ -567,7 +567,7 @@ export default function ContractStats({
   // Memoize status distribution for performance
   const statusDistribution = useMemo(() => {
     return Object.entries(stats.statusDistribution).sort(
-      ([, a], [, b]) => b - a
+      ([, a], [, b]) => b - a,
     );
   }, [stats.statusDistribution]);
 
@@ -579,7 +579,7 @@ export default function ContractStats({
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-emerald-500" />
-              Financial Overview
+              Overview
             </CardTitle>
             <CardDescription>Contract value and distribution</CardDescription>
           </CardHeader>
@@ -622,7 +622,7 @@ export default function ContractStats({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-3xl font-bold">
+                    <p className="text-xl font-bold">
                       {formatCurrency(stats.totalValue)}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -645,7 +645,7 @@ export default function ContractStats({
                       <span className="font-medium">
                         {stats.totalContracts > 0
                           ? formatCurrency(
-                              stats.totalValue / stats.totalContracts
+                              stats.totalValue / stats.totalContracts,
                             )
                           : formatCurrency(0)}
                       </span>
@@ -698,117 +698,131 @@ export default function ContractStats({
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Skeleton className="h-20 rounded-lg" />
-                  <Skeleton className="h-20 rounded-lg" />
-                  <Skeleton className="h-20 rounded-lg" />
-                  <Skeleton className="h-20 rounded-lg" />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-12 w-12 rounded-full" />
                 </div>
-                <Skeleton className="h-4 w-32 mb-2" />
-                <Skeleton className="h-2 w-full rounded-full" />
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                  <Skeleton className="h-6 w-24 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
                 </div>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {statusDistribution.slice(0, 4).map(([status, count], i) => (
-                    <div
-                      key={i}
-                      className="flex flex-col items-center justify-center p-3 rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200"
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold">{stats.totalContracts}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Contracts
+                    </p>
+                  </div>
+                  <div className="relative h-12 w-12">
+                    <svg
+                      className="h-12 w-12 rotate-[-90deg]"
+                      viewBox="0 0 100 100"
                     >
-                      <div
-                        className={`h-3 w-3 rounded-full ${getStatusColor(
-                          status
-                        )} mb-1`}
-                      ></div>
-                      <p className="text-xl font-bold">{count}</p>
-                      <p className="text-[8px] text-muted-foreground capitalize">
-                        {status}
-                      </p>
+                      <circle
+                        className="stroke-slate-200 dark:stroke-slate-700"
+                        cx="50"
+                        cy="50"
+                        r="35"
+                        strokeWidth="8"
+                        fill="none"
+                      />
+                      <circle
+                        className="stroke-blue-500"
+                        cx="50"
+                        cy="50"
+                        r="35"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeDasharray="219.9"
+                        strokeDashoffset={
+                          stats.totalContracts > 0 &&
+                          stats.approvalMetrics.approvedContracts > 0
+                            ? 219.9 -
+                              219.9 *
+                                (stats.approvalMetrics.approvedContracts /
+                                  stats.totalContracts)
+                            : 219.9
+                        }
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4 text-blue-500" />
                     </div>
-                  ))}
+                  </div>
                 </div>
 
-                {/* <div>
-                  <p className="text-sm font-medium mb-2">
-                    Status Distribution
-                  </p>
-                  <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                    {statusDistribution.map(([status, count], i) => (
-                      <div
-                        key={i}
-                        className={`${getStatusColor(status)}`}
-                        style={{
-                          width: `${
-                            stats.totalContracts > 0
-                              ? (count / stats.totalContracts) * 100
-                              : 0
-                          }%`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {statusDistribution.map(([status, count], i) => (
-                      <Tooltip key={i}>
+                <div className="space-y-0">
+                  {statusDistribution.slice(0, 3).map(([status, count], i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between py-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-2 w-2 rounded-full ${getStatusColor(
+                            status,
+                          )}`}
+                        ></div>
+                        <span className="text-[8px] capitalize text-muted-foreground">
+                          {status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{count}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {stats.totalContracts > 0
+                            ? `${Math.round((count / stats.totalContracts) * 100)}%`
+                            : "0%"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {statusDistribution.length > 3 && (
+                    <div className="flex items-center justify-between py-1 border-t border-slate-200 dark:border-slate-700 pt-2">
+                      <span className="text-xs text-muted-foreground italic">
+                        +{statusDistribution.length - 3} more statuses
+                      </span>
+                      <Tooltip>
                         <TooltipTrigger asChild>
-                          <Badge
-                            variant="outline"
-                            className={`${getStatusBadgeVariant(status)}`}
-                          >
-                            {status}: {count}
-                          </Badge>
+                          <span className="text-xs text-blue-500 cursor-help">
+                            View all
+                          </span>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>
-                            {Math.round((count / stats.totalContracts) * 100)}%
-                            of total contracts
-                          </p>
+                          <div className="space-y-1">
+                            {statusDistribution
+                              .slice(3)
+                              .map(([status, count], i) => (
+                                <div
+                                  key={i}
+                                  className="flex items-center justify-between gap-4"
+                                >
+                                  <span className="capitalize">{status}</span>
+                                  <span>{count}</span>
+                                </div>
+                              ))}
+                          </div>
                         </TooltipContent>
                       </Tooltip>
-                    ))}
-                  </div>
-                </div> */}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </CardContent>
-          {/* <CardFooter className="pt-0 pb-3">
-            <div className="w-full flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4" />
-                <span>Completion Rate</span>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="font-medium">
-                    {stats.totalContracts > 0
-                      ? `${Math.round(
-                          (stats.approvalMetrics.approvedContracts /
-                            stats.totalContracts) *
-                            100
-                        )}%`
-                      : "0%"}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Percentage of contracts that have been fully approved</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </CardFooter> */}
         </Card>
-
         {/* Timeline & Expiration Card */}
         <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <Calendar className="h-5 w-5 text-violet-500" />
-              Timeline & Expiration
+              Timeline
             </CardTitle>
             <CardDescription>Contract duration and expiration</CardDescription>
           </CardHeader>
@@ -884,7 +898,7 @@ export default function ContractStats({
                         ? Math.round(
                             (stats.expiringContracts.next30Days /
                               stats.totalContracts) *
-                              100
+                              100,
                           )
                         : 0}
                       %
@@ -976,7 +990,7 @@ export default function ContractStats({
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-amber-500" />
-              Approval & Amendments
+              Approval
             </CardTitle>
             <CardDescription>Approval process metrics</CardDescription>
           </CardHeader>
@@ -1004,7 +1018,7 @@ export default function ContractStats({
                   <div>
                     <p className="text-3xl font-bold">
                       {formatDuration(
-                        stats.approvalMetrics.averageApprovalTime
+                        stats.approvalMetrics.averageApprovalTime,
                       )}
                     </p>
                     <p className="text-sm text-muted-foreground">

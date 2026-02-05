@@ -455,7 +455,7 @@ export function MyImprestStats({ imprests }: { imprests: any }) {
           <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50">
             <CardTitle className="flex items-center text-lg font-semibold">
               <User className="mr-2 h-5 w-5 text-blue-600 dark:text-blue-400" />
-              My Imprest Overview
+          Overview
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
@@ -579,27 +579,6 @@ export function MyImprestStats({ imprests }: { imprests: any }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/50">
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Active Imprests
-                  </div>
-                  <div className="mt-1 text-lg font-semibold">
-                    {stats.activeImprests || 0}
-                  </div>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900/50">
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                    Avg. Processing
-                  </div>
-                  <div className="mt-1 text-lg font-semibold">
-                    {Math.round(stats.averageProcessingTime || 0)}
-                    <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
-                      hrs
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -705,7 +684,7 @@ export function MyImprestStats({ imprests }: { imprests: any }) {
           <CardHeader className="pb-2 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-950/50 dark:to-emerald-900/50">
             <CardTitle className="flex items-center text-lg font-semibold">
               <ReceiptText className="mr-2 h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              Accounting Status
+              Accounting
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">

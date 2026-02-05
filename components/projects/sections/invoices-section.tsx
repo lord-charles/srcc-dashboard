@@ -80,7 +80,7 @@ const initialFormState: InvoiceFormState = {
   invoiceDate: format(new Date(), "yyyy-MM-dd"),
   dueDate: format(
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    "yyyy-MM-dd"
+    "yyyy-MM-dd",
   ),
   paymentTerms: "Net 30",
   notes: "",
@@ -92,7 +92,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   projectId,
 }) => {
   const [showPaymentDrawer, setShowPaymentDrawer] = useState<string | null>(
-    null
+    null,
   );
   const [showAttachDrawer, setShowAttachDrawer] = useState<string | null>(null);
   const [paymentForm, setPaymentForm] = useState<any>({});
@@ -102,7 +102,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [isReceiptUploading, setIsReceiptUploading] = useState(false);
   const [isAttachUploading, setIsAttachUploading] = useState(false);
   const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>(
-    {}
+    {},
   );
 
   const openPaymentDrawer = (invoiceId: string) => {
@@ -188,7 +188,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
   const [submittingInvoiceId, setSubmittingInvoiceId] = useState<string | null>(
-    null
+    null,
   );
   const { toast } = useToast();
   const router = useRouter();
@@ -253,7 +253,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
               ...item,
               [field]: field === "description" ? value : Number(value),
             }
-          : item
+          : item,
       ),
     }));
     // Clear error when field is updated
@@ -275,7 +275,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
           total: acc.total + amount + taxAmount,
         };
       },
-      { subtotal: 0, totalTax: 0, total: 0 }
+      { subtotal: 0, totalTax: 0, total: 0 },
     );
   };
 
@@ -397,6 +397,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     switch (status.toLowerCase()) {
       case "paid":
         return "bg-green-500 text-white";
+      case "partially_paid":
+        return "bg-blue-500 text-white";
       case "pending":
       case "pending_approval":
         return "bg-yellow-500 text-white";
@@ -404,8 +406,10 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
         return "bg-red-500 text-white";
       case "draft":
         return "bg-gray-500 text-white";
+      case "approved":
+        return "bg-purple-500 text-white";
       default:
-        return "bg-green-500 text-white";
+        return "bg-gray-500 text-white";
     }
   };
 
@@ -527,7 +531,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                               handleItemChange(
                                 index,
                                 "description",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             className={
@@ -553,7 +557,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                 handleItemChange(
                                   index,
                                   "quantity",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className={
@@ -578,7 +582,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                 handleItemChange(
                                   index,
                                   "amount",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className={
@@ -603,7 +607,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                 handleItemChange(
                                   index,
                                   "taxRate",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className={
@@ -714,6 +718,16 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         Issued by: {invoice.issuedBy.firstName}{" "}
                         {invoice.issuedBy.lastName}
                       </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Badge
+                          className={getInvoiceStatusColor(invoice.status)}
+                        >
+                          {invoice.status.replace("_", " ").toUpperCase()}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {formatCurrency(invoice.totalAmount)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -742,7 +756,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                       size="icon"
                       onClick={() =>
                         setExpandedInvoice(
-                          expandedInvoice === invoice._id ? null : invoice._id
+                          expandedInvoice === invoice._id ? null : invoice._id,
                         )
                       }
                     >
@@ -766,37 +780,119 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                 </div>
                 {expandedInvoice === invoice._id && (
                   <Card className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <Card className=" p-4 rounded-lg shadow">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                      <Card className="p-4 rounded-lg shadow">
                         <h5 className="font-semibold mb-3 text-green-800">
                           Invoice Details
                         </h5>
-                        <p className="text-sm flex items-center">
-                          <Calendar className="mr-2 h-4 w-4 text-green-600" />{" "}
-                          Invoice Date: {formatDate(invoice.invoiceDate)}
-                        </p>
-                        <p className="text-sm flex items-center mt-2">
-                          <Clock className="mr-2 h-4 w-4 text-green-600" /> Due
-                          Date: {formatDate(invoice.dueDate)}
-                        </p>
-                        <p className="text-sm flex items-center mt-2">
-                          <DollarSign className="mr-2 h-4 w-4 text-green-600" />{" "}
-                          Payment Terms: {invoice.paymentTerms}
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-sm flex items-center">
+                            <Calendar className="mr-2 h-4 w-4 text-green-600" />
+                            Invoice Date: {formatDate(invoice.invoiceDate)}
+                          </p>
+                          <p className="text-sm flex items-center">
+                            <Clock className="mr-2 h-4 w-4 text-green-600" />
+                            Due Date: {formatDate(invoice.dueDate)}
+                          </p>
+                          <p className="text-sm flex items-center">
+                            <DollarSign className="mr-2 h-4 w-4 text-green-600" />
+                            Payment Terms: {invoice.paymentTerms}
+                          </p>
+                          <div className="pt-2 border-t">
+                            <Badge
+                              className={getInvoiceStatusColor(invoice.status)}
+                            >
+                              {invoice.status.replace("_", " ").toUpperCase()}
+                            </Badge>
+                          </div>
+                        </div>
                       </Card>
-                      <Card className=" p-4 rounded-lg shadow">
+                      <Card className="p-4 rounded-lg shadow">
                         <h5 className="font-semibold mb-3 text-green-800">
                           Amount Summary
                         </h5>
-                        <p className="text-sm">
-                          Subtotal: {formatCurrency(invoice.subtotal)}
-                        </p>
-                        <p className="text-sm mt-2">
-                          Total Tax: {formatCurrency(invoice.totalTax)}
-                        </p>
-                        <p className="text-sm font-semibold mt-2">
-                          Total Amount: {formatCurrency(invoice.totalAmount)}
-                        </p>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Subtotal:</span>
+                            <span className="text-sm font-medium">
+                              {formatCurrency(invoice.subtotal)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Total Tax:</span>
+                            <span className="text-sm font-medium">
+                              {formatCurrency(invoice.totalTax)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t">
+                            <span className="text-sm font-semibold">
+                              Total Amount:
+                            </span>
+                            <span className="text-sm font-semibold text-green-600">
+                              {formatCurrency(invoice.totalAmount)}
+                            </span>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-4 rounded-lg shadow">
+                        <h5 className="font-semibold mb-3 text-green-800">
+                          Payment Status
+                        </h5>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm">Total Paid:</span>
+                            <span className="text-sm font-medium text-green-600">
+                              {formatCurrency(
+                                invoice.payments?.reduce(
+                                  (sum, payment) => sum + payment.amountPaid,
+                                  0,
+                                ) || 0,
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Outstanding:</span>
+                            <span className="text-sm font-medium text-red-600">
+                              {formatCurrency(
+                                invoice.totalAmount -
+                                  (invoice.payments?.reduce(
+                                    (sum, payment) => sum + payment.amountPaid,
+                                    0,
+                                  ) || 0),
+                              )}
+                            </span>
+                          </div>
+                          <div className="pt-2 border-t">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    ((invoice.payments?.reduce(
+                                      (sum, payment) =>
+                                        sum + payment.amountPaid,
+                                      0,
+                                    ) || 0) /
+                                      invoice.totalAmount) *
+                                      100,
+                                  )}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {Math.round(
+                                ((invoice.payments?.reduce(
+                                  (sum, payment) => sum + payment.amountPaid,
+                                  0,
+                                ) || 0) /
+                                  invoice.totalAmount) *
+                                  100,
+                              )}
+                              % paid
+                            </p>
+                          </div>
+                        </div>
                       </Card>
                     </div>
                     <Card className=" rounded-lg shadow overflow-hidden">
@@ -840,9 +936,152 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         </TableBody>
                       </Table>
                     </Card>
+                    {/* Payment Records Section */}
+                    {invoice.payments && invoice.payments.length > 0 && (
+                      <div className="mt-6 bg-blue-50 p-4 rounded-lg shadow">
+                        <h5 className="font-semibold mb-3 text-blue-800">
+                          Payment Records
+                        </h5>
+                        <div className="space-y-4">
+                          {invoice.payments.map((payment, index) => (
+                            <Card key={index} className="p-4 bg-white">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700">
+                                    Amount Paid
+                                  </p>
+                                  <p className="text-lg font-semibold text-green-600">
+                                    {formatCurrency(payment.amountPaid)}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700">
+                                    Payment Method
+                                  </p>
+                                  <p className="text-sm capitalize">
+                                    {payment.method?.replace("_", " ") || "N/A"}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700">
+                                    Payment Date
+                                  </p>
+                                  <p className="text-sm">
+                                    {payment.paidAt
+                                      ? formatDate(payment.paidAt)
+                                      : "N/A"}
+                                  </p>
+                                </div>
+                                {payment.bankName && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Bank Name
+                                    </p>
+                                    <p className="text-sm">
+                                      {payment.bankName}
+                                    </p>
+                                  </div>
+                                )}
+                                {payment.accountNumber && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Account Number
+                                    </p>
+                                    <p className="text-sm font-mono">
+                                      {payment.accountNumber}
+                                    </p>
+                                  </div>
+                                )}
+                                {payment.branchCode && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Branch Code
+                                    </p>
+                                    <p className="text-sm font-mono">
+                                      {payment.branchCode}
+                                    </p>
+                                  </div>
+                                )}
+                                {payment.referenceNumber && (
+                                  <div>
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Reference Number
+                                    </p>
+                                    <p className="text-sm font-mono">
+                                      {payment.referenceNumber}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                              {payment.receiptUrl && (
+                                <div className="mt-4 pt-4 border-t border-gray-200">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Payment Receipt
+                                    </p>
+                                    <div className="flex space-x-2">
+                                      <a
+                                        href={payment.receiptUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        <Button variant="outline" size="sm">
+                                          <FileText className="h-4 w-4 mr-2" />
+                                          View Receipt
+                                        </Button>
+                                      </a>
+                                      <a
+                                        href={payment.receiptUrl}
+                                        download={`payment-receipt-${index + 1}.pdf`}
+                                      >
+                                        <Button variant="default" size="sm">
+                                          Download Receipt
+                                        </Button>
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </Card>
+                          ))}
+                        </div>
+
+                        {/* Payment Summary */}
+                        <div className="mt-4 p-3 bg-white rounded border-l-4 border-blue-500">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              Total Paid:
+                            </span>
+                            <span className="text-lg font-semibold text-green-600">
+                              {formatCurrency(
+                                invoice.payments.reduce(
+                                  (sum, payment) => sum + payment.amountPaid,
+                                  0,
+                                ),
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center mt-2">
+                            <span className="text-sm font-medium text-gray-700">
+                              Outstanding Balance:
+                            </span>
+                            <span className="text-lg font-semibold text-red-600">
+                              {formatCurrency(
+                                invoice.totalAmount -
+                                  invoice.payments.reduce(
+                                    (sum, payment) => sum + payment.amountPaid,
+                                    0,
+                                  ),
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {invoice.notes && (
-                      <div className="mt-6  p-4 rounded-lg shadow">
-                        <h5 className="font-semibold mb-2 text-green-800">
+                      <div className="mt-6 bg-gray-50 p-4 rounded-lg shadow">
+                        <h5 className="font-semibold mb-2 text-gray-800">
                           Notes
                         </h5>
                         <p className="text-sm text-muted-foreground">
@@ -879,26 +1118,97 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                       <h5 className="font-semibold mb-3 text-green-800">
                         Audit Trail
                       </h5>
-                      <div className="space-y-3 text-black">
-                        {invoice.auditTrail.map((audit, index) => (
+                      <div className="space-y-3">
+                        {invoice.auditTrail?.map((audit, index) => (
                           <div
                             key={index}
-                            className="text-sm border-l-2 border-green-400 pl-3"
+                            className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border-l-4 border-green-400"
                           >
-                            <p className="font-medium">
-                              {audit.action} by {audit.performedBy.firstName}{" "}
-                              {audit.performedBy.lastName}
-                            </p>
-                            <p className="text-muted-foreground">
-                              {formatDate(audit.performedAt)}
-                            </p>
-                            {audit.details && (
-                              <p className="text-muted-foreground mt-1">
-                                {audit.details.comments || audit.details.status}
+                            <div className="flex-shrink-0 w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {audit.action
+                                    ?.replace(/_/g, " ")
+                                    .toLowerCase()
+                                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {formatDate(audit.performedAt)}
+                                </p>
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">
+                                by {audit.performedBy?.firstName || "Unknown"}{" "}
+                                {audit.performedBy?.lastName || ""}
+                                {audit.performedBy?.email && (
+                                  <span className="text-gray-400">
+                                    {" "}
+                                    ({audit.performedBy.email})
+                                  </span>
+                                )}
                               </p>
-                            )}
+                              {audit.details && (
+                                <div className="mt-2 text-xs text-gray-500">
+                                  {audit.details.comments && (
+                                    <p>Comments: {audit.details.comments}</p>
+                                  )}
+                                  {audit.details.status && (
+                                    <p>Status: {audit.details.status}</p>
+                                  )}
+                                  {audit.details.actualInvoice && (
+                                    <p>
+                                      Document:{" "}
+                                      <a
+                                        href={audit.details.actualInvoice}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline"
+                                      >
+                                        View Document
+                                      </a>
+                                    </p>
+                                  )}
+                                  {audit.details.payment && (
+                                    <div className="mt-1">
+                                      <p>Payment Details:</p>
+                                      <ul className="ml-2 space-y-1">
+                                        <li>
+                                          Amount:{" "}
+                                          {formatCurrency(
+                                            Number(
+                                              audit.details.payment.amountPaid,
+                                            ),
+                                          )}
+                                        </li>
+                                        <li>
+                                          Method:{" "}
+                                          {audit.details.payment.method?.replace(
+                                            "_",
+                                            " ",
+                                          )}
+                                        </li>
+                                        {audit.details.payment
+                                          .referenceNumber && (
+                                          <li>
+                                            Reference:{" "}
+                                            {
+                                              audit.details.payment
+                                                .referenceNumber
+                                            }
+                                          </li>
+                                        )}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        ))}
+                        )) || (
+                          <p className="text-sm text-gray-500">
+                            No audit trail available
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="mt-6 flex justify-end space-x-3">
@@ -928,17 +1238,24 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <Button
-                        variant="default"
-                        onClick={() => openPaymentDrawer(invoice._id)}
-                      >
-                        Add Payment Record
-                      </Button>
+
+                      {/* Only show payment button if not fully paid */}
+                      {invoice.status !== "paid" && (
+                        <Button
+                          variant="default"
+                          onClick={() => openPaymentDrawer(invoice._id)}
+                        >
+                          Add Payment Record
+                        </Button>
+                      )}
+
                       <Button
                         variant="default"
                         onClick={() => openAttachDrawer(invoice._id)}
                       >
-                        Attach Invoice
+                        {invoice.actualInvoice
+                          ? "Update Invoice"
+                          : "Attach Invoice"}
                       </Button>
                     </div>
                   </Card>
@@ -1095,7 +1412,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                       setIsReceiptUploading(true);
                       try {
                         const url = await cloudinaryService.uploadFile(
-                          files[0]
+                          files[0],
                         );
                         setPaymentForm((f: any) => ({ ...f, receiptUrl: url }));
                         setPaymentErrors((prev) => {
