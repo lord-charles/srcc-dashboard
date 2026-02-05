@@ -844,7 +844,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                             <span className="text-sm font-medium text-green-600">
                               {formatCurrency(
                                 invoice.payments?.reduce(
-                                  (sum, payment) => sum + payment.amountPaid,
+                                  (sum, payment: any) =>
+                                    sum + payment?.amountPaid,
                                   0,
                                 ) || 0,
                               )}
@@ -856,7 +857,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                               {formatCurrency(
                                 invoice.totalAmount -
                                   (invoice.payments?.reduce(
-                                    (sum, payment) => sum + payment.amountPaid,
+                                    (sum, payment: any) =>
+                                      sum + payment.amountPaid,
                                     0,
                                   ) || 0),
                               )}
@@ -870,7 +872,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                   width: `${Math.min(
                                     100,
                                     ((invoice.payments?.reduce(
-                                      (sum, payment) =>
+                                      (sum, payment: any) =>
                                         sum + payment.amountPaid,
                                       0,
                                     ) || 0) /
@@ -883,7 +885,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                             <p className="text-xs text-muted-foreground mt-1">
                               {Math.round(
                                 ((invoice.payments?.reduce(
-                                  (sum, payment) => sum + payment.amountPaid,
+                                  (sum, payment: any) =>
+                                    sum + payment.amountPaid,
                                   0,
                                 ) || 0) /
                                   invoice.totalAmount) *
@@ -943,7 +946,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                           Payment Records
                         </h5>
                         <div className="space-y-4">
-                          {invoice.payments.map((payment, index) => (
+                          {invoice.payments.map((payment: any, index) => (
                             <Card key={index} className="p-4 bg-white">
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <div>
@@ -1055,7 +1058,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                             <span className="text-lg font-semibold text-green-600">
                               {formatCurrency(
                                 invoice.payments.reduce(
-                                  (sum, payment) => sum + payment.amountPaid,
+                                  (sum, payment: any) =>
+                                    sum + payment.amountPaid,
                                   0,
                                 ),
                               )}
@@ -1069,7 +1073,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                               {formatCurrency(
                                 invoice.totalAmount -
                                   invoice.payments.reduce(
-                                    (sum, payment) => sum + payment.amountPaid,
+                                    (sum, payment: any) =>
+                                      sum + payment.amountPaid,
                                     0,
                                   ),
                               )}
@@ -1119,7 +1124,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         Audit Trail
                       </h5>
                       <div className="space-y-3">
-                        {invoice.auditTrail?.map((audit, index) => (
+                        {invoice.auditTrail?.map((audit: any, index) => (
                           <div
                             key={index}
                             className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border-l-4 border-green-400"
@@ -1131,7 +1136,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                   {audit.action
                                     ?.replace(/_/g, " ")
                                     .toLowerCase()
-                                    .replace(/\b\w/g, (l) => l.toUpperCase())}
+                                    .replace(/\b\w/g, (l: any) =>
+                                      l.toUpperCase(),
+                                    )}
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   {formatDate(audit.performedAt)}
