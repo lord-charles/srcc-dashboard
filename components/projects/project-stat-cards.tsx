@@ -149,7 +149,7 @@ export function ProjectStatCards({ projectData }: { projectData: Project }) {
             Invoices: {projectData?.invoices?.length} (
             {
               projectData?.invoices?.filter(
-                (i) => i?.status === "pending_approval",
+                (i) => i?.status === "pending_invoice_attachment",
               ).length
             }{" "}
             pending)
