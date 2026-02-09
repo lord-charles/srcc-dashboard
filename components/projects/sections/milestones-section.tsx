@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Project, ProjectMilestone } from "@/types/project";
-import { useRouter } from "next/navigation";
 
 interface MilestonesSectionProps {
   milestones: ProjectMilestone[];
@@ -60,7 +59,6 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
     ProjectMilestone | undefined
   >();
   const { toast } = useToast();
-  const router = useRouter();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-KE", {
@@ -116,7 +114,7 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
 
   const totalMilestoneBudget = milestones.reduce(
     (sum, milestone) => sum + (milestone.budget || 0),
-    0
+    0,
   );
   const completedMilestones = milestones.filter((m) => m.completed).length;
   const progressPercentage =
@@ -171,7 +169,7 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
                   <div className="flex items-center space-x-4">
                     <div
                       className={`p-2 rounded-full ${getMilestoneStatusColor(
-                        milestone.completed
+                        milestone.completed,
                       )}`}
                     >
                       {milestone.completed ? (

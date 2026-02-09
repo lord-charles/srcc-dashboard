@@ -358,7 +358,19 @@ export function ContractDetailsDrawer({
 
     try {
       setIsApproving(true);
-      await approveContract(contract._id, comments);
+      const result = await approveContract(contract._id, comments);
+
+      // Check if the server action returned an error
+      if (!result.success) {
+        toast({
+          title: "Approval Failed",
+          description:
+            result.error || "Failed to approve contract. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Contract Approved",
         description: "The contract has been successfully approved.",
@@ -366,16 +378,18 @@ export function ContractDetailsDrawer({
       onClose?.();
       setComments("");
     } catch (error: any) {
+      console.error("Approval error:", error);
+
       toast({
         title: "Approval Failed",
-        description: error.message || "Failed to approve contract",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsApproving(false);
-      // setTimeout(() => {
-      //   window.location.reload();
-      // }, 1500);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     }
   };
 
@@ -391,7 +405,19 @@ export function ContractDetailsDrawer({
 
     try {
       setIsRejecting(true);
-      await rejectContract(contract._id, comments);
+      const result = await rejectContract(contract._id, comments);
+
+      // Check if the server action returned an error
+      if (!result.success) {
+        toast({
+          title: "Rejection Failed",
+          description:
+            result.error || "Failed to reject contract. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Contract Rejected",
         description: "The contract has been rejected.",
@@ -399,14 +425,18 @@ export function ContractDetailsDrawer({
       onClose?.();
       setComments("");
     } catch (error: any) {
+      console.error("Rejection error:", error);
+
       toast({
         title: "Rejection Failed",
-        description: error.message || "Failed to reject contract",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsRejecting(false);
-      window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     }
   };
 

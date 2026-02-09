@@ -161,3 +161,31 @@ export async function attachActualInvoice(
     );
   }
 }
+
+export async function requestInvoiceRevision(
+  invoiceId: string,
+  comments: string,
+  changes: string[],
+) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Invoice>(
+      `${API_URL}/invoices/${invoiceId}/request-revision`,
+      { comments, changes },
+      config,
+    );
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Failed to request invoice revision";
+
+    return { success: false, error: errorMessage };
+  }
+}

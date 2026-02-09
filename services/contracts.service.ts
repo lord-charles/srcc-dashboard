@@ -20,7 +20,7 @@ export async function getAllContracts() {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts`,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -38,7 +38,7 @@ export async function createContract(data: any) {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -55,7 +55,7 @@ export async function getContractById(contractId: string) {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -73,7 +73,7 @@ export async function updateContractStatus(contractId: string, status: string) {
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}/status`,
       { status },
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -90,7 +90,7 @@ export async function getContractsByProject(projectId: string) {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/project/${projectId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error) {
@@ -107,7 +107,7 @@ export async function getContractsByUser(userId: string) {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/user/${userId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -124,7 +124,7 @@ export async function getMyContracts() {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/my-contracts`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -142,7 +142,7 @@ export async function updateContract(contractId: string, contractData: any) {
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}`,
       contractData,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -159,7 +159,7 @@ export async function deleteContract(contractId: string) {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -177,7 +177,7 @@ export async function generateContractOtp(contractId: string) {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}/generate-otp`,
       {},
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -195,7 +195,7 @@ export async function verifyContractOtp(contractId: string, otp: string) {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}/verify-otp`,
       { otp },
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -213,15 +213,24 @@ export async function approveContract(contractId: string, comments: string) {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}/approve`,
       { comments },
-      config
+      config,
     );
-    return response.data;
+    return { success: true, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to approve contract ${contractId}:`, error);
-    throw error?.response?.data.message || "Failed to approve contract";
+
+    // Extract the error message from the backend response
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Failed to approve contract";
+
+    // Return error as data instead of throwing to avoid Next.js sanitization
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -231,15 +240,24 @@ export async function rejectContract(contractId: string, reason: string) {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}/reject`,
       { reason },
-      config
+      config,
     );
-    return response.data;
+    return { success: true, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to reject contract ${contractId}:`, error);
-    throw error?.response?.data.message || "Failed to reject contract";
+
+    // Extract the error message from the backend response
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      "Failed to reject contract";
+
+    // Return error as data instead of throwing to avoid Next.js sanitization
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -259,7 +277,7 @@ export async function createClaim(data: {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/claims`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -276,7 +294,7 @@ export async function getContractClaims(contractId: string) {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/claims/contract/${contractId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -293,7 +311,7 @@ export async function getAllClaims() {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/claims/claims`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -310,7 +328,7 @@ export async function fetchClaimsByContract(contractId: string) {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/claims?contractId=${contractId}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -336,7 +354,7 @@ export async function getContractTemplates(params?: {
       `${process.env.NEXT_PUBLIC_API_URL}/contract-templates${
         search.toString() ? `?${search.toString()}` : ""
       }`,
-      config
+      config,
     );
     return response.data as Array<{
       _id: string;
@@ -371,7 +389,7 @@ export async function createContractTemplate(data: {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/contract-templates`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -395,14 +413,14 @@ export async function updateContractTemplate(
     content: string;
     variablesCsv?: string;
     active?: boolean;
-  }>
+  }>,
 ) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/contract-templates/${id}`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -421,7 +439,7 @@ export async function deleteContractTemplate(id: string) {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/contract-templates/${id}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {

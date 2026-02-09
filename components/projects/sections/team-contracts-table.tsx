@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -43,11 +42,12 @@ import {
   Edit,
   Eye,
   Search,
-  ChevronLeft,
-  ChevronRight,
   Trash2,
   Receipt,
   MoreHorizontal,
+  FileText,
+  DollarSign,
+  Calendar,
 } from "lucide-react";
 import { Contract } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
@@ -74,11 +74,9 @@ interface ContractsTableProps {
 
 const ContractsTable = ({
   contracts,
-  projectId,
   projectMilestones,
 }: ContractsTableProps) => {
   const { toast } = useToast();
-  const router = useRouter();
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null,
   );
@@ -88,6 +86,10 @@ const ContractsTable = ({
   const [contractForClaim, setContractForClaim] = useState<Contract | null>(
     null,
   );
+
+  // Get currency from first contract or default to KES
+  const currency = contracts[0]?.currency || "KES";
+
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
@@ -167,6 +169,37 @@ const ContractsTable = ({
           .includes(searchTerm?.toLowerCase()),
     );
   }, [contracts, searchTerm]);
+
+  // Group contracts by milestone
+  const groupedContracts = useMemo(() => {
+    const groups: Record<
+      string,
+      {
+        milestone: any;
+        milestoneName: string;
+        contracts: Contract[];
+      }
+    > = {};
+
+    filteredContracts.forEach((contract) => {
+      const milestoneId =
+        (contract as any).milestoneId?._id?.toString() || "no-milestone";
+      const milestoneName =
+        (contract as any).milestoneId?.title || "No Milestone Assigned";
+
+      if (!groups[milestoneId]) {
+        groups[milestoneId] = {
+          milestone: (contract as any).milestoneId,
+          milestoneName,
+          contracts: [],
+        };
+      }
+
+      groups[milestoneId].contracts.push(contract);
+    });
+
+    return Object.values(groups);
+  }, [filteredContracts]);
 
   const paginatedContracts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -312,153 +345,168 @@ const ContractsTable = ({
         </div>
       </div>
       <CardContent className="p-0">
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Contract Number</TableHead>
-                <TableHead>Team Member</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedContracts.length > 0 ? (
-                paginatedContracts.map((contract) => (
-                  <TableRow key={contract._id}>
-                    <TableCell className="font-medium">
-                      {contract.contractNumber}
-                      <div className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">
-                        {contract.description}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">
-                        {`${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {contract.contractedUserId.email}
-                      </div>
-                    </TableCell>
-                    <TableCell>{`${contract.contractValue.toLocaleString()} ${
-                      contract.currency
-                    }`}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={getStatusColor(contract.status)}
-                      >
-                        {contract.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        {formatDate(contract?.startDate)}
-                      </div>
-                      <div className="text-sm">
-                        {formatDate(contract?.endDate)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setContractForClaim(contract);
-                              setShowCreateClaimDialog(true);
-                            }}
-                          >
-                            <Receipt className="mr-2 h-4 w-4" />
-                            Create Claim
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleViewContract(contract)}
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleEditContract(contract)}
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-red-600 focus:text-red-600"
-                            onClick={() => handleOpenDeleteDialog(contract)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="h-24 text-center text-muted-foreground"
+        <div className="space-y-6">
+          {groupedContracts.map((group, groupIndex) => (
+            <div key={group.milestoneName} className="space-y-3">
+              {/* Milestone Header */}
+              <div className="px-6 pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {group.milestoneName}
+                      </h3>
+                      {group.milestone && (
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                          <span className="flex items-center">
+                            <DollarSign className="h-3 w-3 mr-1" />
+                            Budget: {group.milestone.budget?.toLocaleString()}{" "}
+                            {currency}
+                          </span>
+                          {group.milestone.dueDate && (
+                            <span className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              Due: {formatDate(group.milestone.dueDate)}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 text-blue-700 border-blue-200"
                   >
-                    {contracts.length === 0
-                      ? "No contracts found"
-                      : "No matching contracts found"}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                    {group.contracts.length}{" "}
+                    {group.contracts.length === 1 ? "Contract" : "Contracts"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Contracts Table for this Milestone */}
+              <div className="rounded-md border mx-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Contract Number</TableHead>
+                      <TableHead>Team Member</TableHead>
+                      <TableHead>Value</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.contracts.length > 0 ? (
+                      group.contracts.map((contract) => (
+                        <TableRow key={contract._id}>
+                          <TableCell className="font-medium">
+                            {contract.contractNumber}
+                            <div className="text-xs text-muted-foreground mt-1 truncate max-w-[200px]">
+                              {contract.description}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">
+                              {`${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {contract.contractedUserId.email}
+                            </div>
+                          </TableCell>
+                          <TableCell>{`${contract.contractValue.toLocaleString()} ${
+                            contract.currency
+                          }`}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={getStatusColor(contract.status)}
+                            >
+                              {contract.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {formatDate(contract?.startDate)}
+                            </div>
+                            <div className="text-sm">
+                              {formatDate(contract?.endDate)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <span className="sr-only">Open menu</span>
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setContractForClaim(contract);
+                                    setShowCreateClaimDialog(true);
+                                  }}
+                                >
+                                  <Receipt className="mr-2 h-4 w-4" />
+                                  Create Claim
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleViewContract(contract)}
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleEditContract(contract)}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  className="text-red-600 focus:text-red-600"
+                                  onClick={() =>
+                                    handleOpenDeleteDialog(contract)
+                                  }
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="h-24 text-center text-muted-foreground"
+                        >
+                          No contracts found for this milestone
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ))}
+
+          {groupedContracts.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground">
+              {contracts.length === 0
+                ? "No contracts found"
+                : "No matching contracts found"}
+            </div>
+          )}
         </div>
       </CardContent>
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="text-sm text-muted-foreground">
-            Showing{" "}
-            <span className="font-medium">
-              {(currentPage - 1) * itemsPerPage + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {Math.min(currentPage * itemsPerPage, filteredContracts.length)}
-            </span>{" "}
-            of <span className="font-medium">{filteredContracts.length}</span>{" "}
-            contracts
-          </div>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
-              disabled={currentPage === totalPages}
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </div>
-      )}
       {selectedContract && (
         <EditContractDialog
           open={showEditContractDialog}

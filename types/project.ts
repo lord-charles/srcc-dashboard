@@ -168,7 +168,16 @@ export interface Invoice {
   totalTax: number;
   totalAmount: number;
   currency: string;
-  status: "draft" | "pending_approval" | "approved" | "rejected" | "paid";
+  status:
+    | "draft"
+    | "pending_invoice_attachment"
+    | "revision_requested"
+    | "approved"
+    | "rejected"
+    | "paid"
+    | "partially_paid"
+    | "overdue"
+    | "cancelled";
   paymentTerms: string;
   notes: string;
   createdBy: string;
@@ -184,7 +193,7 @@ export interface Invoice {
 
 export interface Payment {
   _id: string;
-  method: "bank_transfer" | "cheque" | "mpesa" | "cash";
+  method: "bank_transfer" | "cheque" | "mpesa" | "cash" | "wht" | "wht_vat";
   bankName?: string;
   accountNumber?: string;
   branchCode?: string;
@@ -193,6 +202,10 @@ export interface Payment {
   amountPaid?: number;
   receiptUrl?: string;
   comments?: string;
+  whtCertificateRefNo?: string;
+  whtCertificateUrl?: string;
+  whtVatCertificateRefNo?: string;
+  whtVatCertificateUrl?: string;
   recordedBy: {
     _id: string;
     firstName: string;

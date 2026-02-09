@@ -38,7 +38,6 @@ interface ProjectDetailsProps {
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({
   project: projectData,
   isLoading = false,
-  onTeamMemberEdit,
 }) => {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(

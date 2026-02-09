@@ -62,12 +62,15 @@ import {
   editInvoice,
   recordPayment,
   submitInvoice,
+  requestInvoiceRevision,
 } from "@/services/invoice.service";
 import { Invoice, InvoiceFormState } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { FileUpload } from "@/components/ui/file-upload";
 import { cloudinaryService } from "@/lib/cloudinary-service";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface InvoicesSectionProps {
   invoices: Invoice[];
@@ -95,11 +98,24 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     null,
   );
   const [showAttachDrawer, setShowAttachDrawer] = useState<string | null>(null);
+  const [showRevisionDrawer, setShowRevisionDrawer] = useState<string | null>(
+    null,
+  );
   const [paymentForm, setPaymentForm] = useState<any>({});
+  const [paymentTab, setPaymentTab] = useState<"regular" | "wht" | "wht_vat">(
+    "regular",
+  );
   const [attachUrl, setAttachUrl] = useState<string>("");
+  const [revisionForm, setRevisionForm] = useState<{
+    comments: string;
+    changes: string[];
+  }>({ comments: "", changes: [""] });
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [isAttachSubmitting, setIsAttachSubmitting] = useState(false);
+  const [isRevisionSubmitting, setIsRevisionSubmitting] = useState(false);
   const [isReceiptUploading, setIsReceiptUploading] = useState(false);
+  const [isWhtCertUploading, setIsWhtCertUploading] = useState(false);
+  const [isWhtVatCertUploading, setIsWhtVatCertUploading] = useState(false);
   const [isAttachUploading, setIsAttachUploading] = useState(false);
   const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>(
     {},
@@ -108,6 +124,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const openPaymentDrawer = (invoiceId: string) => {
     setShowPaymentDrawer(invoiceId);
     setPaymentForm({});
+    setPaymentTab("regular");
   };
   const closePaymentDrawer = () => setShowPaymentDrawer(null);
   const openAttachDrawer = (invoiceId: string) => {
@@ -115,11 +132,18 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     setAttachUrl("");
   };
   const closeAttachDrawer = () => setShowAttachDrawer(null);
+  const openRevisionDrawer = (invoiceId: string) => {
+    setShowRevisionDrawer(invoiceId);
+    setRevisionForm({ comments: "", changes: [""] });
+  };
+  const closeRevisionDrawer = () => setShowRevisionDrawer(null);
 
   const handlePaymentSubmit = async () => {
     if (!showPaymentDrawer) return;
-    // Validation: amountPaid, method, and receiptUrl are required
+
+    // Validation based on payment tab
     const errors: Record<string, string> = {};
+
     if (
       !paymentForm.amountPaid ||
       isNaN(Number(paymentForm.amountPaid)) ||
@@ -127,21 +151,68 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     ) {
       errors.amountPaid = "Amount paid is required and must be greater than 0.";
     }
-    if (!paymentForm.method || paymentForm.method.trim() === "") {
-      errors.method = "Payment method is required.";
+
+    if (paymentTab === "regular") {
+      // Regular payment validation
+      if (!paymentForm.method || paymentForm.method.trim() === "") {
+        errors.method = "Payment method is required.";
+      }
+      if (
+        !paymentForm.receiptUrl ||
+        typeof paymentForm.receiptUrl !== "string" ||
+        !paymentForm.receiptUrl.startsWith("http")
+      ) {
+        errors.receiptUrl = "Receipt URL is required and must be a valid URL.";
+      }
+    } else if (paymentTab === "wht") {
+      // WHT payment validation
+      if (
+        !paymentForm.whtCertificateRefNo ||
+        paymentForm.whtCertificateRefNo.trim() === ""
+      ) {
+        errors.whtCertificateRefNo =
+          "WHT Certificate Reference Number is required.";
+      }
+      if (
+        !paymentForm.whtCertificateUrl ||
+        typeof paymentForm.whtCertificateUrl !== "string" ||
+        !paymentForm.whtCertificateUrl.startsWith("http")
+      ) {
+        errors.whtCertificateUrl = "WHT Certificate attachment is required.";
+      }
+    } else if (paymentTab === "wht_vat") {
+      // WHT-VAT payment validation
+      if (
+        !paymentForm.whtVatCertificateRefNo ||
+        paymentForm.whtVatCertificateRefNo.trim() === ""
+      ) {
+        errors.whtVatCertificateRefNo =
+          "WHT-VAT Certificate Reference Number is required.";
+      }
+      if (
+        !paymentForm.whtVatCertificateUrl ||
+        typeof paymentForm.whtVatCertificateUrl !== "string" ||
+        !paymentForm.whtVatCertificateUrl.startsWith("http")
+      ) {
+        errors.whtVatCertificateUrl =
+          "WHT-VAT Certificate attachment is required.";
+      }
     }
-    if (
-      !paymentForm.receiptUrl ||
-      typeof paymentForm.receiptUrl !== "string" ||
-      !paymentForm.receiptUrl.startsWith("http")
-    ) {
-      errors.receiptUrl = "Receipt URL is required and must be a valid URL.";
-    }
+
     setPaymentErrors(errors);
     if (Object.keys(errors).length > 0) return;
+
     setIsPaymentSubmitting(true);
     try {
-      await recordPayment(showPaymentDrawer, paymentForm);
+      // Set the method based on the tab and ensure paidAt has a default value
+      const paymentData = {
+        ...paymentForm,
+        method: paymentTab === "regular" ? paymentForm.method : paymentTab,
+        // Default to today's date if paidAt is not provided
+        paidAt: paymentForm.paidAt || format(new Date(), "yyyy-MM-dd"),
+      };
+
+      await recordPayment(showPaymentDrawer, paymentData);
       toast({
         title: "Success",
         description: "Payment recorded successfully.",
@@ -177,6 +248,64 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       });
     } finally {
       setIsAttachSubmitting(false);
+    }
+  };
+
+  const handleRevisionSubmit = async () => {
+    if (!showRevisionDrawer) return;
+
+    // Validation
+    if (!revisionForm.comments.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide revision comments.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const validChanges = revisionForm.changes.filter((c) => c.trim() !== "");
+    if (validChanges.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please specify at least one change required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRevisionSubmitting(true);
+    try {
+      const result = await requestInvoiceRevision(
+        showRevisionDrawer,
+        revisionForm.comments,
+        validChanges,
+      );
+
+      if (!result.success) {
+        toast({
+          title: "Request Failed",
+          description: result.error || "Failed to request revision.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Revision request submitted successfully.",
+      });
+      closeRevisionDrawer();
+      // Delay reload to ensure drawer closes first
+      setTimeout(() => window.location.reload(), 100);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRevisionSubmitting(false);
     }
   };
 
@@ -400,14 +529,18 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       case "partially_paid":
         return "bg-blue-500 text-white";
       case "pending":
-      case "pending_approval":
+      case "pending_invoice_attachment":
         return "bg-yellow-500 text-white";
+      case "revision_requested":
+        return "bg-orange-500 text-white";
       case "overdue":
         return "bg-red-500 text-white";
       case "draft":
         return "bg-gray-500 text-white";
       case "approved":
         return "bg-purple-500 text-white";
+      case "rejected":
+        return "bg-red-600 text-white";
       default:
         return "bg-gray-500 text-white";
     }
@@ -731,7 +864,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {invoice.status === "draft" && (
+                    {(invoice.status === "draft" ||
+                      invoice.status === "revision_requested") && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -746,7 +880,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         ) : (
                           <>
                             <Send className="mr-2 h-4 w-4" />
-                            Submit for Approval
+                            {invoice.status === "revision_requested"
+                              ? "Resubmit Invoice"
+                              : "Submit for Approval"}
                           </>
                         )}
                       </Button>
@@ -766,7 +902,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         <ChevronDown className="h-5 w-5 text-green-600" />
                       )}
                     </Button>
-                    {invoice.status === "draft" && (
+                    {(invoice.status === "draft" ||
+                      invoice.status === "revision_requested") && (
                       <Button
                         variant="outline"
                         size="icon"
@@ -1045,6 +1182,91 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                   </div>
                                 </div>
                               )}
+
+                              {/* WHT Certificate Section */}
+                              {payment.method === "wht" &&
+                                payment.whtCertificateUrl && (
+                                  <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <div className="space-y-3">
+                                      <div>
+                                        <p className="text-sm font-medium text-gray-700">
+                                          WHT Certificate Ref No.
+                                        </p>
+                                        <p className="text-sm font-mono">
+                                          {payment.whtCertificateRefNo || "N/A"}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm font-medium text-gray-700">
+                                          WHT Certificate
+                                        </p>
+                                        <div className="flex space-x-2">
+                                          <a
+                                            href={payment.whtCertificateUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                          >
+                                            <Button variant="outline" size="sm">
+                                              <FileText className="h-4 w-4 mr-2" />
+                                              View Certificate
+                                            </Button>
+                                          </a>
+                                          <a
+                                            href={payment.whtCertificateUrl}
+                                            download={`wht-certificate-${index + 1}.pdf`}
+                                          >
+                                            <Button variant="default" size="sm">
+                                              Download
+                                            </Button>
+                                          </a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                              {/* WHT-VAT Certificate Section */}
+                              {payment.method === "wht_vat" &&
+                                payment.whtVatCertificateUrl && (
+                                  <div className="mt-4 pt-4 border-t border-gray-200">
+                                    <div className="space-y-3">
+                                      <div>
+                                        <p className="text-sm font-medium text-gray-700">
+                                          WHT-VAT Certificate Ref No.
+                                        </p>
+                                        <p className="text-sm font-mono">
+                                          {payment.whtVatCertificateRefNo ||
+                                            "N/A"}
+                                        </p>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm font-medium text-gray-700">
+                                          WHT-VAT Certificate
+                                        </p>
+                                        <div className="flex space-x-2">
+                                          <a
+                                            href={payment.whtVatCertificateUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                          >
+                                            <Button variant="outline" size="sm">
+                                              <FileText className="h-4 w-4 mr-2" />
+                                              View Certificate
+                                            </Button>
+                                          </a>
+                                          <a
+                                            href={payment.whtVatCertificateUrl}
+                                            download={`wht-vat-certificate-${index + 1}.pdf`}
+                                          >
+                                            <Button variant="default" size="sm">
+                                              Download
+                                            </Button>
+                                          </a>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                             </Card>
                           ))}
                         </div>
@@ -1079,6 +1301,51 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                   ),
                               )}
                             </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Display Revision Request Details */}
+                    {invoice.revisionRequest && (
+                      <div className="mt-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg shadow">
+                        <div className="flex items-start space-x-3">
+                          <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+                          <div className="flex-1">
+                            <h5 className="font-semibold mb-2 text-orange-800">
+                              Revision Requested
+                            </h5>
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-sm font-medium text-orange-700">
+                                  Comments:
+                                </p>
+                                <p className="text-sm text-orange-900 mt-1">
+                                  {invoice.revisionRequest.comments}
+                                </p>
+                              </div>
+                              {invoice.revisionRequest.changes &&
+                                invoice.revisionRequest.changes.length > 0 && (
+                                  <div>
+                                    <p className="text-sm font-medium text-orange-700">
+                                      Required Changes:
+                                    </p>
+                                    <ul className="list-disc list-inside text-sm text-orange-900 mt-1 space-y-1">
+                                      {invoice.revisionRequest.changes.map(
+                                        (change: string, idx: number) => (
+                                          <li key={idx}>{change}</li>
+                                        ),
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
+                              <div className="text-xs text-orange-600 pt-2 border-t border-orange-200">
+                                Requested on{" "}
+                                {formatDate(
+                                  invoice.revisionRequest.requestedAt,
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1256,6 +1523,16 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         </Button>
                       )}
 
+                      {/* Show revision request button for pending_invoice_attachment status */}
+                      {invoice.status === "pending_invoice_attachment" && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openRevisionDrawer(invoice._id)}
+                        >
+                          Request Revision
+                        </Button>
+                      )}
+
                       <Button
                         variant="default"
                         onClick={() => openAttachDrawer(invoice._id)}
@@ -1278,202 +1555,492 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
         </CardContent>
       </Card>
 
-      {/* --- Payment Drawer --- */}
+      {/* --- Payment Drawer with Tabs --- */}
       {showPaymentDrawer && (
         <ModalDrawer
           open={!!showPaymentDrawer}
           onOpenChange={closePaymentDrawer}
         >
-          <DrawerContent className="max-w-[500px] mx-auto">
+          <DrawerContent className="max-w-[700px] mx-auto h-[90vh]">
             <DrawerHeader>
               <DrawerTitle>Add Payment Record</DrawerTitle>
               <DrawerDescription>
-                Record a payment for this invoice. Provide a receipt URL.
+                Record a payment, WHT, or WHT-VAT for this invoice.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="p-4 space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Amount Paid</Label>
-                  <Input
-                    type="number"
-                    placeholder="Amount Paid"
-                    value={paymentForm.amountPaid || ""}
-                    onChange={(e) =>
-                      setPaymentForm((f: any) => ({
-                        ...f,
-                        amountPaid: e.target.value,
-                      }))
-                    }
-                    min={0}
-                    className={paymentErrors.amountPaid ? "border-red-500" : ""}
-                  />
-                  {paymentErrors.amountPaid && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {paymentErrors.amountPaid}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>Payment Method</Label>
-                  <Select
-                    value={paymentForm.method || ""}
-                    onValueChange={(val) =>
-                      setPaymentForm((f: any) => ({ ...f, method: val }))
-                    }
-                  >
-                    <SelectTrigger
-                      className={paymentErrors.method ? "border-red-500" : ""}
-                    >
-                      <SelectValue placeholder="Select Method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bank_transfer">
-                        Bank Transfer
-                      </SelectItem>
-                      <SelectItem value="cheque">Cheque</SelectItem>
-                      <SelectItem value="mpesa">MPESA</SelectItem>
-                      <SelectItem value="cash">Cash</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {paymentErrors.method && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {paymentErrors.method}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>Bank Name</Label>
-                  <Input
-                    type="text"
-                    placeholder="Bank Name"
-                    value={paymentForm.bankName || ""}
-                    onChange={(e) =>
-                      setPaymentForm((f: any) => ({
-                        ...f,
-                        bankName: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Account Number</Label>
-                  <Input
-                    type="text"
-                    placeholder="Account Number"
-                    value={paymentForm.accountNumber || ""}
-                    onChange={(e) =>
-                      setPaymentForm((f: any) => ({
-                        ...f,
-                        accountNumber: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Branch Code</Label>
-                  <Input
-                    type="text"
-                    placeholder="Branch Code"
-                    value={paymentForm.branchCode || ""}
-                    onChange={(e) =>
-                      setPaymentForm((f: any) => ({
-                        ...f,
-                        branchCode: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Reference Number</Label>
-                  <Input
-                    type="text"
-                    placeholder="Reference Number"
-                    value={paymentForm.referenceNumber || ""}
-                    onChange={(e) =>
-                      setPaymentForm((f: any) => ({
-                        ...f,
-                        referenceNumber: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div>
-                  <Label>Payment Date</Label>
-                  <Input
-                    type="date"
-                    value={paymentForm.paidAt || ""}
-                    onChange={(e) =>
-                      setPaymentForm((f: any) => ({
-                        ...f,
-                        paidAt: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label>Receipt Upload</Label>
-                  <FileUpload
-                    onChange={async (files) => {
-                      if (!files?.length) return;
-                      setIsReceiptUploading(true);
-                      try {
-                        const url = await cloudinaryService.uploadFile(
-                          files[0],
-                        );
-                        setPaymentForm((f: any) => ({ ...f, receiptUrl: url }));
-                        setPaymentErrors((prev) => {
-                          const n = { ...prev };
-                          delete n.receiptUrl;
-                          return n;
-                        });
-                        toast({
-                          title: "Uploaded",
-                          description: "Receipt uploaded successfully",
-                        });
-                      } catch (e: any) {
-                        toast({
-                          title: "Upload failed",
-                          description: e?.message || "Unable to upload",
-                          variant: "destructive",
-                        });
-                      } finally {
-                        setIsReceiptUploading(false);
+
+            <Tabs
+              value={paymentTab}
+              onValueChange={(v) =>
+                setPaymentTab(v as "regular" | "wht" | "wht_vat")
+              }
+              className="flex-1 flex flex-col"
+            >
+              <div className="px-4">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="regular">Regular Payment</TabsTrigger>
+                  <TabsTrigger value="wht">WHT</TabsTrigger>
+                  <TabsTrigger value="wht_vat">WHT-VAT</TabsTrigger>
+                </TabsList>
+              </div>
+
+              <ScrollArea className="flex-1 px-4 py-4">
+                {/* Regular Payment Tab */}
+                <TabsContent value="regular" className="mt-0 space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label>Amount Paid *</Label>
+                      <Input
+                        type="number"
+                        placeholder="Amount Paid"
+                        value={paymentForm.amountPaid || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            amountPaid: e.target.value,
+                          }))
+                        }
+                        min={0}
+                        className={
+                          paymentErrors.amountPaid ? "border-red-500" : ""
+                        }
+                      />
+                      {paymentErrors.amountPaid && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.amountPaid}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>Payment Method *</Label>
+                      <Select
+                        value={paymentForm.method || ""}
+                        onValueChange={(val) =>
+                          setPaymentForm((f: any) => ({ ...f, method: val }))
+                        }
+                      >
+                        <SelectTrigger
+                          className={
+                            paymentErrors.method ? "border-red-500" : ""
+                          }
+                        >
+                          <SelectValue placeholder="Select Method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bank_transfer">
+                            Bank Transfer
+                          </SelectItem>
+                          <SelectItem value="cheque">Cheque</SelectItem>
+                          <SelectItem value="mpesa">MPESA</SelectItem>
+                          <SelectItem value="cash">Cash</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {paymentErrors.method && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.method}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>Bank Name</Label>
+                      <Input
+                        type="text"
+                        placeholder="Bank Name"
+                        value={paymentForm.bankName || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            bankName: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Account Number</Label>
+                      <Input
+                        type="text"
+                        placeholder="Account Number"
+                        value={paymentForm.accountNumber || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            accountNumber: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Branch Code</Label>
+                      <Input
+                        type="text"
+                        placeholder="Branch Code"
+                        value={paymentForm.branchCode || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            branchCode: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Reference Number</Label>
+                      <Input
+                        type="text"
+                        placeholder="Reference Number"
+                        value={paymentForm.referenceNumber || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            referenceNumber: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Payment Date</Label>
+                      <Input
+                        type="date"
+                        value={paymentForm.paidAt || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            paidAt: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Receipt Upload *</Label>
+                      <FileUpload
+                        onChange={async (files) => {
+                          if (!files?.length) return;
+                          setIsReceiptUploading(true);
+                          try {
+                            const url = await cloudinaryService.uploadFile(
+                              files[0],
+                            );
+                            setPaymentForm((f: any) => ({
+                              ...f,
+                              receiptUrl: url,
+                            }));
+                            setPaymentErrors((prev) => {
+                              const n = { ...prev };
+                              delete n.receiptUrl;
+                              return n;
+                            });
+                            toast({
+                              title: "Uploaded",
+                              description: "Receipt uploaded successfully",
+                            });
+                          } catch (e: any) {
+                            toast({
+                              title: "Upload failed",
+                              description: e?.message || "Unable to upload",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setIsReceiptUploading(false);
+                          }
+                        }}
+                      />
+                      {isReceiptUploading && (
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Uploading
+                          receipt...
+                        </p>
+                      )}
+                      {paymentForm.receiptUrl && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Linked: {paymentForm.receiptUrl}
+                        </p>
+                      )}
+                      {paymentErrors.receiptUrl && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.receiptUrl}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Comments</Label>
+                    <Textarea
+                      placeholder="Comments (optional)"
+                      value={paymentForm.comments || ""}
+                      onChange={(e) =>
+                        setPaymentForm((f: any) => ({
+                          ...f,
+                          comments: e.target.value,
+                        }))
                       }
-                    }}
-                  />
-                  {isReceiptUploading && (
-                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Uploading
-                      receipt...
-                    </p>
-                  )}
-                  {paymentForm.receiptUrl && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Linked: {paymentForm.receiptUrl}
-                    </p>
-                  )}
-                  {paymentErrors.receiptUrl && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {paymentErrors.receiptUrl}
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label>Comments</Label>
-                <Textarea
-                  placeholder="Comments (optional)"
-                  value={paymentForm.comments || ""}
-                  onChange={(e) =>
-                    setPaymentForm((f: any) => ({
-                      ...f,
-                      comments: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* WHT Tab */}
+                <TabsContent value="wht" className="mt-0 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>WHT Amount *</Label>
+                      <Input
+                        type="number"
+                        placeholder="WHT Amount"
+                        value={paymentForm.amountPaid || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            amountPaid: e.target.value,
+                          }))
+                        }
+                        min={0}
+                        className={
+                          paymentErrors.amountPaid ? "border-red-500" : ""
+                        }
+                      />
+                      {paymentErrors.amountPaid && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.amountPaid}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>WHT Certificate Ref No. *</Label>
+                      <Input
+                        type="text"
+                        placeholder="Certificate Reference Number"
+                        value={paymentForm.whtCertificateRefNo || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            whtCertificateRefNo: e.target.value,
+                          }))
+                        }
+                        className={
+                          paymentErrors.whtCertificateRefNo
+                            ? "border-red-500"
+                            : ""
+                        }
+                      />
+                      {paymentErrors.whtCertificateRefNo && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.whtCertificateRefNo}
+                        </p>
+                      )}
+                    </div>
+                    <div className="col-span-2">
+                      <Label>WHT Certificate Upload *</Label>
+                      <FileUpload
+                        onChange={async (files) => {
+                          if (!files?.length) return;
+                          setIsWhtCertUploading(true);
+                          try {
+                            const url = await cloudinaryService.uploadFile(
+                              files[0],
+                            );
+                            setPaymentForm((f: any) => ({
+                              ...f,
+                              whtCertificateUrl: url,
+                            }));
+                            setPaymentErrors((prev) => {
+                              const n = { ...prev };
+                              delete n.whtCertificateUrl;
+                              return n;
+                            });
+                            toast({
+                              title: "Uploaded",
+                              description:
+                                "WHT Certificate uploaded successfully",
+                            });
+                          } catch (e: any) {
+                            toast({
+                              title: "Upload failed",
+                              description: e?.message || "Unable to upload",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setIsWhtCertUploading(false);
+                          }
+                        }}
+                      />
+                      {isWhtCertUploading && (
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Uploading
+                          certificate...
+                        </p>
+                      )}
+                      {paymentForm.whtCertificateUrl && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Linked: {paymentForm.whtCertificateUrl}
+                        </p>
+                      )}
+                      {paymentErrors.whtCertificateUrl && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.whtCertificateUrl}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>Payment Date</Label>
+                      <Input
+                        type="date"
+                        value={paymentForm.paidAt || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            paidAt: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Comments</Label>
+                    <Textarea
+                      placeholder="Comments (optional)"
+                      value={paymentForm.comments || ""}
+                      onChange={(e) =>
+                        setPaymentForm((f: any) => ({
+                          ...f,
+                          comments: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* WHT-VAT Tab */}
+                <TabsContent value="wht_vat" className="mt-0 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>WHT-VAT Amount *</Label>
+                      <Input
+                        type="number"
+                        placeholder="WHT-VAT Amount"
+                        value={paymentForm.amountPaid || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            amountPaid: e.target.value,
+                          }))
+                        }
+                        min={0}
+                        className={
+                          paymentErrors.amountPaid ? "border-red-500" : ""
+                        }
+                      />
+                      {paymentErrors.amountPaid && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.amountPaid}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>WHT-VAT Certificate Ref No. *</Label>
+                      <Input
+                        type="text"
+                        placeholder="Certificate Reference Number"
+                        value={paymentForm.whtVatCertificateRefNo || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            whtVatCertificateRefNo: e.target.value,
+                          }))
+                        }
+                        className={
+                          paymentErrors.whtVatCertificateRefNo
+                            ? "border-red-500"
+                            : ""
+                        }
+                      />
+                      {paymentErrors.whtVatCertificateRefNo && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.whtVatCertificateRefNo}
+                        </p>
+                      )}
+                    </div>
+                    <div className="col-span-2">
+                      <Label>WHT-VAT Certificate Upload *</Label>
+                      <FileUpload
+                        onChange={async (files) => {
+                          if (!files?.length) return;
+                          setIsWhtVatCertUploading(true);
+                          try {
+                            const url = await cloudinaryService.uploadFile(
+                              files[0],
+                            );
+                            setPaymentForm((f: any) => ({
+                              ...f,
+                              whtVatCertificateUrl: url,
+                            }));
+                            setPaymentErrors((prev) => {
+                              const n = { ...prev };
+                              delete n.whtVatCertificateUrl;
+                              return n;
+                            });
+                            toast({
+                              title: "Uploaded",
+                              description:
+                                "WHT-VAT Certificate uploaded successfully",
+                            });
+                          } catch (e: any) {
+                            toast({
+                              title: "Upload failed",
+                              description: e?.message || "Unable to upload",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setIsWhtVatCertUploading(false);
+                          }
+                        }}
+                      />
+                      {isWhtVatCertUploading && (
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                          <Loader2 className="h-3 w-3 animate-spin" /> Uploading
+                          certificate...
+                        </p>
+                      )}
+                      {paymentForm.whtVatCertificateUrl && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Linked: {paymentForm.whtVatCertificateUrl}
+                        </p>
+                      )}
+                      {paymentErrors.whtVatCertificateUrl && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {paymentErrors.whtVatCertificateUrl}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label>Payment Date</Label>
+                      <Input
+                        type="date"
+                        value={paymentForm.paidAt || ""}
+                        onChange={(e) =>
+                          setPaymentForm((f: any) => ({
+                            ...f,
+                            paidAt: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Comments</Label>
+                    <Textarea
+                      placeholder="Comments (optional)"
+                      value={paymentForm.comments || ""}
+                      onChange={(e) =>
+                        setPaymentForm((f: any) => ({
+                          ...f,
+                          comments: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+
             <DrawerFooter>
               <Button
                 onClick={handlePaymentSubmit}
@@ -1552,6 +2119,106 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                 ) : null}
                 Attach
+              </Button>
+              <DrawerClose asChild>
+                <Button variant="outline" className="w-full">
+                  Cancel
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </ModalDrawer>
+      )}
+
+      {/* --- Request Revision Drawer --- */}
+      {showRevisionDrawer && (
+        <ModalDrawer
+          open={!!showRevisionDrawer}
+          onOpenChange={closeRevisionDrawer}
+        >
+          <DrawerContent className="max-w-lg mx-auto">
+            <DrawerHeader>
+              <DrawerTitle>Request Invoice Revision</DrawerTitle>
+              <DrawerDescription>
+                Request changes to the invoice before attaching the actual
+                document. The invoice creator will be notified.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4 space-y-4">
+              <div>
+                <Label>Revision Comments *</Label>
+                <Textarea
+                  placeholder="Explain what needs to be revised..."
+                  value={revisionForm.comments}
+                  onChange={(e) =>
+                    setRevisionForm((f) => ({ ...f, comments: e.target.value }))
+                  }
+                  rows={4}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Required Changes *</Label>
+                <div className="space-y-2 mt-1">
+                  {revisionForm.changes.map((change, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder={`Change ${index + 1}`}
+                        value={change}
+                        onChange={(e) => {
+                          const newChanges = [...revisionForm.changes];
+                          newChanges[index] = e.target.value;
+                          setRevisionForm((f) => ({
+                            ...f,
+                            changes: newChanges,
+                          }));
+                        }}
+                      />
+                      {revisionForm.changes.length > 1 && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => {
+                            const newChanges = revisionForm.changes.filter(
+                              (_, i) => i !== index,
+                            );
+                            setRevisionForm((f) => ({
+                              ...f,
+                              changes: newChanges,
+                            }));
+                          }}
+                        >
+                          ×
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setRevisionForm((f) => ({
+                        ...f,
+                        changes: [...f.changes, ""],
+                      }))
+                    }
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Change
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <DrawerFooter>
+              <Button
+                onClick={handleRevisionSubmit}
+                disabled={isRevisionSubmitting}
+                className="w-full"
+              >
+                {isRevisionSubmitting ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : null}
+                Request Revision
               </Button>
               <DrawerClose asChild>
                 <Button variant="outline" className="w-full">

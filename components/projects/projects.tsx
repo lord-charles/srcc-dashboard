@@ -1,23 +1,9 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaginatedResponse } from "@/services/employees.service";
-import {
-  Users,
-  DollarSign,
-  Briefcase,
-  TrendingUp,
-  Plus,
-  Clock,
-  CheckCircle,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { Project } from "@/types/project";
 import { useRouter } from "next/navigation";
 import ProjectTable from "./projects-table/projects";
@@ -29,7 +15,6 @@ interface EmployeeModuleProps {
 
 export default function ProjectsModule({ initialData }: EmployeeModuleProps) {
   const router = useRouter();
-
 
   return (
     <div className="flex-1 space-y-4 p-2">
