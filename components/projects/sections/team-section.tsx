@@ -149,12 +149,20 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     }
 
     // 1. Try exact match (milestoneId matches and not a coach contract)
-    const exactMatch = projectData.teamMemberContracts.find(
-      (contract) =>
+    const exactMatch = projectData.teamMemberContracts.find((contract) => {
+      const contractMilestoneId =
+        contract?.milestoneId &&
+        typeof contract.milestoneId === "object" &&
+        "_id" in contract.milestoneId
+          ? (contract.milestoneId as any)._id
+          : (contract?.milestoneId as string | undefined);
+
+      return (
         contract?.contractedUserId?._id === memberId &&
-        contract?.milestoneId === milestoneId &&
-        contract?.type !== "coach",
-    );
+        contractMilestoneId === milestoneId &&
+        contract?.type !== "coach"
+      );
+    });
     if (exactMatch) return exactMatch;
 
     // 2. Fallback for legacy contracts (no milestoneId)
@@ -244,10 +252,14 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     }
   };
 
-  const handleOpenContractDialog = (memberId: string, milestoneId?: string) => {
+  const handleOpenContractDialog = (memberId: string, milestoneId?: string | any) => {
     setContractMemberId(memberId);
-    // Store the milestone ID for contract creation
-    setSelectedMemberMilestone(milestoneId);
+    // Normalize and store the milestone ID (supporting embedded milestone objects)
+    const normalizedMilestoneId =
+      milestoneId && typeof milestoneId === "object" && "_id" in milestoneId
+        ? (milestoneId as any)._id
+        : (milestoneId as string | undefined);
+    setSelectedMemberMilestone(normalizedMilestoneId);
     setShowContractDialog(true);
   };
 
@@ -420,7 +432,13 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 
                 teamMembers.forEach((member) => {
                   if (member.milestoneId) {
-                    const key = member.milestoneId;
+                    const rawMilestoneId = member.milestoneId as any;
+                    const key =
+                      rawMilestoneId &&
+                      typeof rawMilestoneId === "object" &&
+                      "_id" in rawMilestoneId
+                        ? (rawMilestoneId._id as string)
+                        : (rawMilestoneId as string);
                     if (!groupedMembers.has(key)) {
                       groupedMembers.set(key, []);
                     }
@@ -481,7 +499,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                             <h3 className="text-lg font-semibold mb-3 text-green-700">
                               {milestone
                                 ? `${milestone.title} Team Members`
-                                : `Milestone ${milestoneId} Team Members`}
+                                : `Milestone ${String(milestoneId)} Team Members`}
                             </h3>
                             <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
                               {members.map((member) => (

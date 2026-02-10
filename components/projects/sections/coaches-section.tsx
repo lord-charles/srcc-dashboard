@@ -60,7 +60,13 @@ function groupCoachesByMilestone(
     { milestone: ProjectMilestone | null; coaches: CoachAssignment[] }
   >();
   coaches.forEach((c) => {
-    const key = c.milestoneId || "unknown";
+    const rawMilestoneId = c.milestoneId as any;
+    const key =
+      rawMilestoneId &&
+      typeof rawMilestoneId === "object" &&
+      "_id" in rawMilestoneId
+        ? (rawMilestoneId._id as string)
+        : (rawMilestoneId as string) || "unknown";
     if (!grouped.has(key))
       grouped.set(key, { milestone: byId.get(key) || null, coaches: [] });
     grouped.get(key)!.coaches.push(c);
@@ -129,12 +135,20 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
     }
 
     // 1. Try exact match (milestoneId matches and type is 'coach')
-    const exactMatch = projectData.teamMemberContracts.find(
-      (contract) =>
+    const exactMatch = projectData.teamMemberContracts.find((contract) => {
+      const contractMilestoneId =
+        contract?.milestoneId &&
+        typeof contract.milestoneId === "object" &&
+        "_id" in contract.milestoneId
+          ? (contract.milestoneId as any)._id
+          : (contract?.milestoneId as string | undefined);
+
+      return (
         contract?.contractedUserId?._id === coachId &&
-        contract?.milestoneId === milestoneId &&
-        contract?.type === "coach",
-    );
+        contractMilestoneId === milestoneId &&
+        contract?.type === "coach"
+      );
+    });
     if (exactMatch) return exactMatch;
 
     // 2. Fallback for legacy contracts (no milestoneId)

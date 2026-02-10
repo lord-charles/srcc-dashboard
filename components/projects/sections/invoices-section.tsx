@@ -101,6 +101,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [showRevisionDrawer, setShowRevisionDrawer] = useState<string | null>(
     null,
   );
+
+  console.log("invoices", invoices)
   const [paymentForm, setPaymentForm] = useState<any>({});
   const [paymentTab, setPaymentTab] = useState<"regular" | "wht" | "wht_vat">(
     "regular",
@@ -1078,197 +1080,164 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                     </Card>
                     {/* Payment Records Section */}
                     {invoice.payments && invoice.payments.length > 0 && (
-                      <div className="mt-6 bg-blue-50 p-4 rounded-lg shadow">
+                      <div className="mt-6 p-4 rounded-lg shadow">
                         <h5 className="font-semibold mb-3 text-blue-800">
                           Payment Records
                         </h5>
-                        <div className="space-y-4">
-                          {invoice.payments.map((payment: any, index) => (
-                            <Card key={index} className="p-4 bg-white">
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div>
-                                  <p className="text-sm font-medium text-gray-700">
-                                    Amount Paid
-                                  </p>
-                                  <p className="text-lg font-semibold text-green-600">
-                                    {formatCurrency(payment.amountPaid)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-700">
-                                    Payment Method
-                                  </p>
-                                  <p className="text-sm capitalize">
-                                    {payment.method?.replace("_", " ") || "N/A"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-700">
-                                    Payment Date
-                                  </p>
-                                  <p className="text-sm">
+                        <div className="rounded-md border">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-[60px]">#</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Method</TableHead>
+                                <TableHead className="text-right">
+                                  Amount
+                                </TableHead>
+                                <TableHead>Reference</TableHead>
+                                <TableHead className="text-center">
+                                  Receipt / Certificate
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {invoice.payments.map((payment: any, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="text-xs">
+                                    {index + 1}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
                                     {payment.paidAt
                                       ? formatDate(payment.paidAt)
-                                      : "N/A"}
-                                  </p>
-                                </div>
-                                {payment.bankName && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700">
-                                      Bank Name
-                                    </p>
-                                    <p className="text-sm">
-                                      {payment.bankName}
-                                    </p>
-                                  </div>
-                                )}
-                                {payment.accountNumber && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700">
-                                      Account Number
-                                    </p>
-                                    <p className="text-sm font-mono">
-                                      {payment.accountNumber}
-                                    </p>
-                                  </div>
-                                )}
-                                {payment.branchCode && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700">
-                                      Branch Code
-                                    </p>
-                                    <p className="text-sm font-mono">
-                                      {payment.branchCode}
-                                    </p>
-                                  </div>
-                                )}
-                                {payment.referenceNumber && (
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-700">
-                                      Reference Number
-                                    </p>
-                                    <p className="text-sm font-mono">
-                                      {payment.referenceNumber}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                              {payment.receiptUrl && (
-                                <div className="mt-4 pt-4 border-t border-gray-200">
-                                  <div className="flex items-center justify-between">
-                                    <p className="text-sm font-medium text-gray-700">
-                                      Payment Receipt
-                                    </p>
-                                    <div className="flex space-x-2">
-                                      <a
-                                        href={payment.receiptUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                      >
-                                        <Button variant="outline" size="sm">
-                                          <FileText className="h-4 w-4 mr-2" />
-                                          View Receipt
-                                        </Button>
-                                      </a>
-                                      <a
-                                        href={payment.receiptUrl}
-                                        download={`payment-receipt-${index + 1}.pdf`}
-                                      >
-                                        <Button variant="default" size="sm">
-                                          Download Receipt
-                                        </Button>
-                                      </a>
+                                      : 'N/A'}
+                                  </TableCell>
+                                  <TableCell className="text-sm capitalize">
+                                    {payment.method?.replace('_', ' ') || 'N/A'}
+                                  </TableCell>
+                                  <TableCell className="text-right text-sm font-medium text-green-600">
+                                    {formatCurrency(payment.amountPaid)}
+                                  </TableCell>
+                                  <TableCell className="text-xs font-mono align-top">
+                                    <div className="space-y-1">
+                                      {payment.referenceNumber && (
+                                        <div>
+                                          <span className="font-semibold">Ref:</span>{' '}
+                                          {payment.referenceNumber}
+                                        </div>
+                                      )}
+                                      {payment.bankName && (
+                                        <div>{payment.bankName}</div>
+                                      )}
+                                      {payment.accountNumber && (
+                                        <div>{payment.accountNumber}</div>
+                                      )}
+                                      {payment.branchCode && (
+                                        <div>{payment.branchCode}</div>
+                                      )}
                                     </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* WHT Certificate Section */}
-                              {payment.method === "wht" &&
-                                payment.whtCertificateUrl && (
-                                  <div className="mt-4 pt-4 border-t border-gray-200">
-                                    <div className="space-y-3">
-                                      <div>
-                                        <p className="text-sm font-medium text-gray-700">
-                                          WHT Certificate Ref No.
-                                        </p>
-                                        <p className="text-sm font-mono">
-                                          {payment.whtCertificateRefNo || "N/A"}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium text-gray-700">
-                                          WHT Certificate
-                                        </p>
-                                        <div className="flex space-x-2">
+                                  </TableCell>
+                                  <TableCell className="text-xs align-top">
+                                    <div className="flex flex-col gap-1 items-start">
+                                      {payment.receiptUrl && (
+                                        <div className="flex gap-1">
                                           <a
-                                            href={payment.whtCertificateUrl}
+                                            href={payment.receiptUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                           >
-                                            <Button variant="outline" size="sm">
-                                              <FileText className="h-4 w-4 mr-2" />
-                                              View Certificate
+                                            <Button
+                                              variant="outline"
+                                              size="xs"
+                                              className="h-7 px-2 text-xs"
+                                            >
+                                              <FileText className="h-3 w-3 mr-1" />
+                                              Receipt
                                             </Button>
                                           </a>
                                           <a
-                                            href={payment.whtCertificateUrl}
-                                            download={`wht-certificate-${index + 1}.pdf`}
+                                            href={payment.receiptUrl}
+                                            download={`payment-receipt-${index + 1}.pdf`}
                                           >
-                                            <Button variant="default" size="sm">
+                                            <Button
+                                              variant="default"
+                                              size="xs"
+                                              className="h-7 px-2 text-xs"
+                                            >
                                               Download
                                             </Button>
                                           </a>
                                         </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
+                                      )}
 
-                              {/* WHT-VAT Certificate Section */}
-                              {payment.method === "wht_vat" &&
-                                payment.whtVatCertificateUrl && (
-                                  <div className="mt-4 pt-4 border-t border-gray-200">
-                                    <div className="space-y-3">
-                                      <div>
-                                        <p className="text-sm font-medium text-gray-700">
-                                          WHT-VAT Certificate Ref No.
-                                        </p>
-                                        <p className="text-sm font-mono">
-                                          {payment.whtVatCertificateRefNo ||
-                                            "N/A"}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium text-gray-700">
-                                          WHT-VAT Certificate
-                                        </p>
-                                        <div className="flex space-x-2">
-                                          <a
-                                            href={payment.whtVatCertificateUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
-                                            <Button variant="outline" size="sm">
-                                              <FileText className="h-4 w-4 mr-2" />
-                                              View Certificate
-                                            </Button>
-                                          </a>
-                                          <a
-                                            href={payment.whtVatCertificateUrl}
-                                            download={`wht-vat-certificate-${index + 1}.pdf`}
-                                          >
-                                            <Button variant="default" size="sm">
-                                              Download
-                                            </Button>
-                                          </a>
-                                        </div>
-                                      </div>
+                                      {payment.method === 'wht' &&
+                                        payment.whtCertificateUrl && (
+                                          <div className="flex gap-1">
+                                            <a
+                                              href={payment.whtCertificateUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                            >
+                                              <Button
+                                                variant="outline"
+                                                size="xs"
+                                                className="h-7 px-2 text-xs"
+                                              >
+                                                <FileText className="h-3 w-3 mr-1" />
+                                                WHT Cert
+                                              </Button>
+                                            </a>
+                                            <a
+                                              href={payment.whtCertificateUrl}
+                                              download={`wht-certificate-${index + 1}.pdf`}
+                                            >
+                                              <Button
+                                                variant="default"
+                                                size="xs"
+                                                className="h-7 px-2 text-xs"
+                                              >
+                                                Download
+                                              </Button>
+                                            </a>
+                                          </div>
+                                        )}
+
+                                      {payment.method === 'wht_vat' &&
+                                        payment.whtVatCertificateUrl && (
+                                          <div className="flex gap-1">
+                                            <a
+                                              href={payment.whtVatCertificateUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                            >
+                                              <Button
+                                                variant="outline"
+                                                size="xs"
+                                                className="h-7 px-2 text-xs"
+                                              >
+                                                <FileText className="h-3 w-3 mr-1" />
+                                                WHT-VAT
+                                              </Button>
+                                            </a>
+                                            <a
+                                              href={payment.whtVatCertificateUrl}
+                                              download={`wht-vat-certificate-${index + 1}.pdf`}
+                                            >
+                                              <Button
+                                                variant="default"
+                                                size="xs"
+                                                className="h-7 px-2 text-xs"
+                                              >
+                                                Download
+                                              </Button>
+                                            </a>
+                                          </div>
+                                        )}
                                     </div>
-                                  </div>
-                                )}
-                            </Card>
-                          ))}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
 
                         {/* Payment Summary */}
@@ -1561,7 +1530,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
           open={!!showPaymentDrawer}
           onOpenChange={closePaymentDrawer}
         >
-          <DrawerContent className="max-w-[700px] mx-auto h-[90vh]">
+          <DrawerContent className="max-w-[800px] mx-auto max-h-[95vh] flex flex-col">
             <DrawerHeader>
               <DrawerTitle>Add Payment Record</DrawerTitle>
               <DrawerDescription>
@@ -1574,7 +1543,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
               onValueChange={(v) =>
                 setPaymentTab(v as "regular" | "wht" | "wht_vat")
               }
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col min-h-0"
             >
               <div className="px-4">
                 <TabsList className="grid w-full grid-cols-3">
@@ -1584,7 +1553,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                 </TabsList>
               </div>
 
-              <ScrollArea className="flex-1 px-4 py-4">
+              <ScrollArea className="flex-1 px-4 py-4 h-[300px]">
                 {/* Regular Payment Tab */}
                 <TabsContent value="regular" className="mt-0 space-y-4">
                   <div className="grid grid-cols-3 gap-4">
@@ -2042,21 +2011,20 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
             </Tabs>
 
             <DrawerFooter>
-              <Button
+  
+                <Button
                 onClick={handlePaymentSubmit}
                 disabled={isPaymentSubmitting}
-                className="w-full"
+                className="flex items-center w-full"
               >
                 {isPaymentSubmitting ? (
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                 ) : null}
                 Submit Payment
               </Button>
-              <DrawerClose asChild>
-                <Button variant="outline" className="w-full">
-                  Cancel
-                </Button>
-              </DrawerClose>
+              <Button variant="outline" className="flex-1 w-full">
+                Cancel
+              </Button>
             </DrawerFooter>
           </DrawerContent>
         </ModalDrawer>
