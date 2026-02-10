@@ -1147,7 +1147,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                           >
                                             <Button
                                               variant="outline"
-                                              size="xs"
+                                              size="icon"
                                               className="h-7 px-2 text-xs"
                                             >
                                               <FileText className="h-3 w-3 mr-1" />
@@ -1160,7 +1160,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                           >
                                             <Button
                                               variant="default"
-                                              size="xs"
+                                              size="icon"
                                               className="h-7 px-2 text-xs"
                                             >
                                               Download
@@ -1179,7 +1179,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="outline"
-                                                size="xs"
+                                                size="icon"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 <FileText className="h-3 w-3 mr-1" />
@@ -1192,7 +1192,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="default"
-                                                size="xs"
+                                                size="icon"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 Download
@@ -1211,7 +1211,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="outline"
-                                                size="xs"
+                                                size="icon"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 <FileText className="h-3 w-3 mr-1" />
@@ -1224,7 +1224,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="default"
-                                                size="xs"
+                                                size="icon"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 Download
