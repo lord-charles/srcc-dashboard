@@ -9,6 +9,8 @@ import { formatDate } from "@/lib/utils";
 
 const getStatusColor = (status: ImprestStatus) => {
   switch (status) {
+    case "revision_requested":
+      return "bg-slate-500";
     case "pending_hod":
       return "bg-yellow-500";
     case "pending_accountant":

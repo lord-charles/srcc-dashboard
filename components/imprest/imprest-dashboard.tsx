@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
+  Pencil,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +26,10 @@ import {
   createImprest,
   getMyImprest,
   acknowledgeImprestReceipt,
+  acceptDisputeResolution,
 } from "@/services/imprest.service";
 import { FormValues } from "./new-imprest-drawer";
+import type { Imprest as ImprestType } from "@/types/imprest";
 import { MyImprestStats } from "./my-imprest-stats";
 import { ImprestFilters } from "./imprest-filters";
 import { ImprestDetailView } from "./imprest-detail-view";
@@ -112,6 +115,16 @@ export type Imprest = {
     balance: number;
     comments?: string;
   };
+  accountingRevision?: {
+    requestedBy: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    requestedAt: string;
+    reason: string;
+  };
 };
 
 export default function ImprestDashboard({
@@ -147,6 +160,7 @@ export default function ImprestDashboard({
 
   const { toast } = useToast();
   const [isNewImprestModalOpen, setIsNewImprestModalOpen] = useState(false);
+  const [editImprest, setEditImprest] = useState<ImprestType | null>(null);
 
   const handleCreateImprest = async (data: FormValues) => {
     try {
@@ -331,6 +345,9 @@ export default function ImprestDashboard({
   const rejectedCount = imprestData.filter(
     (item) => item.status === "rejected",
   ).length;
+  const draftCount = imprestData.filter(
+    (item) => item.status === "revision_requested",
+  ).length;
 
   // Export data function
   const handleExport = () => {
@@ -412,15 +429,110 @@ export default function ImprestDashboard({
       item.status === "resolved_dispute",
   );
 
+  // Items needing revision (revision_requested status)
+  const draftItems = imprestData.filter(
+    (item) => item.status === "revision_requested",
+  );
+
   // Handle acknowledgment from banner
   const handleBannerAcknowledge = (imprest: Imprest) => {
     setAcknowledgmentImprest(imprest);
     setIsAcknowledgmentDialogOpen(true);
   };
 
+  // Handle accepting resolved dispute
+  const [isAcceptingResolution, setIsAcceptingResolution] = useState(false);
+  const handleAcceptResolution = async (imprest: Imprest) => {
+    try {
+      setIsAcceptingResolution(true);
+      await acceptDisputeResolution(imprest._id);
+      toast({
+        title: "Resolution Accepted",
+        description:
+          "You have accepted the dispute resolution. You can now submit your accounting.",
+      });
+      const updatedData = await getMyImprest();
+      setImprestData(updatedData);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to accept dispute resolution",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAcceptingResolution(false);
+    }
+  };
+
   return (
     <div className="p-3 space-y-8">
       <MyImprestStats imprests={initialData} />
+
+      {/* Draft Revision Required Banner */}
+      {draftItems.length > 0 && (
+        <Card className="border-slate-200 bg-slate-50 dark:bg-slate-950/20 dark:border-slate-800">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-slate-100 dark:bg-slate-900/50 rounded-full">
+                <Pencil className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-slate-800 dark:text-slate-400 mb-1">
+                  Revision Required
+                </h3>
+                <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
+                  You have {draftItems.length} imprest request
+                  {draftItems.length > 1 ? "s" : ""} that{" "}
+                  {draftItems.length === 1 ? "requires" : "require"} revision
+                  and resubmission.
+                </p>
+                <div className="space-y-2">
+                  {draftItems.slice(0, 3).map((item) => (
+                    <div
+                      key={item._id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-slate-200 dark:border-slate-800"
+                    >
+                      <div className="flex-1 min-w-0 flex items-center gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Pencil className="h-4 w-4 text-slate-600" />
+                          <span className="font-medium text-sm truncate max-w-[140px] sm:max-w-[200px]">
+                            {item.paymentReason}
+                          </span>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="bg-slate-50 text-slate-700 border-slate-200"
+                        >
+                          Draft - Needs Revision
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setEditImprest(item as unknown as ImprestType);
+                            setIsNewImprestModalOpen(true);
+                          }}
+                          className="text-xs bg-slate-600 hover:bg-slate-700 text-white whitespace-nowrap min-w-[88px]"
+                        >
+                          <Pencil className="mr-1 h-3 w-3" />
+                          Edit & Resubmit
+                        </Button>
+                        <span className="text-sm font-medium flex-shrink-0">
+                          {new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: item.currency,
+                          }).format(item.amount)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Attention Required Banner */}
       {itemsRequiringAttention.length > 0 && (
@@ -471,7 +583,6 @@ export default function ImprestDashboard({
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2 mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
-                    
                         {item.status === "pending_acknowledgment" ? (
                           <Button
                             size="sm"
@@ -483,16 +594,16 @@ export default function ImprestDashboard({
                         ) : (
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setActiveTab("disbursed");
-                              handleViewDetails(item);
-                            }}
-                            className="text-xs whitespace-nowrap"
+                            onClick={() => handleAcceptResolution(item)}
+                            disabled={isAcceptingResolution}
+                            className="text-xs bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap min-w-[88px]"
                           >
-                            View Details
+                            {isAcceptingResolution
+                              ? "Accepting..."
+                              : "Accept Resolution"}
                           </Button>
-                        )}    <span className="text-sm font-medium flex-shrink-0">
+                        )}{" "}
+                        <span className="text-sm font-medium flex-shrink-0">
                           {new Intl.NumberFormat("en-US", {
                             style: "currency",
                             currency: item.currency,
@@ -743,8 +854,18 @@ export default function ImprestDashboard({
 
       <NewImprestDrawer
         open={isNewImprestModalOpen}
-        onOpenChange={setIsNewImprestModalOpen}
+        onOpenChange={(open) => {
+          setIsNewImprestModalOpen(open);
+          if (!open) {
+            setEditImprest(null);
+            // Refresh data when drawer closes
+            getMyImprest()
+              .then(setImprestData)
+              .catch(() => {});
+          }
+        }}
         onSubmit={handleCreateImprest}
+        editImprest={editImprest}
       />
 
       {/* Detail View Dialog */}

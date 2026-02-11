@@ -49,6 +49,18 @@ export interface ImprestDisputeResolution {
   adminComments?: string;
 }
 
+export interface ImprestRevision {
+  requestedBy: User;
+  requestedAt: string;
+  reason: string;
+}
+
+export interface ImprestAccountingRevision {
+  requestedBy: User;
+  requestedAt: string;
+  reason: string;
+}
+
 export interface ImprestAttachment {
   fileName: string;
   fileUrl: string;
@@ -56,6 +68,7 @@ export interface ImprestAttachment {
 }
 
 export type ImprestStatus =
+  | "revision_requested"
   | "pending_hod"
   | "pending_accountant"
   | "pending_accounting_approval"
@@ -94,6 +107,8 @@ export interface Imprest {
   disbursement?: ImprestDisbursement;
   acknowledgment?: ImprestAcknowledgment;
   disputeResolution?: ImprestDisputeResolution;
+  revision?: ImprestRevision;
+  accountingRevision?: ImprestAccountingRevision;
   accounting?: ImprestAccounting;
   attachments?: ImprestAttachment[];
   createdAt: string;

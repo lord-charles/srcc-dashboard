@@ -8,6 +8,7 @@ import {
   CheckCircle,
   FileCheck,
   XCircle,
+  Pencil,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,6 +21,12 @@ export const StatusBadge = ({ status }: StatusBadgeProps) => {
     string,
     { color: string; bgColor: string; label: string; icon: React.ReactNode }
   > = {
+    revision_requested: {
+      color: "text-slate-700 dark:text-slate-400",
+      bgColor: "bg-slate-50 dark:bg-slate-950/50",
+      label: "Revision Requested",
+      icon: <Pencil className="h-3.5 w-3.5" />,
+    },
     pending_hod: {
       color: "text-amber-700 dark:text-amber-400",
       bgColor: "bg-amber-50 dark:bg-amber-950/50",
