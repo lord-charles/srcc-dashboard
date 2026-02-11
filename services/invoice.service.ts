@@ -118,6 +118,56 @@ export async function submitInvoice(id: string) {
   }
 }
 
+export async function approveInvoice(id: string, comments: string = "") {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Invoice>(
+      `${API_URL}/invoices/${id}/approve`,
+      { comments },
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+
+    throw new Error(
+      error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to approve invoice",
+    );
+  }
+}
+
+export async function approverRequestChanges(
+  id: string,
+  comments: string,
+) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Invoice>(
+      `${API_URL}/invoices/${id}/approver-request-changes`,
+      { comments },
+      config,
+    );
+    return { success: true, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      'Failed to request changes as approver';
+
+    return { success: false, error: errorMessage };
+  }
+}
+
 export async function recordPayment(
   invoiceId: string,
   paymentData: Record<string, any>,

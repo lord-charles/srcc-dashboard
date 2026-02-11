@@ -96,6 +96,7 @@ const availableRoles: any[] = [
   "approver",
   "coach_finance",
   "srcc_invoice_request",
+  "invoice_approver"
 ];
 
 // Roles that require department assignment
@@ -111,6 +112,7 @@ const departmentRequiredRoles = [
   "finance",
   "coach_finance",
   "srcc_invoice_request",
+  "invoice_approver"
 ];
 
 // Available departments

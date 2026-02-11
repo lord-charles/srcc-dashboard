@@ -177,7 +177,8 @@ export interface Invoice {
     | "paid"
     | "partially_paid"
     | "overdue"
-    | "cancelled";
+    | "cancelled"
+    |"pending_invoice_approver"
   paymentTerms: string;
   notes: string;
   createdBy: string;

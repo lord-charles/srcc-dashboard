@@ -63,6 +63,8 @@ import {
   recordPayment,
   submitInvoice,
   requestInvoiceRevision,
+  approveInvoice,
+  approverRequestChanges,
 } from "@/services/invoice.service";
 import { Invoice, InvoiceFormState } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +73,16 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { cloudinaryService } from "@/lib/cloudinary-service";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface InvoicesSectionProps {
   invoices: Invoice[];
@@ -233,6 +245,68 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     }
   };
 
+  const handleApproverRequestChanges = async () => {
+    if (!approverDialogInvoice || !approverComments.trim()) {
+      return;
+    }
+
+    setIsApproverRequesting(true);
+
+    const { success, error } = await approverRequestChanges(
+      approverDialogInvoice._id,
+      approverComments.trim(),
+    );
+
+    setIsApproverRequesting(false);
+
+    if (!success) {
+      toast({
+        title: "Error",
+        description: error || "Failed to request changes.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Changes requested. Invoice has been returned to draft.",
+    });
+
+    setApproverDialogInvoice(null);
+    setApproverComments("");
+
+    // Refresh the page to reflect the new status and audit trail
+    setTimeout(() => window.location.reload(), 1500);
+  };
+
+  const handleApproveAsApprover = async (invoice: Invoice) => {
+    try {
+      setApprovingInvoiceId(invoice._id);
+      // For now we send an empty comment; can be extended to prompt the user
+      await approveInvoice(invoice._id, "");
+
+      toast({
+        title: "Success",
+        description: "Invoice approved and moved to pending attachment",
+      });
+    } catch (error: any) {
+      const errorMessage = (error.message || "Failed to approve invoice").replace(
+        /^Error: /,
+        "",
+      );
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setApprovingInvoiceId(null);
+      setTimeout(() => window.location.reload(), 1500);
+    }
+  };
+
   const handleAttachSubmit = async () => {
     if (!showAttachDrawer || !attachUrl) return;
     setIsAttachSubmitting(true);
@@ -240,8 +314,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       await attachActualInvoice(showAttachDrawer, attachUrl);
       toast({ title: "Success", description: "Actual invoice URL attached." });
       closeAttachDrawer();
-      // Delay reload to ensure drawer closes first
-      setTimeout(() => window.location.reload(), 100);
+  
     } catch (error: any) {
       toast({
         title: "Error",
@@ -250,6 +323,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       });
     } finally {
       setIsAttachSubmitting(false);
+      setTimeout(() => window.location.reload(), 1000);
     }
   };
 
@@ -298,8 +372,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
         description: "Revision request submitted successfully.",
       });
       closeRevisionDrawer();
-      // Delay reload to ensure drawer closes first
-      setTimeout(() => window.location.reload(), 100);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -308,6 +380,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       });
     } finally {
       setIsRevisionSubmitting(false);
+      setTimeout(() => window.location.reload(), 1000);
+
     }
   };
 
@@ -321,8 +395,15 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [submittingInvoiceId, setSubmittingInvoiceId] = useState<string | null>(
     null,
   );
+  const [approvingInvoiceId, setApprovingInvoiceId] = useState<string | null>(
+    null,
+  );
+  const [approverDialogInvoice, setApproverDialogInvoice] =
+    useState<Invoice | null>(null);
+  const [approverComments, setApproverComments] = useState<string>("");
+  const [isApproverRequesting, setIsApproverRequesting] =
+    useState<boolean>(false);
   const { toast } = useToast();
-  const router = useRouter();
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -468,8 +549,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       setFormState(initialFormState);
       setFormErrors({});
       setEditingInvoice(null);
-      // Delay reload to ensure any modals close first
-      setTimeout(() => window.location.reload(), 100);
     } catch (error) {
       toast({
         title: "Error",
@@ -480,7 +559,10 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       });
     } finally {
       setIsSubmitting(false);
+      setTimeout(() => window.location.reload(), 1500);
+
     }
+
   };
 
   const handleSubmitForApproval = async (invoice: Invoice) => {
@@ -491,16 +573,20 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
         title: "Success",
         description: "Invoice submitted for approval",
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error.message.replace(
+        /^Error: /,
+        ""
+      ) as string;
       toast({
         title: "Error",
-        description: "Failed to submit invoice for approval",
+        description: errorMessage || "Failed to submit invoice for approval",
         variant: "destructive",
       });
     } finally {
       setSubmittingInvoiceId(null);
       // Delay reload to ensure any modals close first
-      setTimeout(() => window.location.reload(), 100);
+      setTimeout(() => window.location.reload(), 1500);
     }
   };
 
@@ -551,6 +637,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const toggleInvoiceExpansion = (invoiceId: string) => {
     setExpandedInvoice(expandedInvoice === invoiceId ? null : invoiceId);
   };
+
 
   return (
     <>
@@ -904,6 +991,39 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                         <ChevronDown className="h-5 w-5 text-green-600" />
                       )}
                     </Button>
+                    {invoice.status === "pending_invoice_approver" && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleApproveAsApprover(invoice);
+                          }}
+                          disabled={approvingInvoiceId === invoice._id}
+                        >
+                          {approvingInvoiceId === invoice._id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Approving...
+                            </>
+                          ) : (
+                            "Approve as Approver"
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setApproverDialogInvoice(invoice);
+                            setApproverComments("");
+                          }}
+                        >
+                          Request Changes
+                        </Button>
+                      </>
+                    )}
                     {(invoice.status === "draft" ||
                       invoice.status === "revision_requested") && (
                       <Button
@@ -1140,27 +1260,14 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                     <div className="flex flex-col gap-1 items-start">
                                       {payment.receiptUrl && (
                                         <div className="flex gap-1">
-                                          <a
-                                            href={payment.receiptUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-7 px-2 text-xs"
-                                            >
-                                              <FileText className="h-3 w-3 mr-1" />
-                                              Receipt
-                                            </Button>
-                                          </a>
+                                   
                                           <a
                                             href={payment.receiptUrl}
                                             download={`payment-receipt-${index + 1}.pdf`}
                                           >
                                             <Button
                                               variant="default"
-                                              size="icon"
+                                              size="default"
                                               className="h-7 px-2 text-xs"
                                             >
                                               Download
@@ -1179,7 +1286,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="outline"
-                                                size="icon"
+                                                size="default"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 <FileText className="h-3 w-3 mr-1" />
@@ -1192,7 +1299,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="default"
-                                                size="icon"
+                                                size="default"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 Download
@@ -1211,7 +1318,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="outline"
-                                                size="icon"
+                                                size="default"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 <FileText className="h-3 w-3 mr-1" />
@@ -1224,7 +1331,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                             >
                                               <Button
                                                 variant="default"
-                                                size="icon"
+                                                size="default"
                                                 className="h-7 px-2 text-xs"
                                               >
                                                 Download
@@ -1523,6 +1630,54 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {approverDialogInvoice && (
+        <AlertDialog
+          open={!!approverDialogInvoice}
+          onOpenChange={(open) => {
+            if (!open) {
+              setApproverDialogInvoice(null);
+              setApproverComments("");
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Request Changes</AlertDialogTitle>
+              <AlertDialogDescription>
+                These comments will be sent to the invoice creator and
+                recorded in the audit trail.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-2 py-2">
+              <Label htmlFor="approver-comments">Comments</Label>
+              <Textarea
+                id="approver-comments"
+                value={approverComments}
+                onChange={(e) => setApproverComments(e.target.value)}
+                placeholder="Describe the changes required..."
+                rows={4}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => {
+                  setApproverDialogInvoice(null);
+                  setApproverComments("");
+                }}
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleApproverRequestChanges}
+                disabled={isApproverRequesting || !approverComments.trim()}
+              >
+                {isApproverRequesting ? "Submitting..." : "Submit Changes"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* --- Payment Drawer with Tabs --- */}
       {showPaymentDrawer && (
