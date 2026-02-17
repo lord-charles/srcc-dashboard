@@ -7,6 +7,7 @@ import {
   UserPlus,
   Building2,
   Edit,
+  FileEdit,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -31,6 +32,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { updateProject } from "@/services/projects-service";
 import { useToast } from "@/hooks/use-toast";
+import { ProjectUpdateDrawer } from "./project-update-drawer";
+import { ProjectAuditTrail } from "./project-audit-trail";
 
 interface ProjectData {
   _id: string;
@@ -50,6 +53,20 @@ interface ProjectData {
   amountSpent: number;
   milestones: Array<{ completed: boolean }>;
   procurementMethod: string;
+  updateAuditTrail?: Array<{
+    updatedBy: {
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+    updatedAt: string;
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+    reason?: string;
+  }>;
 }
 
 interface ProjectOverviewProps {
@@ -131,8 +148,17 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
   return (
     <div className="space-y-2">
       <Card>
-        <div className="pb-3 px-4 pt-5">
+        <div className="pb-3 px-4 pt-5 flex items-center justify-between">
           <CardTitle>{projectData?.name || "Project Details"} </CardTitle>
+          <ProjectUpdateDrawer
+            projectData={projectData}
+            trigger={
+              <Button variant="outline" size="sm" className="gap-2">
+                <FileEdit className="h-4 w-4" />
+                Update Details
+              </Button>
+            }
+          />
         </div>
         <div className="p-2">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -347,6 +373,9 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Audit Trail */}
+      <ProjectAuditTrail auditTrail={projectData.updateAuditTrail || []} />
     </div>
   );
 }
