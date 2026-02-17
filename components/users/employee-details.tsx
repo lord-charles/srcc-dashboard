@@ -387,7 +387,8 @@ export default function EmployeeDetailsPage({ employee }: any) {
               >
                 {employee?.status || "unknown"}
               </Badge>
-              {employee?.status === "pending_verification" && (
+              {(employee?.status === "pending_verification" ||
+                employee?.status === "pending") && (
                 <>
                   {/* Show verify button if email or phone not verified */}
                   {(!employee?.isEmailVerified ||
