@@ -27,7 +27,7 @@ export async function registerConsultant(formData: FormData): Promise<any> {
           ...config.headers,
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data;
   } catch (error: any) {
@@ -36,21 +36,21 @@ export async function registerConsultant(formData: FormData): Promise<any> {
     }
     console.error(
       "Consultant registration error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message;
   }
 }
 
 export async function approveConsultant(
-  consultantId: string
+  consultantId: string,
 ): Promise<boolean> {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/${consultantId}/approve`,
       {},
-      config
+      config,
     );
     return true;
   } catch (error: any) {
@@ -68,7 +68,7 @@ export async function rejectConsultant(consultantId: string): Promise<boolean> {
     await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/${consultantId}/reject`,
       {},
-      config
+      config,
     );
     return true;
   } catch (error: any) {
@@ -86,7 +86,7 @@ export async function requestPasswordReset(email: string): Promise<any> {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password/request`,
       { email },
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -95,7 +95,7 @@ export async function requestPasswordReset(email: string): Promise<any> {
     }
     console.error(
       "Password reset request error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || error.message;
   }
@@ -113,7 +113,7 @@ export async function registerOrganization(formData: FormData): Promise<any> {
           ...config.headers,
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data;
   } catch (error: any) {
@@ -122,7 +122,7 @@ export async function registerOrganization(formData: FormData): Promise<any> {
     }
     console.error(
       "Organization registration error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || error.message;
   }
@@ -141,7 +141,7 @@ export async function quickRegister(data: {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/quick-register`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -150,7 +150,7 @@ export async function quickRegister(data: {
     }
     console.error(
       "Quick registration error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || "An unexpected error occurred.";
   }
@@ -168,7 +168,7 @@ export async function quickCompanyRegister(data: {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/quick-company-register`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -177,7 +177,7 @@ export async function quickCompanyRegister(data: {
     }
     console.error(
       "Quick company registration error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || "An unexpected error occurred.";
   }
@@ -193,7 +193,7 @@ export async function verifyOtp(data: {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/verify-otp`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -202,7 +202,7 @@ export async function verifyOtp(data: {
     }
     console.error(
       "OTP verification error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || "An unexpected error occurred.";
   }
@@ -218,7 +218,7 @@ export async function verifyCompanyOtp(data: {
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/company/verify-otp`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -227,7 +227,7 @@ export async function verifyCompanyOtp(data: {
     }
     console.error(
       "Company OTP verification error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || "An unexpected error occurred.";
   }
@@ -240,7 +240,7 @@ export const verifyPhoneOtp = async (email: string, pin: string) =>
   verifyOtp({ email, pin, verificationType: "phone" });
 
 export async function getVerificationStatus(
-  email: string
+  email: string,
 ): Promise<{ isEmailVerified: boolean; isPhoneVerified: boolean }> {
   try {
     const config = await getAxiosConfig();
@@ -249,7 +249,7 @@ export async function getVerificationStatus(
       {
         ...config,
         params: { email },
-      }
+      },
     );
     return response.data;
   } catch (error: any) {
@@ -258,14 +258,14 @@ export async function getVerificationStatus(
     }
     console.error(
       "Get verification status error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || "An unexpected error occurred.";
   }
 }
 
 export async function getCompanyVerificationStatus(
-  businessEmail: string
+  businessEmail: string,
 ): Promise<{ isEmailVerified: boolean; isPhoneVerified: boolean }> {
   try {
     const config = await getAxiosConfig();
@@ -274,7 +274,7 @@ export async function getCompanyVerificationStatus(
       {
         ...config,
         params: { businessEmail },
-      }
+      },
     );
     return response.data;
   } catch (error: any) {
@@ -283,7 +283,7 @@ export async function getCompanyVerificationStatus(
     }
     console.error(
       "Get company verification status error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     throw error.response?.data.message || "An unexpected error occurred.";
   }
@@ -294,7 +294,7 @@ export async function getOrganization(id: string): Promise<any> {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${id}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -313,7 +313,7 @@ export async function updateOrganization(id: string, data: any): Promise<any> {
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/update/${id}`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -331,7 +331,7 @@ export async function getConsultant(id: string): Promise<any> {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/user/${id}`,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -350,7 +350,7 @@ export async function updateConsultant(id: string, data: any): Promise<any> {
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/consultant/update/${id}`,
       data,
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -364,14 +364,14 @@ export async function updateConsultant(id: string, data: any): Promise<any> {
 }
 
 export async function completeConsultantRegistration(
-  consultantId: string
+  consultantId: string,
 ): Promise<any> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/${consultantId}/complete-registration`,
       {},
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -385,14 +385,14 @@ export async function completeConsultantRegistration(
 }
 
 export async function completeOrganizationRegistration(
-  organizationId: string
+  organizationId: string,
 ): Promise<any> {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${organizationId}/complete-registration`,
       {},
-      config
+      config,
     );
     return response.data;
   } catch (error: any) {
@@ -402,5 +402,25 @@ export async function completeOrganizationRegistration(
     const errorMsg = error.response?.data?.message || error.message;
     console.error(`Failed to complete organization registration:`, errorMsg);
     throw errorMsg;
+  }
+}
+
+export async function manualVerifyConsultant(
+  consultantId: string,
+): Promise<boolean> {
+  try {
+    const config = await getAxiosConfig();
+    await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/${consultantId}/manual-verify`,
+      {},
+      config,
+    );
+    return true;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to manually verify consultant:", error);
+    throw error.response?.data?.message || "Failed to verify consultant";
   }
 }

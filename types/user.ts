@@ -38,7 +38,30 @@ export interface AcademicCertificate {
 }
 
 export type UserStatus = "active" | "pending" | "rejected" | "suspended";
-export type UserRole = "consultant" | "admin" | "hr" | "finance";
+export type UserRole =
+  | "consultant"
+  | "admin"
+  | "super_admin"
+  | "hr"
+  | "finance"
+  | "budget_checker"
+  | "budget_manager"
+  | "finance_approver"
+  | "claim_checker"
+  | "claim_manager"
+  | "managing_director"
+  | "hod"
+  | "accountant"
+  | "head_of_programs"
+  | "director"
+  | "academic_director"
+  | "srcc_checker"
+  | "srcc_finance"
+  | "reviewer"
+  | "approver"
+  | "coach_finance"
+  | "srcc_invoice_request"
+  | "invoice_approver";
 export type Availability = "available" | "unavailable" | "busy";
 
 export interface User {
