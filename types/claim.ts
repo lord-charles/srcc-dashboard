@@ -80,6 +80,19 @@ export interface PaymentDetails {
   paymentAdviceUrl: string;
 }
 
+export type ClaimDocument = {
+  url: string;
+  name: string;
+  type: "invoice" | "receipt" | "timesheet" | "report" | "other" | string;
+  uploadedAt?: string;
+  uploadedBy?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+};
+
 export interface Claim {
   _id: string;
   projectId: {
@@ -138,7 +151,7 @@ export interface Claim {
     lastName: string;
     email?: string;
   };
-  documents: string[];
+  documents: Array<ClaimDocument | string>;
   auditTrail: AuditTrailEntry[];
   createdAt: string;
   updatedAt: string;
@@ -151,4 +164,12 @@ export interface Claim {
   approvalFlow: ApprovalFlow;
   currentLevelDeadline?: string;
   payment?: PaymentDetails;
+
+  coachClaim?: {
+    units: number;
+    rate: number;
+    rateUnit: "per_session" | "per_hour";
+    unitAmount: number;
+    totalAmount: number;
+  };
 }
