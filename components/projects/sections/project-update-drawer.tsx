@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { Loader2, AlertCircle } from "lucide-react";
+import { getProjectConfig } from "@/services/system-config.service";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -40,6 +41,28 @@ export function ProjectUpdateDrawer({
 }: ProjectUpdateDrawerProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setLoadingDepartments(true);
+      try {
+        const config = await getProjectConfig();
+        if (config && config.data.departments) {
+          setDepartments(config.data.departments);
+        }
+      } catch (error) {
+        console.error("Failed to fetch departments", error);
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    if (open) {
+      fetchDepartments();
+    }
+  }, [open]);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -180,27 +203,30 @@ export function ProjectUpdateDrawer({
             <Select
               value={watch("department")}
               onValueChange={(value) => setValue("department", value)}
+              disabled={loadingDepartments}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select Department" />
+                {loadingDepartments ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading departments...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select Department" />
+                )}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ILAB">ILAB - Innovation Lab</SelectItem>
-                <SelectItem value="SBS">
-                  SBS - School of Business Studies
-                </SelectItem>
-                <SelectItem value="SRCC">
-                  SRCC - Strathmore Research & Consultancy Centre
-                </SelectItem>
-                <SelectItem value="SHSS">
-                  SHSS - School of Humanities & Social Sciences
-                </SelectItem>
-                <SelectItem value="SERC">
-                  SERC - Strathmore Energy Research Centre
-                </SelectItem>
-                <SelectItem value="SIMS">
-                  SIMS - School of Information Management & Systems
-                </SelectItem>
+                {departments.length === 0 && !loadingDepartments ? (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    No departments configured
+                  </div>
+                ) : (
+                  departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
