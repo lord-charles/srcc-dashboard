@@ -601,21 +601,25 @@ export interface Milestone {
   _id: string;
   title: string;
   description: string;
+  startDate?: string;
   dueDate: string;
   completed: boolean;
   completionDate?: string;
   budget: number;
   actualCost?: number;
+  percentage?: number;
 }
 
 export interface AddMilestonePayload {
   title: string;
   description: string;
+  startDate?: string;
   dueDate: string;
   completed: boolean;
   completionDate?: string;
   budget: number;
   actualCost?: number;
+  percentage?: number;
 }
 
 export interface UpdateMilestonePayload extends Partial<

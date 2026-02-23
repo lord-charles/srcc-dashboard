@@ -411,10 +411,10 @@ const ContractsTable = ({
                           </TableCell>
                           <TableCell>
                             <div className="font-medium">
-                              {`${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`}
+                              {`${contract.contractedUserId?.firstName} ${contract.contractedUserId?.lastName}`}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {contract.contractedUserId.email}
+                              {contract.contractedUserId?.email}
                             </div>
                           </TableCell>
                           <TableCell>{`${contract.contractValue.toLocaleString()} ${

@@ -39,6 +39,7 @@ import { ProjectMilestone } from "@/types/project";
 const milestoneSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
+  startDate: z.string().optional().nullable(),
   dueDate: z.string().min(1, "Due date is required"),
   completed: z.boolean(),
   completionDate: z.string().optional().nullable(),
@@ -46,6 +47,12 @@ const milestoneSchema = z.object({
   actualCost: z.coerce
     .number()
     .min(0, "Actual cost must be a positive number")
+    .optional()
+    .nullable(),
+  percentage: z.coerce
+    .number()
+    .min(0, "Percentage must be at least 0")
+    .max(100, "Percentage cannot exceed 100")
     .optional()
     .nullable(),
 });
@@ -73,11 +80,13 @@ export function EditMilestoneDialog({
     defaultValues: {
       title: "",
       description: "",
+      startDate: "",
       dueDate: "",
       completed: false,
       completionDate: null,
       budget: 0,
       actualCost: null,
+      percentage: null,
     },
   });
 
@@ -93,6 +102,9 @@ export function EditMilestoneDialog({
       reset({
         title: milestone.title,
         description: milestone.description,
+        startDate: milestone.startDate
+          ? format(new Date(milestone.startDate), "yyyy-MM-dd")
+          : "",
         dueDate: format(new Date(milestone.dueDate), "yyyy-MM-dd"),
         completed: milestone.completed,
         completionDate: milestone.completionDate
@@ -100,16 +112,19 @@ export function EditMilestoneDialog({
           : null,
         budget: milestone.budget,
         actualCost: milestone.actualCost || null,
+        percentage: milestone.percentage || null,
       });
     } else {
       reset({
         title: "",
         description: "",
+        startDate: "",
         dueDate: "",
         completed: false,
         completionDate: null,
         budget: 0,
         actualCost: null,
+        percentage: null,
       });
     }
   }, [milestone, reset]);
@@ -119,8 +134,10 @@ export function EditMilestoneDialog({
       // Convert null values to undefined for API compatibility
       const submitData = {
         ...data,
+        startDate: data.startDate || undefined,
         completionDate: data.completionDate || undefined,
         actualCost: data.actualCost || undefined,
+        percentage: data.percentage || undefined,
       };
 
       if (milestone?._id) {
@@ -130,7 +147,7 @@ export function EditMilestoneDialog({
           description: "Milestone updated successfully",
         });
       } else {
-        await addMilestone(projectId, submitData);
+        await addMilestone(projectId, submitData as any);
         toast({
           title: "Success",
           description: "Milestone added successfully",
@@ -196,10 +213,28 @@ export function EditMilestoneDialog({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
+                name="startDate"
+                render={({ field: { value, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Start Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        value={value || ""}
+                        placeholder="Select start date"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>End Date</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
@@ -207,6 +242,8 @@ export function EditMilestoneDialog({
                   </FormItem>
                 )}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="budget"
@@ -219,6 +256,27 @@ export function EditMilestoneDialog({
                         {...field}
                         step="10"
                         placeholder="Enter budget amount"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="percentage"
+                render={({ field: { value, ...field } }) => (
+                  <FormItem>
+                    <FormLabel>Project Percentage (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        value={value || ""}
+                        min={0}
+                        max={100}
+                        step="0.1"
+                        placeholder="e.g. 30"
                       />
                     </FormControl>
                     <FormMessage />
@@ -249,7 +307,7 @@ export function EditMilestoneDialog({
             <div
               className={cn(
                 "grid grid-cols-2 gap-4",
-                !isCompleted && "opacity-50"
+                !isCompleted && "opacity-50",
               )}
             >
               <FormField
@@ -283,7 +341,7 @@ export function EditMilestoneDialog({
                         value={value || ""}
                         onChange={(e) =>
                           onChange(
-                            e.target.value ? Number(e.target.value) : null
+                            e.target.value ? Number(e.target.value) : null,
                           )
                         }
                         min={0}

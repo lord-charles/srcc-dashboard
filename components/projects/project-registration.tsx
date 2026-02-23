@@ -28,22 +28,40 @@ import { createProject } from "@/services/projects-service";
 import { cloudinaryService } from "@/lib/cloudinary-service";
 import { useToast } from "@/hooks/use-toast";
 import { FileUpload } from "../ui/file-upload";
+import { getProjectConfig } from "@/services/system-config.service";
+import { useEffect } from "react";
 
 // Define the validation schema
 const projectSchema = z.object({
   name: z.string().min(2, "Project name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   // totalBudget: z.coerce.number().min(0, "Budget must be a positive number"),
-  totalProjectValue: z.coerce.number().min(0, "Project value must be a positive number"),
+  totalProjectValue: z.coerce
+    .number()
+    .min(0, "Project value must be a positive number"),
   currency: z.enum(["KES", "USD", "EUR", "GBP"]).default("KES"),
   contractStartDate: z.date(),
   contractEndDate: z.date(),
   client: z.string().min(2, "Client name must be at least 2 characters"),
-  department: z.enum(["SBS", "SRCC", "SHSS", "SERC", "SIMS", "ILAB"]).default("ILAB"),
-  status: z.enum(["draft", "pending_approval", "active", "on_hold", "completed", "cancelled"]).default("draft"),
+  department: z.string().min(1, "Department is required"),
+  status: z
+    .enum([
+      "draft",
+      "pending_approval",
+      "active",
+      "on_hold",
+      "completed",
+      "cancelled",
+    ])
+    .default("draft"),
   reportingFrequency: z.enum(["Weekly", "Biweekly", "Monthly", "Quarterly"]),
   riskLevel: z.enum(["Low", "Medium", "High"]),
-  procurementMethod: z.enum(["Open Tender", "Restricted Tender", "Direct Procurement", "Request for Quotation"]),
+  procurementMethod: z.enum([
+    "Open Tender",
+    "Restricted Tender",
+    "Direct Procurement",
+    "Request for Quotation",
+  ]),
   riskAssessment: z.object({
     factors: z.array(z.string()),
     mitigationStrategies: z.array(z.string()),
@@ -51,15 +69,23 @@ const projectSchema = z.object({
     // nextAssessmentDate: z.date()
   }),
   actualCompletionDate: z.date().optional(),
-  milestones: z.array(z.object({
-    title: z.string().min(2, "Title must be at least 2 characters"),
-    description: z.string().min(10, "Description must be at least 10 characters"),
-    dueDate: z.date(),
-    completed: z.boolean().default(false),
-    completionDate: z.date().optional(),
-    budget: z.number().min(0),
-    actualCost: z.number().optional(),
-  })).default([]),
+  milestones: z
+    .array(
+      z.object({
+        title: z.string().min(2, "Title must be at least 2 characters"),
+        description: z
+          .string()
+          .min(10, "Description must be at least 10 characters"),
+        dueDate: z.date(),
+        startDate: z.date().optional(),
+        completed: z.boolean().default(false),
+        completionDate: z.date().optional(),
+        budget: z.number().min(0),
+        actualCost: z.number().optional(),
+        percentage: z.number().min(0).max(100).optional(),
+      }),
+    )
+    .default([]),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -74,7 +100,9 @@ export function NewProjectComponent() {
   const [executionMemoUrl, setExecutionMemoUrl] = useState<string>("");
   const [signedBudgetUrl, setSignedBudgetUrl] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
-
+  const [availableDepartments, setAvailableDepartments] = useState<string[]>(
+    [],
+  );
 
   // Replace react-hook-form with pure React state
   const [formData, setFormData] = useState<Partial<ProjectFormData>>({
@@ -88,55 +116,76 @@ export function NewProjectComponent() {
     riskAssessment: {
       factors: [],
       mitigationStrategies: [],
-    }
+    },
   });
-  
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const config = await getProjectConfig();
+        if (config && config.data.departments) {
+          setAvailableDepartments(config.data.departments);
+          if (config.data.departments.length > 0) {
+            setFormData((prev) => ({
+              ...prev,
+              department: config.data.departments[0],
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch departments", error);
+      }
+    };
+    fetchDepartments();
+  }, []);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
 
   // Helper to format Date for HTML date input
   const formatDateInput = (date?: Date): string => {
     if (!date) return "";
-    const pad = (n: number) => String(n).padStart(2, '0');
+    const pad = (n: number) => String(n).padStart(2, "0");
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   };
 
-
   // Handle milestone management
   const addMilestone = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      milestones: [...(prev.milestones || []), {
-        title: '',
-        description: '',
-        dueDate: new Date(),
-        completed: false,
-        budget: 0
-      }]
+      milestones: [
+        ...(prev.milestones || []),
+        {
+          title: "",
+          description: "",
+          dueDate: new Date(),
+          completed: false,
+          budget: 0,
+        },
+      ],
     }));
   };
 
   const removeMilestone = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      milestones: prev.milestones?.filter((_, i) => i !== index) || []
+      milestones: prev.milestones?.filter((_, i) => i !== index) || [],
     }));
   };
 
   const updateMilestone = (index: number, field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      milestones: prev.milestones?.map((milestone, i) => 
-        i === index ? { ...milestone, [field]: value } : milestone
-      ) || []
+      milestones:
+        prev.milestones?.map((milestone, i) =>
+          i === index ? { ...milestone, [field]: value } : milestone,
+        ) || [],
     }));
   };
 
-
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name || formData.name.length < 2) {
       newErrors.name = "Project name must be at least 2 characters";
     }
@@ -155,7 +204,7 @@ export function NewProjectComponent() {
     if (!formData.contractEndDate) {
       newErrors.contractEndDate = "End date is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -175,7 +224,8 @@ export function NewProjectComponent() {
       if (!signedContractUrl || !executionMemoUrl || !signedBudgetUrl) {
         toast({
           title: "Missing Files",
-          description: "Please upload all required project documents (Signed Contract, Execution Memo, and Signed Budget).",
+          description:
+            "Please upload all required project documents (Signed Contract, Execution Memo, and Signed Budget).",
           variant: "destructive",
         });
         return;
@@ -205,10 +255,13 @@ export function NewProjectComponent() {
         router.push("/projects");
       }, 2000);
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Creation Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -217,10 +270,10 @@ export function NewProjectComponent() {
   };
 
   const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -258,8 +311,8 @@ export function NewProjectComponent() {
                   <Label htmlFor="name">Project Name *</Label>
                   <Input
                     id="name"
-                    value={formData.name || ''}
-                    onChange={(e) => updateFormData('name', e.target.value)}
+                    value={formData.name || ""}
+                    onChange={(e) => updateFormData("name", e.target.value)}
                     className={errors.name ? "border-red-500" : ""}
                   />
                   {errors.name && (
@@ -271,8 +324,10 @@ export function NewProjectComponent() {
                   <Label htmlFor="description">Description *</Label>
                   <Textarea
                     id="description"
-                    value={formData.description || ''}
-                    onChange={(e) => updateFormData('description', e.target.value)}
+                    value={formData.description || ""}
+                    onChange={(e) =>
+                      updateFormData("description", e.target.value)
+                    }
                     className={errors.description ? "border-red-500" : ""}
                   />
                   {errors.description && (
@@ -284,8 +339,8 @@ export function NewProjectComponent() {
                   <Label htmlFor="client">Client *</Label>
                   <Input
                     id="client"
-                    value={formData.client || ''}
-                    onChange={(e) => updateFormData('client', e.target.value)}
+                    value={formData.client || ""}
+                    onChange={(e) => updateFormData("client", e.target.value)}
                     className={errors.client ? "border-red-500" : ""}
                   />
                   {errors.client && (
@@ -295,17 +350,21 @@ export function NewProjectComponent() {
 
                 <div className="space-y-2">
                   <Label>School/Department *</Label>
-                  <Select value={formData.department || 'SRCC'} onValueChange={(value) => updateFormData('department', value)}>
+                  <Select
+                    value={formData.department || ""}
+                    onValueChange={(value) =>
+                      updateFormData("department", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select School/Department" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ILAB">ILAB</SelectItem>
-                      <SelectItem value="SBS">SBS</SelectItem>
-                      <SelectItem value="SRCC">SRCC</SelectItem>
-                      <SelectItem value="SHSS">SHSS</SelectItem>
-                      <SelectItem value="SERC">SERC</SelectItem>
-                      <SelectItem value="SIMS">SIMS</SelectItem>
+                      {availableDepartments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {errors.department && (
@@ -314,22 +373,34 @@ export function NewProjectComponent() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="totalProjectValue">Total Project Value *</Label>
+                  <Label htmlFor="totalProjectValue">
+                    Total Project Value *
+                  </Label>
                   <Input
                     id="totalProjectValue"
                     type="number"
-                    value={formData.totalProjectValue || ''}
-                    onChange={(e) => updateFormData('totalProjectValue', parseFloat(e.target.value) || 0)}
+                    value={formData.totalProjectValue || ""}
+                    onChange={(e) =>
+                      updateFormData(
+                        "totalProjectValue",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
                     className={errors.totalProjectValue ? "border-red-500" : ""}
                   />
                   {errors.totalProjectValue && (
-                    <p className="text-sm text-red-500">{errors.totalProjectValue}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.totalProjectValue}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency *</Label>
-                  <Select value={formData.currency || 'KES'} onValueChange={(value) => updateFormData('currency', value)}>
+                  <Select
+                    value={formData.currency || "KES"}
+                    onValueChange={(value) => updateFormData("currency", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
@@ -345,22 +416,34 @@ export function NewProjectComponent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="contractStartDate">Start Date *</Label>
-                  <Input
-                    id="contractStartDate"
-                    type="date"
-                    value={formatDateInput(formData.contractStartDate as Date)}
-                    onChange={(e) => updateFormData('contractStartDate', e.target.value ? new Date(e.target.value) : undefined)}
-                  />
+                    <Input
+                      id="contractStartDate"
+                      type="date"
+                      value={formatDateInput(
+                        formData.contractStartDate as Date,
+                      )}
+                      onChange={(e) =>
+                        updateFormData(
+                          "contractStartDate",
+                          e.target.value ? new Date(e.target.value) : undefined,
+                        )
+                      }
+                    />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="contractEndDate">End Date *</Label>
-                  <Input
-                    id="contractEndDate"
-                    type="date"
-                    value={formatDateInput(formData.contractEndDate as Date)}
-                    onChange={(e) => updateFormData('contractEndDate', e.target.value ? new Date(e.target.value) : undefined)}
-                  />
+                    <Input
+                      id="contractEndDate"
+                      type="date"
+                      value={formatDateInput(formData.contractEndDate as Date)}
+                      onChange={(e) =>
+                        updateFormData(
+                          "contractEndDate",
+                          e.target.value ? new Date(e.target.value) : undefined,
+                        )
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -375,18 +458,21 @@ export function NewProjectComponent() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-
-
                 <div className="space-y-2">
                   <Label>Project Status *</Label>
-                  <Select value={formData.status || 'active'} onValueChange={(value) => updateFormData('status', value)}>
+                  <Select
+                    value={formData.status || "active"}
+                    onValueChange={(value) => updateFormData("status", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="pending_approval">Pending Approval</SelectItem>
+                      <SelectItem value="pending_approval">
+                        Pending Approval
+                      </SelectItem>
                       <SelectItem value="on_hold">On Hold</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -396,7 +482,12 @@ export function NewProjectComponent() {
 
                 <div className="space-y-2">
                   <Label>Reporting Frequency *</Label>
-                  <Select value={formData.reportingFrequency || 'Monthly'} onValueChange={(value) => updateFormData('reportingFrequency', value)}>
+                  <Select
+                    value={formData.reportingFrequency || "Monthly"}
+                    onValueChange={(value) =>
+                      updateFormData("reportingFrequency", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select frequency" />
                     </SelectTrigger>
@@ -411,19 +502,32 @@ export function NewProjectComponent() {
 
                 <div className="space-y-2">
                   <Label>Procurement Method *</Label>
-                  <Select value={formData.procurementMethod || 'Open Tender'} onValueChange={(value) => updateFormData('procurementMethod', value)}>
+                  <Select
+                    value={formData.procurementMethod || "Open Tender"}
+                    onValueChange={(value) =>
+                      updateFormData("procurementMethod", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select procurement method" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Open Tender">Open Tender</SelectItem>
-                      <SelectItem value="Restricted Tender">Restricted Tender</SelectItem>
-                      <SelectItem value="Direct Procurement">Direct Procurement</SelectItem>
-                      <SelectItem value="Request for Quotation">Request for Quotation</SelectItem>
+                      <SelectItem value="Restricted Tender">
+                        Restricted Tender
+                      </SelectItem>
+                      <SelectItem value="Direct Procurement">
+                        Direct Procurement
+                      </SelectItem>
+                      <SelectItem value="Request for Quotation">
+                        Request for Quotation
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.procurementMethod && (
-                    <p className="text-sm text-red-500">{errors.procurementMethod}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.procurementMethod}
+                    </p>
                   )}
                 </div>
 
@@ -434,35 +538,40 @@ export function NewProjectComponent() {
                       <Label>Risk Factors</Label>
                       <Textarea
                         placeholder="Enter risk factors (one per line)"
-                        value={formData.riskAssessment?.factors?.join('\n') || ''}
-                        onChange={(e) => updateFormData('riskAssessment', {
-                          ...formData.riskAssessment,
-                          factors: e.target.value.split('\n')
-                        })}
+                        value={
+                          formData.riskAssessment?.factors?.join("\n") || ""
+                        }
+                        onChange={(e) =>
+                          updateFormData("riskAssessment", {
+                            ...formData.riskAssessment,
+                            factors: e.target.value.split("\n"),
+                          })
+                        }
                       />
                     </div>
                     <div>
                       <Label>Mitigation Strategies</Label>
                       <Textarea
                         placeholder="Enter mitigation strategies (one per line)"
-                        value={formData.riskAssessment?.mitigationStrategies?.join('\n') || ''}
-                        onChange={(e) => updateFormData('riskAssessment', {
-                          ...formData.riskAssessment,
-                          mitigationStrategies: e.target.value.split('\n')
-                        })}
+                        value={
+                          formData.riskAssessment?.mitigationStrategies?.join(
+                            "\n",
+                          ) || ""
+                        }
+                        onChange={(e) =>
+                          updateFormData("riskAssessment", {
+                            ...formData.riskAssessment,
+                            mitigationStrategies: e.target.value.split("\n"),
+                          })
+                        }
                       />
                     </div>
-
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-
-
         </div>
-
-
 
         {/* upload documents */}
         <Card className="mt-4">
@@ -479,11 +588,20 @@ export function NewProjectComponent() {
                     if (files.length > 0) {
                       setIsUploading(true);
                       try {
-                        const url = await cloudinaryService.uploadFile(files[0]);
+                        const url = await cloudinaryService.uploadFile(
+                          files[0],
+                        );
                         setProjectProposalUrl(url);
-                        toast({ title: "Success", description: "Project proposal uploaded." });
+                        toast({
+                          title: "Success",
+                          description: "Project proposal uploaded.",
+                        });
                       } catch (error) {
-                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                        toast({
+                          title: "Upload Failed",
+                          description: "Could not upload file.",
+                          variant: "destructive",
+                        });
                       } finally {
                         setIsUploading(false);
                       }
@@ -491,7 +609,12 @@ export function NewProjectComponent() {
                   }}
                 />
                 {projectProposalUrl && (
-                  <a href={projectProposalUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                  <a
+                    href={projectProposalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline"
+                  >
                     View Uploaded Proposal
                   </a>
                 )}
@@ -503,11 +626,20 @@ export function NewProjectComponent() {
                     if (files.length > 0) {
                       setIsUploading(true);
                       try {
-                        const url = await cloudinaryService.uploadFile(files[0]);
+                        const url = await cloudinaryService.uploadFile(
+                          files[0],
+                        );
                         setSignedContractUrl(url);
-                        toast({ title: "Success", description: "Signed contract uploaded." });
+                        toast({
+                          title: "Success",
+                          description: "Signed contract uploaded.",
+                        });
                       } catch (error) {
-                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                        toast({
+                          title: "Upload Failed",
+                          description: "Could not upload file.",
+                          variant: "destructive",
+                        });
                       } finally {
                         setIsUploading(false);
                       }
@@ -515,7 +647,12 @@ export function NewProjectComponent() {
                   }}
                 />
                 {signedContractUrl && (
-                  <a href={signedContractUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                  <a
+                    href={signedContractUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline"
+                  >
                     View Uploaded Contract
                   </a>
                 )}
@@ -527,11 +664,20 @@ export function NewProjectComponent() {
                     if (files.length > 0) {
                       setIsUploading(true);
                       try {
-                        const url = await cloudinaryService.uploadFile(files[0]);
+                        const url = await cloudinaryService.uploadFile(
+                          files[0],
+                        );
                         setExecutionMemoUrl(url);
-                        toast({ title: "Success", description: "Execution memo uploaded." });
+                        toast({
+                          title: "Success",
+                          description: "Execution memo uploaded.",
+                        });
                       } catch (error) {
-                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                        toast({
+                          title: "Upload Failed",
+                          description: "Could not upload file.",
+                          variant: "destructive",
+                        });
                       } finally {
                         setIsUploading(false);
                       }
@@ -539,7 +685,12 @@ export function NewProjectComponent() {
                   }}
                 />
                 {executionMemoUrl && (
-                  <a href={executionMemoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                  <a
+                    href={executionMemoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline"
+                  >
                     View Uploaded Memo
                   </a>
                 )}
@@ -551,11 +702,20 @@ export function NewProjectComponent() {
                     if (files.length > 0) {
                       setIsUploading(true);
                       try {
-                        const url = await cloudinaryService.uploadFile(files[0]);
+                        const url = await cloudinaryService.uploadFile(
+                          files[0],
+                        );
                         setSignedBudgetUrl(url);
-                        toast({ title: "Success", description: "Signed budget uploaded." });
+                        toast({
+                          title: "Success",
+                          description: "Signed budget uploaded.",
+                        });
                       } catch (error) {
-                        toast({ title: "Upload Failed", description: "Could not upload file.", variant: "destructive" });
+                        toast({
+                          title: "Upload Failed",
+                          description: "Could not upload file.",
+                          variant: "destructive",
+                        });
                       } finally {
                         setIsUploading(false);
                       }
@@ -563,7 +723,12 @@ export function NewProjectComponent() {
                   }}
                 />
                 {signedBudgetUrl && (
-                  <a href={signedBudgetUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
+                  <a
+                    href={signedBudgetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline"
+                  >
                     View Uploaded Budget
                   </a>
                 )}
@@ -577,7 +742,9 @@ export function NewProjectComponent() {
           <Card>
             <CardHeader>
               <CardTitle>Project Milestones</CardTitle>
-              <CardDescription>Define project milestones and their details</CardDescription>
+              <CardDescription>
+                Define project milestones and their details
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -596,212 +763,102 @@ export function NewProjectComponent() {
                       <div className="space-y-2">
                         <Label>Milestone Title *</Label>
                         <Input
-                          value={milestone.title || ''}
-                          onChange={(e) => updateMilestone(index, 'title', e.target.value)}
+                          value={milestone.title || ""}
+                          onChange={(e) =>
+                            updateMilestone(index, "title", e.target.value)
+                          }
                           placeholder="Enter milestone title"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label>Description *</Label>
                         <Textarea
-                          value={milestone.description || ''}
-                          onChange={(e) => updateMilestone(index, 'description', e.target.value)}
+                          value={milestone.description || ""}
+                          onChange={(e) =>
+                            updateMilestone(
+                              index,
+                              "description",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Enter milestone description"
                         />
                       </div>
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label>Due Date *</Label>
+                          <Label>Start Date</Label>
+                          <Input
+                            type="date"
+                            value={formatDateInput(milestone.startDate as Date)}
+                            onChange={(e) =>
+                              updateMilestone(
+                                index,
+                                "startDate",
+                                e.target.value
+                                  ? new Date(e.target.value)
+                                  : undefined,
+                              )
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>End Date *</Label>
                           <Input
                             type="date"
                             value={formatDateInput(milestone.dueDate as Date)}
-                            onChange={(e) => updateMilestone(index, 'dueDate', e.target.value ? new Date(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              updateMilestone(
+                                index,
+                                "dueDate",
+                                e.target.value
+                                  ? new Date(e.target.value)
+                                  : undefined,
+                              )
+                            }
                           />
                         </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>Budget *</Label>
                           <Input
                             type="number"
-                            value={milestone.budget || ''}
-                            onChange={(e) => updateMilestone(index, 'budget', parseFloat(e.target.value) || 0)}
+                            value={milestone.budget || ""}
+                            onChange={(e) =>
+                              updateMilestone(
+                                index,
+                                "budget",
+                                parseFloat(e.target.value) || 0,
+                              )
+                            }
                             placeholder="Enter budget"
+                          />
+                        </div>
+                        <div>
+                          <Label>Weight (%)</Label>
+                          <Input
+                            type="number"
+                            value={milestone.percentage || ""}
+                            onChange={(e) =>
+                              updateMilestone(
+                                index,
+                                "percentage",
+                                parseFloat(e.target.value) || 0,
+                              )
+                            }
+                            placeholder="e.g. 20"
                           />
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addMilestone}
-                >
+                <Button type="button" variant="outline" onClick={addMilestone}>
                   Add Milestone
                 </Button>
               </div>
             </CardContent>
           </Card>
-
-          {/* Team Members */}
-          {/* <Card>
-            <CardHeader>
-              <CardTitle>Team Members</CardTitle>
-              <CardDescription>Assign team members to the project</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {teamMemberFields.map((field, index) => (
-                  <div key={field.id} className="p-4 border rounded-md relative">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-2"
-                      onClick={() => removeTeamMember(index)}
-                    >
-                      ×
-                    </Button>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Name *</Label>
-                        <Input
-                          {...register(`teamMembers.${index}.name`)}
-                          placeholder="Enter team member name"
-                        />
-                        {errors.teamMembers?.[index]?.name && (
-                          <p className="text-sm text-red-500">{errors.teamMembers[index]?.name?.message}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Email *</Label>
-                        <Input
-                          type="email"
-                          {...register(`teamMembers.${index}.email`)}
-                          placeholder="Enter team member email"
-                        />
-                        {errors.teamMembers?.[index]?.email && (
-                          <p className="text-sm text-red-500">{errors.teamMembers[index]?.email?.message}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Phone *</Label>
-                        <Input
-                          {...register(`teamMembers.${index}.phone`)}
-                          placeholder="Enter team member phone"
-                        />
-                        {errors.teamMembers?.[index]?.phone && (
-                          <p className="text-sm text-red-500">{errors.teamMembers[index]?.phone?.message}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Role *</Label>
-                        <Input
-                          {...register(`teamMembers.${index}.role`)}
-                          placeholder="Enter team member role"
-                        />
-                        {errors.teamMembers?.[index]?.role && (
-                          <p className="text-sm text-red-500">{errors.teamMembers[index]?.role?.message}</p>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <Label>Start Date *</Label>
-                          <Controller
-                            name={`teamMembers.${index}.startDate`}
-                            control={control}
-                            render={({ field }) => (
-                              <DatePicker date={field.value} setDate={field.onChange} />
-                            )}
-                          />
-                          {errors.teamMembers?.[index]?.startDate && (
-                            <p className="text-sm text-red-500">{errors.teamMembers[index]?.startDate?.message}</p>
-                          )}
-                        </div>
-                        <div>
-                          <Label>End Date (Optional)</Label>
-                          <Controller
-                            name={`teamMembers.${index}.endDate`}
-                            control={control}
-                            render={({ field }) => (
-                              <DatePicker date={field.value} setDate={field.onChange} />
-                            )}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Responsibilities</Label>
-                        <Controller
-                          name={`teamMembers.${index}.responsibilities`}
-                          control={control}
-                          render={({ field }) => (
-                            <Textarea
-                              placeholder="Enter responsibilities (one per line)"
-                              value={field.value?.join('\n')}
-                              onChange={(e) => field.onChange(e.target.value.split('\n'))}
-                            />
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => appendTeamMember({
-                    name: '',
-                    email: '',
-                    phone: '',
-                    role: '',
-                    startDate: new Date(),
-                    responsibilities: []
-                  })}
-                >
-                  Add Team Member
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="space-y-2 p-2">
-            <Label>Project Manager Details</Label>
-            <div className="grid gap-2">
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input
-                  {...register("projectManager.name")}
-                  placeholder="Enter project manager name"
-                  className={errors.projectManager?.name ? "border-red-500" : ""}
-                />
-                {errors.projectManager?.name && (
-                  <p className="text-sm text-red-500">{errors.projectManager.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Email *</Label>
-                <Input
-                  type="email"
-                  {...register("projectManager.email")}
-                  placeholder="Enter project manager email"
-                  className={errors.projectManager?.email ? "border-red-500" : ""}
-                />
-                {errors.projectManager?.email && (
-                  <p className="text-sm text-red-500">{errors.projectManager.email.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Phone *</Label>
-                <Input
-                  {...register("projectManager.phone")}
-                  placeholder="Enter project manager phone"
-                  className={errors.projectManager?.phone ? "border-red-500" : ""}
-                />
-                {errors.projectManager?.phone && (
-                  <p className="text-sm text-red-500">{errors.projectManager.phone.message}</p>
-                )}
-              </div>
-
-            </div>
-          </Card> */}
         </div>
 
         {/* Actions */}
@@ -822,7 +879,11 @@ export function NewProjectComponent() {
             disabled={isSubmitting || isUploading}
             onClick={handleSubmit}
           >
-            {isSubmitting ? "Creating..." : isUploading ? "Uploading..." : "Create Project"}
+            {isSubmitting
+              ? "Creating..."
+              : isUploading
+                ? "Uploading..."
+                : "Create Project"}
           </Button>
         </div>
       </div>

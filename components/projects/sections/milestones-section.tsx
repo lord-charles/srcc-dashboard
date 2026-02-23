@@ -15,6 +15,7 @@ import {
   DollarSign,
   MilestoneIcon,
   Pencil,
+  AlertTriangle,
 } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
 import {
@@ -179,7 +180,18 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
                       )}
                     </div>
                     <div>
-                      <h4 className="font-semibold">{milestone.title}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">{milestone.title}</h4>
+                        {(!milestone.percentage || !milestone.startDate) && (
+                          <Badge
+                            variant="destructive"
+                            className="h-5 gap-1 px-2 text-[10px] uppercase tracking-wider"
+                          >
+                            <AlertTriangle className="h-3 w-3" />
+                            Missing Info
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {milestone.description}
                       </p>
@@ -214,39 +226,72 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
                   </div>
                 </div>
                 <Separator />
-                <div className="grid grid-cols-3 gap-4 p-4 text-sm">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 text-sm">
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{formatDate(milestone.dueDate)}</span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-muted-foreground leading-none mb-1">
+                        Timeline
+                      </span>
+                      <span>
+                        {milestone.startDate
+                          ? formatDate(milestone.startDate)
+                          : "N/A"}{" "}
+                        - {formatDate(milestone.dueDate)}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {formatCurrency(milestone.budget)}
-                      {milestone.actualCost && (
-                        <span className="text-muted-foreground">
-                          {" "}
-                          / {formatCurrency(milestone.actualCost)}
-                        </span>
-                      )}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-muted-foreground leading-none mb-1">
+                        Budget
+                      </span>
+                      <span>
+                        {formatCurrency(milestone.budget)}
+                        {milestone.actualCost && (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            / {formatCurrency(milestone.actualCost)}
+                          </span>
+                        )}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <MilestoneIcon className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {(() => {
-                        const totalBudget =
-                          projectData?.budgetId?.totalExternalBudget || 0;
-                        const percentage =
-                          totalBudget > 0
-                            ? ((milestone?.budget || 0) / totalBudget) * 100
-                            : 0;
-                        return isNaN(percentage)
-                          ? "0.0"
-                          : percentage.toFixed(1);
-                      })()}
-                      % of total budget
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-muted-foreground leading-none mb-1">
+                        Project Weight
+                      </span>
+                      <span className="font-medium text-primary">
+                        {milestone.percentage
+                          ? `${milestone.percentage}%`
+                          : "Not set"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="h-4 w-1 bg-muted-foreground/20 rounded-full" />
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-muted-foreground leading-none mb-1">
+                        Budget Ratio
+                      </span>
+                      <span>
+                        {(() => {
+                          const totalBudget =
+                            projectData?.budgetId?.totalExternalBudget || 0;
+                          const percentage =
+                            totalBudget > 0
+                              ? ((milestone?.budget || 0) / totalBudget) * 100
+                              : 0;
+                          return isNaN(percentage)
+                            ? "0.0"
+                            : percentage.toFixed(1);
+                        })()}
+                        % of budget
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Card>

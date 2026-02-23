@@ -56,11 +56,13 @@ export interface ProjectMilestone {
   _id: string;
   title: string;
   description: string;
+  startDate?: string;
   dueDate: string;
   completed: boolean;
   completionDate?: string;
   budget: number;
   actualCost?: number | null;
+  percentage?: number;
 }
 
 export interface ProjectDocument {
@@ -151,6 +153,14 @@ export interface InvoiceRevisionRequest {
   returnToLevel: string;
 }
 
+export interface InvoiceCreditNote {
+  issuedAt: string;
+  amount: number;
+  comment: string;
+  fileUrl?: string;
+  recordedBy: User;
+}
+
 export interface Invoice {
   _id: string;
   projectId: string;
@@ -178,13 +188,14 @@ export interface Invoice {
     | "partially_paid"
     | "overdue"
     | "cancelled"
-    |"pending_invoice_approver"
+    | "pending_invoice_approver";
   paymentTerms: string;
   notes: string;
   createdBy: string;
   updatedBy: string;
   auditTrail: AuditTrailItem[];
   payments: Payment[];
+  creditNotes?: InvoiceCreditNote[];
   createdAt: string;
   updatedAt: string;
   __v: number;
