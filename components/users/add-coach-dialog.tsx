@@ -22,6 +22,7 @@ import {
   DollarSign,
   Briefcase,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { ProjectMilestone } from "@/types/project";
 import { Badge } from "@/components/ui/badge";
