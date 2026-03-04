@@ -67,9 +67,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { updateEmployee } from "@/services/employees.service";
+import { getProjectConfig } from "@/services/system-config.service";
 import type { UserRole } from "@/types/user";
 
 const updateUserRoles = async (userId: string, roles: UserRole[]) => {
@@ -116,17 +117,6 @@ const departmentRequiredRoles = [
   "invoice_approver",
 ];
 
-// Available departments
-const availableDepartments = [
-  "SRCC",
-  "SU",
-  "SBS",
-  "ILAB",
-  "SERC",
-  "SIMS",
-  "SHSS",
-];
-
 export default function EmployeeDetailsPage({ employee }: any) {
   const totalDeductions =
     (employee?.nhifDeduction || 0) + (employee?.nssfDeduction || 0);
@@ -150,6 +140,23 @@ export default function EmployeeDetailsPage({ employee }: any) {
   const [isUpdatingRoles, setIsUpdatingRoles] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showDepartmentWarning, setShowDepartmentWarning] = useState(false);
+  const [availableDepartments, setAvailableDepartments] = useState<string[]>(
+    [],
+  );
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const config = await getProjectConfig();
+        if (config && config.data.departments) {
+          setAvailableDepartments(config.data.departments);
+        }
+      } catch (error) {
+        console.error("Failed to fetch departments", error);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   const filteredAvailableRoles = availableRoles
     .filter((role: UserRole) => !userRoles.includes(role))
