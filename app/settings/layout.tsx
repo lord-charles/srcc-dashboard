@@ -11,6 +11,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         <nav className="space-y-2 text-sm">
           <Link className="block hover:underline" href="/settings">General</Link>
           <Link className="block hover:underline" href="/settings/contract-templates">Contract Templates</Link>
+          <Link className="block hover:underline" href="/settings/charts-of-accounts">Charts of Accounts</Link>
         </nav>
       </aside>
       <main className="flex-1 p-6">
