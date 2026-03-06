@@ -263,6 +263,26 @@ export async function updateProject(
   }
 }
 
+export async function updateProjectDetails(
+  projectId: string,
+  data: any,
+): Promise<Project> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/details`,
+      data,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw error?.response?.data.message || error;
+  }
+}
+
 export async function handleUnauthorized() {
   redirect("/unauthorized");
 }
@@ -581,21 +601,25 @@ export interface Milestone {
   _id: string;
   title: string;
   description: string;
+  startDate?: string;
   dueDate: string;
   completed: boolean;
   completionDate?: string;
   budget: number;
   actualCost?: number;
+  percentage?: number;
 }
 
 export interface AddMilestonePayload {
   title: string;
   description: string;
+  startDate?: string;
   dueDate: string;
   completed: boolean;
   completionDate?: string;
   budget: number;
   actualCost?: number;
+  percentage?: number;
 }
 
 export interface UpdateMilestonePayload extends Partial<

@@ -65,6 +65,7 @@ import {
   requestInvoiceRevision,
   approveInvoice,
   approverRequestChanges,
+  addCreditNote,
 } from "@/services/invoice.service";
 import { Invoice, InvoiceFormState } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
@@ -113,8 +114,11 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [showRevisionDrawer, setShowRevisionDrawer] = useState<string | null>(
     null,
   );
+  const [showCreditNoteDrawer, setShowCreditNoteDrawer] = useState<
+    string | null
+  >(null);
 
-  console.log("invoices", invoices)
+  console.log("invoices", invoices);
   const [paymentForm, setPaymentForm] = useState<any>({});
   const [paymentTab, setPaymentTab] = useState<"regular" | "wht" | "wht_vat">(
     "regular",
@@ -124,6 +128,11 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     comments: string;
     changes: string[];
   }>({ comments: "", changes: [""] });
+  const [creditNoteForm, setCreditNoteForm] = useState<{
+    amount: number;
+    comment: string;
+    fileUrl?: string;
+  }>({ amount: 0, comment: "" });
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false);
   const [isAttachSubmitting, setIsAttachSubmitting] = useState(false);
   const [isRevisionSubmitting, setIsRevisionSubmitting] = useState(false);
@@ -131,6 +140,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const [isWhtCertUploading, setIsWhtCertUploading] = useState(false);
   const [isWhtVatCertUploading, setIsWhtVatCertUploading] = useState(false);
   const [isAttachUploading, setIsAttachUploading] = useState(false);
+  const [isCreditNoteUploading, setIsCreditNoteUploading] = useState(false);
+  const [isCreditNoteSubmitting, setIsCreditNoteSubmitting] = useState(false);
   const [paymentErrors, setPaymentErrors] = useState<Record<string, string>>(
     {},
   );
@@ -151,6 +162,11 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     setRevisionForm({ comments: "", changes: [""] });
   };
   const closeRevisionDrawer = () => setShowRevisionDrawer(null);
+  const openCreditNoteDrawer = (invoiceId: string) => {
+    setShowCreditNoteDrawer(invoiceId);
+    setCreditNoteForm({ amount: 0, comment: "" });
+  };
+  const closeCreditNoteDrawer = () => setShowCreditNoteDrawer(null);
 
   const handlePaymentSubmit = async () => {
     if (!showPaymentDrawer) return;
@@ -291,10 +307,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
         description: "Invoice approved and moved to pending attachment",
       });
     } catch (error: any) {
-      const errorMessage = (error.message || "Failed to approve invoice").replace(
-        /^Error: /,
-        "",
-      );
+      const errorMessage = (
+        error.message || "Failed to approve invoice"
+      ).replace(/^Error: /, "");
 
       toast({
         title: "Error",
@@ -314,7 +329,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       await attachActualInvoice(showAttachDrawer, attachUrl);
       toast({ title: "Success", description: "Actual invoice URL attached." });
       closeAttachDrawer();
-  
     } catch (error: any) {
       toast({
         title: "Error",
@@ -381,7 +395,38 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     } finally {
       setIsRevisionSubmitting(false);
       setTimeout(() => window.location.reload(), 1000);
+    }
+  };
 
+  const handleCreditNoteSubmit = async () => {
+    if (!showCreditNoteDrawer) return;
+
+    if (creditNoteForm.amount <= 0 || !creditNoteForm.comment.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide an amount and a comment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreditNoteSubmitting(true);
+    try {
+      await addCreditNote(showCreditNoteDrawer, creditNoteForm);
+      toast({
+        title: "Success",
+        description: "Credit note added successfully.",
+      });
+      closeCreditNoteDrawer();
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add credit note.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreditNoteSubmitting(false);
     }
   };
 
@@ -560,9 +605,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     } finally {
       setIsSubmitting(false);
       setTimeout(() => window.location.reload(), 1500);
-
     }
-
   };
 
   const handleSubmitForApproval = async (invoice: Invoice) => {
@@ -574,10 +617,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
         description: "Invoice submitted for approval",
       });
     } catch (error: any) {
-      const errorMessage = error.message.replace(
-        /^Error: /,
-        ""
-      ) as string;
+      const errorMessage = error.message.replace(/^Error: /, "") as string;
       toast({
         title: "Error",
         description: errorMessage || "Failed to submit invoice for approval",
@@ -637,7 +677,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
   const toggleInvoiceExpansion = (invoiceId: string) => {
     setExpandedInvoice(expandedInvoice === invoiceId ? null : invoiceId);
   };
-
 
   return (
     <>
@@ -1111,13 +1150,28 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                             </span>
                           </div>
                           <div className="flex justify-between">
+                            <span className="text-sm">Credit Notes:</span>
+                            <span className="text-sm font-medium text-blue-600">
+                              {formatCurrency(
+                                invoice.creditNotes?.reduce(
+                                  (sum, cn) => sum + cn.amount,
+                                  0,
+                                ) || 0,
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
                             <span className="text-sm">Outstanding:</span>
                             <span className="text-sm font-medium text-red-600">
                               {formatCurrency(
                                 invoice.totalAmount -
                                   (invoice.payments?.reduce(
                                     (sum, payment: any) =>
-                                      sum + payment.amountPaid,
+                                      sum + (payment?.amountPaid || 0),
+                                    0,
+                                  ) || 0) -
+                                  (invoice.creditNotes?.reduce(
+                                    (sum, cn) => sum + (cn?.amount || 0),
                                     0,
                                   ) || 0),
                               )}
@@ -1229,10 +1283,10 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                   <TableCell className="text-sm">
                                     {payment.paidAt
                                       ? formatDate(payment.paidAt)
-                                      : 'N/A'}
+                                      : "N/A"}
                                   </TableCell>
                                   <TableCell className="text-sm capitalize">
-                                    {payment.method?.replace('_', ' ') || 'N/A'}
+                                    {payment.method?.replace("_", " ") || "N/A"}
                                   </TableCell>
                                   <TableCell className="text-right text-sm font-medium text-green-600">
                                     {formatCurrency(payment.amountPaid)}
@@ -1241,7 +1295,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                     <div className="space-y-1">
                                       {payment.referenceNumber && (
                                         <div>
-                                          <span className="font-semibold">Ref:</span>{' '}
+                                          <span className="font-semibold">
+                                            Ref:
+                                          </span>{" "}
                                           {payment.referenceNumber}
                                         </div>
                                       )}
@@ -1260,7 +1316,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                     <div className="flex flex-col gap-1 items-start">
                                       {payment.receiptUrl && (
                                         <div className="flex gap-1">
-                                   
                                           <a
                                             href={payment.receiptUrl}
                                             download={`payment-receipt-${index + 1}.pdf`}
@@ -1276,7 +1331,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                         </div>
                                       )}
 
-                                      {payment.method === 'wht' &&
+                                      {payment.method === "wht" &&
                                         payment.whtCertificateUrl && (
                                           <div className="flex gap-1">
                                             <a
@@ -1308,11 +1363,13 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                           </div>
                                         )}
 
-                                      {payment.method === 'wht_vat' &&
+                                      {payment.method === "wht_vat" &&
                                         payment.whtVatCertificateUrl && (
                                           <div className="flex gap-1">
                                             <a
-                                              href={payment.whtVatCertificateUrl}
+                                              href={
+                                                payment.whtVatCertificateUrl
+                                              }
                                               target="_blank"
                                               rel="noopener noreferrer"
                                             >
@@ -1326,7 +1383,9 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                                               </Button>
                                             </a>
                                             <a
-                                              href={payment.whtVatCertificateUrl}
+                                              href={
+                                                payment.whtVatCertificateUrl
+                                              }
                                               download={`wht-vat-certificate-${index + 1}.pdf`}
                                             >
                                               <Button
@@ -1365,19 +1424,99 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                           </div>
                           <div className="flex justify-between items-center mt-2">
                             <span className="text-sm font-medium text-gray-700">
+                              Credit Notes:
+                            </span>
+                            <span className="text-lg font-semibold text-blue-600">
+                              {formatCurrency(
+                                (invoice.creditNotes || []).reduce(
+                                  (sum, cn) => sum + cn.amount,
+                                  0,
+                                ),
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center mt-2 border-t pt-2">
+                            <span className="text-sm font-medium text-gray-700">
                               Outstanding Balance:
                             </span>
                             <span className="text-lg font-semibold text-red-600">
                               {formatCurrency(
                                 invoice.totalAmount -
-                                  invoice.payments.reduce(
+                                  (invoice.payments || []).reduce(
                                     (sum, payment: any) =>
                                       sum + payment.amountPaid,
+                                    0,
+                                  ) -
+                                  (invoice.creditNotes || []).reduce(
+                                    (sum, cn) => sum + cn.amount,
                                     0,
                                   ),
                               )}
                             </span>
                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Credit Notes Section */}
+                    {invoice.creditNotes && invoice.creditNotes.length > 0 && (
+                      <div className="mt-6 p-4 rounded-lg shadow border border-blue-100 bg-blue-50/20">
+                        <h5 className="font-semibold mb-3 text-blue-800">
+                          Credit Notes
+                        </h5>
+                        <div className="rounded-md border bg-white overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-[60px]">#</TableHead>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Comment</TableHead>
+                                <TableHead className="text-right">
+                                  Amount
+                                </TableHead>
+                                <TableHead className="text-right">
+                                  Action
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {invoice.creditNotes.map((cn: any, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="text-xs">
+                                    {index + 1}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {formatDate(cn.issuedAt)}
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {cn.comment}
+                                  </TableCell>
+                                  <TableCell className="text-right text-sm font-medium text-blue-600">
+                                    {formatCurrency(cn.amount)}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {cn.fileUrl && (
+                                      <a
+                                        href={cn.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-block"
+                                      >
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 px-2"
+                                        >
+                                          <FileText className="h-4 w-4 mr-1" />
+                                          View
+                                        </Button>
+                                      </a>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
                       </div>
                     )}
@@ -1591,12 +1730,20 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
 
                       {/* Only show payment button if not fully paid */}
                       {invoice.status !== "paid" && (
-                        <Button
-                          variant="default"
-                          onClick={() => openPaymentDrawer(invoice._id)}
-                        >
-                          Add Payment Record
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="default"
+                            onClick={() => openPaymentDrawer(invoice._id)}
+                          >
+                            Add Payment Record
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => openCreditNoteDrawer(invoice._id)}
+                          >
+                            Credit Note
+                          </Button>
+                        </div>
                       )}
 
                       {/* Show revision request button for pending_invoice_attachment status */}
@@ -1645,8 +1792,8 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
             <AlertDialogHeader>
               <AlertDialogTitle>Request Changes</AlertDialogTitle>
               <AlertDialogDescription>
-                These comments will be sent to the invoice creator and
-                recorded in the audit trail.
+                These comments will be sent to the invoice creator and recorded
+                in the audit trail.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="space-y-2 py-2">
@@ -2166,8 +2313,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
             </Tabs>
 
             <DrawerFooter>
-  
-                <Button
+              <Button
                 onClick={handlePaymentSubmit}
                 disabled={isPaymentSubmitting}
                 className="flex items-center w-full"
@@ -2342,6 +2488,105 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                   <Loader2 className="animate-spin mr-2 h-4 w-4" />
                 ) : null}
                 Request Revision
+              </Button>
+              <DrawerClose asChild>
+                <Button variant="outline" className="w-full">
+                  Cancel
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </ModalDrawer>
+      )}
+      {/* --- Credit Note Drawer --- */}
+      {showCreditNoteDrawer && (
+        <ModalDrawer
+          open={!!showCreditNoteDrawer}
+          onOpenChange={closeCreditNoteDrawer}
+        >
+          <DrawerContent className="max-w-lg mx-auto">
+            <DrawerHeader>
+              <DrawerTitle>Add Credit Note</DrawerTitle>
+              <DrawerDescription>
+                Add a credit note to reduce the invoice amount. This is useful
+                for excess invoicing or partial cancellations.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="p-4 space-y-4">
+              <div>
+                <Label>Amount *</Label>
+                <Input
+                  type="number"
+                  placeholder="Credit amount"
+                  value={creditNoteForm.amount || ""}
+                  onChange={(e) =>
+                    setCreditNoteForm((f) => ({
+                      ...f,
+                      amount: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <Label>Comment *</Label>
+                <Textarea
+                  placeholder="Reason for credit note..."
+                  value={creditNoteForm.comment}
+                  onChange={(e) =>
+                    setCreditNoteForm((f) => ({
+                      ...f,
+                      comment: e.target.value,
+                    }))
+                  }
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label>Attachment (Optional)</Label>
+                <FileUpload
+                  onChange={async (files) => {
+                    if (!files?.length) return;
+                    setIsCreditNoteUploading(true);
+                    try {
+                      const url = await cloudinaryService.uploadFile(files[0]);
+                      setCreditNoteForm((f) => ({ ...f, fileUrl: url }));
+                      toast({
+                        title: "Uploaded",
+                        description: "Credit note attached successfully",
+                      });
+                    } catch (e: any) {
+                      toast({
+                        title: "Upload failed",
+                        description: e?.message || "Unable to upload",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsCreditNoteUploading(false);
+                    }
+                  }}
+                />
+                {isCreditNoteUploading && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Uploading...
+                  </p>
+                )}
+                {creditNoteForm.fileUrl && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Linked: {creditNoteForm.fileUrl}
+                  </p>
+                )}
+              </div>
+            </div>
+            <DrawerFooter>
+              <Button
+                onClick={handleCreditNoteSubmit}
+                disabled={isCreditNoteSubmitting || isCreditNoteUploading}
+                className="w-full"
+              >
+                {isCreditNoteSubmitting ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : null}
+                Add Credit Note
               </Button>
               <DrawerClose asChild>
                 <Button variant="outline" className="w-full">

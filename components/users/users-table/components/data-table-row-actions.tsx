@@ -76,7 +76,7 @@ export function DataTableRowActions<TData>({
         <DropdownMenuItem
           className="text-red-600"
           onClick={handleDelete}
-          disabled={isDeleting}
+          disabled={true}
         >
           {isDeleting ? "Deleting..." : "Delete"}
           <DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>

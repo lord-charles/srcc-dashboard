@@ -73,6 +73,7 @@ import {
   Settings,
   CreditCardIcon,
   ChevronDown,
+  Pencil,
 } from "lucide-react";
 import {
   approveImprestAccountant,
@@ -81,6 +82,9 @@ import {
   rejectImprest,
   approveImprestAccounting,
   resolveImprestDispute,
+  requestImprestRevision,
+  acceptDisputeResolution,
+  requestAccountingRevision,
 } from "@/services/imprest.service";
 
 interface ImprestDetailsDrawerProps {
@@ -92,12 +96,12 @@ interface ImprestDetailsDrawerProps {
   onApprove?: (
     id: string,
     comments: string,
-    type: "hod" | "accountant"
+    type: "hod" | "accountant",
   ) => Promise<void>;
   onReject?: (id: string, reason: string) => Promise<void>;
   onDisburse?: (
     id: string,
-    data: { amount: number; comments: string }
+    data: { amount: number; comments: string },
   ) => Promise<void>;
 }
 
@@ -121,17 +125,27 @@ export function ImprestDetailsDrawer({
   const [isRejecting, setIsRejecting] = useState(false);
   const [isDisbursing, setIsDisbursing] = useState(false);
   const [isResolvingDispute, setIsResolvingDispute] = useState(false);
+  const [isRequestingRevision, setIsRequestingRevision] = useState(false);
+  const [showRevisionForm, setShowRevisionForm] = useState(false);
+  const [revisionReason, setRevisionReason] = useState("");
   const [disputeResolution, setDisputeResolution] = useState<
     "disbursed" | "cancelled"
   >("disbursed");
   const [disputeComments, setDisputeComments] = useState("");
   const [progress, setProgress] = useState(0);
+  const [isAcceptingResolution, setIsAcceptingResolution] = useState(false);
+  const [isRequestingAccountingRevision, setIsRequestingAccountingRevision] =
+    useState(false);
+  const [showAccountingRevisionForm, setShowAccountingRevisionForm] =
+    useState(false);
+  const [accountingRevisionReason, setAccountingRevisionReason] = useState("");
   const { toast } = useToast();
 
   // Calculate approval progress
   useEffect(() => {
     let progressValue = 0;
-    if (imprest?.status === "pending_hod") progressValue = 15;
+    if (imprest?.status === "revision_requested") progressValue = 5;
+    else if (imprest?.status === "pending_hod") progressValue = 15;
     else if (imprest?.status === "pending_accountant") progressValue = 30;
     else if (imprest?.status === "approved") progressValue = 50;
     else if (imprest?.status === "disbursed") progressValue = 65;
@@ -179,6 +193,13 @@ export function ImprestDetailsDrawer({
 
   const getStatusInfo = (status: ImprestStatus) => {
     switch (status) {
+      case "revision_requested":
+        return {
+          label: "Revision Requested",
+          color:
+            "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800/30",
+          icon: <Pencil className="h-3.5 w-3.5 mr-1.5" />,
+        };
       case "pending_hod":
         return {
           label: "Pending HOD",
@@ -469,6 +490,40 @@ export function ImprestDetailsDrawer({
     }
   };
 
+  const handleRequestRevision = async () => {
+    if (!revisionReason.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please provide a reason for the revision request",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsRequestingRevision(true);
+      await requestImprestRevision(imprest?._id, revisionReason);
+      toast({
+        title: "Revision requested",
+        description: "The imprest has been sent back for revision",
+      });
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Revision request failed",
+        description: error?.message || "Failed to request revision",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRequestingRevision(false);
+      setShowRevisionForm(false);
+      setRevisionReason("");
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    }
+  };
+
   const statusInfo = getStatusInfo(imprest?.status);
 
   return (
@@ -501,7 +556,7 @@ export function ImprestDetailsDrawer({
                   variant="outline"
                   className={cn(
                     "flex items-center px-3 py-1.5",
-                    statusInfo?.color
+                    statusInfo?.color,
                   )}
                 >
                   {statusInfo?.icon}
@@ -525,43 +580,43 @@ export function ImprestDetailsDrawer({
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 15 ? "bg-primary" : "bg-muted"
+                        progress >= 15 ? "bg-primary" : "bg-muted",
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 30 ? "bg-primary" : "bg-muted"
+                        progress >= 30 ? "bg-primary" : "bg-muted",
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 50 ? "bg-primary" : "bg-muted"
+                        progress >= 50 ? "bg-primary" : "bg-muted",
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 65 ? "bg-primary" : "bg-muted"
+                        progress >= 65 ? "bg-primary" : "bg-muted",
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 75 ? "bg-primary" : "bg-muted"
+                        progress >= 75 ? "bg-primary" : "bg-muted",
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 85 ? "bg-primary" : "bg-muted"
+                        progress >= 85 ? "bg-primary" : "bg-muted",
                       )}
                     />
                     <div
                       className={cn(
                         "h-4 w-4 rounded-full border-2 border-background",
-                        progress >= 100 ? "bg-primary" : "bg-muted"
+                        progress >= 100 ? "bg-primary" : "bg-muted",
                       )}
                     />
                   </div>
@@ -636,13 +691,13 @@ export function ImprestDetailsDrawer({
                     ].includes(imprest?.status)
                   }
                 >
-                  <Settings
+                  <FileCheck
                     className="-ms-0.5 me-1.5 opacity-60"
                     size={16}
                     strokeWidth={2}
                     aria-hidden="true"
                   />
-                  Actions
+                  Review & Approve
                 </TabsTrigger>
               </TabsList>
 
@@ -661,7 +716,7 @@ export function ImprestDetailsDrawer({
                             <p className="text-3xl font-bold mt-1">
                               {formatCurrency(
                                 imprest?.amount,
-                                imprest?.currency
+                                imprest?.currency,
                               )}
                             </p>
                             <div className="flex items-center mt-2 text-sm text-muted-foreground">
@@ -722,7 +777,7 @@ export function ImprestDetailsDrawer({
                             <AvatarFallback className="bg-primary/10 text-primary">
                               {getInitials(
                                 imprest?.requestedBy?.firstName,
-                                imprest?.requestedBy?.lastName
+                                imprest?.requestedBy?.lastName,
                               )}
                             </AvatarFallback>
                           </Avatar>
@@ -765,7 +820,7 @@ export function ImprestDetailsDrawer({
                               {imprest?.requestedBy?.employeeId ||
                                 "EMP-" +
                                   imprest?._id.substring(
-                                    imprest?._id.length - 6
+                                    imprest?._id.length - 6,
                                   )}
                             </span>
                           </div>
@@ -826,7 +881,7 @@ export function ImprestDetailsDrawer({
                                     imprest?.hodApproval.approvedBy
                                       ?.firstName || "H",
                                     imprest?.hodApproval.approvedBy?.lastName ||
-                                      "D"
+                                      "D",
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -876,7 +931,7 @@ export function ImprestDetailsDrawer({
                                     imprest?.rejection.rejectedBy?.firstName ||
                                       "R",
                                     imprest?.rejection.rejectedBy?.lastName ||
-                                      "J"
+                                      "J",
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -949,7 +1004,7 @@ export function ImprestDetailsDrawer({
                                     imprest?.accountantApproval.approvedBy
                                       ?.firstName || "F",
                                     imprest?.accountantApproval.approvedBy
-                                      ?.lastName || "A"
+                                      ?.lastName || "A",
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -972,7 +1027,7 @@ export function ImprestDetailsDrawer({
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {formatDate(
-                                    imprest?.accountantApproval.approvedAt
+                                    imprest?.accountantApproval.approvedAt,
                                   )}
                                 </p>
                               </div>
@@ -1072,14 +1127,14 @@ export function ImprestDetailsDrawer({
                                     "border",
                                     imprest?.acknowledgment.received
                                       ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                                      : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                      : "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400",
                                   )}
                                 >
                                   {getInitials(
                                     imprest?.acknowledgment.acknowledgedBy
                                       ?.firstName || "A",
                                     imprest?.acknowledgment.acknowledgedBy
-                                      ?.lastName || "U"
+                                      ?.lastName || "U",
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -1100,7 +1155,7 @@ export function ImprestDetailsDrawer({
                                       "ml-2",
                                       imprest?.acknowledgment.received
                                         ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30"
-                                        : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30"
+                                        : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30",
                                     )}
                                   >
                                     {imprest?.acknowledgment.received ? (
@@ -1118,7 +1173,7 @@ export function ImprestDetailsDrawer({
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {formatDate(
-                                    imprest?.acknowledgment.acknowledgedAt
+                                    imprest?.acknowledgment.acknowledgedAt,
                                   )}
                                 </p>
                               </div>
@@ -1204,7 +1259,7 @@ export function ImprestDetailsDrawer({
                                     imprest?.disputeResolution.resolvedBy
                                       ?.firstName || "A",
                                     imprest?.disputeResolution.resolvedBy
-                                      ?.lastName || "D"
+                                      ?.lastName || "D",
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -1228,7 +1283,7 @@ export function ImprestDetailsDrawer({
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {formatDate(
-                                    imprest?.disputeResolution.resolvedAt
+                                    imprest?.disputeResolution.resolvedAt,
                                   )}
                                 </p>
                               </div>
@@ -1275,7 +1330,7 @@ export function ImprestDetailsDrawer({
                                     imprest?.disbursement.disbursedBy
                                       ?.firstName || "F",
                                     imprest?.disbursement.disbursedBy
-                                      ?.lastName || "O"
+                                      ?.lastName || "O",
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -1298,7 +1353,7 @@ export function ImprestDetailsDrawer({
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                   {formatDate(
-                                    imprest?.disbursement.disbursedAt
+                                    imprest?.disbursement.disbursedAt,
                                   )}
                                 </p>
                               </div>
@@ -1312,7 +1367,7 @@ export function ImprestDetailsDrawer({
                                 <p className="text-lg font-semibold">
                                   {formatCurrency(
                                     imprest?.disbursement.amount,
-                                    imprest?.currency
+                                    imprest?.currency,
                                   )}
                                 </p>
                               </div>
@@ -1321,7 +1376,7 @@ export function ImprestDetailsDrawer({
                                   Payment Reference
                                 </h5>
                                 <p className="font-mono text-sm">{`REF-${imprest?._id.substring(
-                                  imprest?._id.length - 6
+                                  imprest?._id.length - 6,
                                 )}`}</p>
                               </div>
                             </div>
@@ -1443,7 +1498,7 @@ export function ImprestDetailsDrawer({
                                     imprest?.accounting.verifiedBy?.firstName ||
                                       "V",
                                     imprest?.accounting.verifiedBy?.lastName ||
-                                      "A"
+                                      "A",
                                   )}
                                 </AvatarFallback>
                               </Avatar>
@@ -1472,7 +1527,7 @@ export function ImprestDetailsDrawer({
                                 <p className="text-lg font-semibold">
                                   {formatCurrency(
                                     imprest?.amount,
-                                    imprest?.currency
+                                    imprest?.currency,
                                   )}
                                 </p>
                               </div>
@@ -1483,7 +1538,7 @@ export function ImprestDetailsDrawer({
                                 <p className="text-lg font-semibold">
                                   {formatCurrency(
                                     imprest?.accounting.totalAmount,
-                                    imprest?.currency
+                                    imprest?.currency,
                                   )}
                                 </p>
                               </div>
@@ -1493,16 +1548,16 @@ export function ImprestDetailsDrawer({
                                   imprest?.accounting.balance === 0
                                     ? "bg-emerald-50/50 dark:bg-emerald-900/10"
                                     : imprest?.accounting.balance > 0
-                                    ? "bg-amber-50/50 dark:bg-amber-900/10"
-                                    : "bg-red-50/50 dark:bg-red-900/10"
+                                      ? "bg-amber-50/50 dark:bg-amber-900/10"
+                                      : "bg-red-50/50 dark:bg-red-900/10",
                                 )}
                               >
                                 <h5 className="text-sm font-medium mb-1 text-muted-foreground">
                                   {imprest?.accounting.balance === 0
                                     ? "Balance (Settled)"
                                     : imprest?.accounting.balance > 0
-                                    ? "Balance (To Return)"
-                                    : "Balance (To Reimburse)"}
+                                      ? "Balance (To Return)"
+                                      : "Balance (To Reimburse)"}
                                 </h5>
                                 <p
                                   className={cn(
@@ -1510,13 +1565,13 @@ export function ImprestDetailsDrawer({
                                     imprest?.accounting.balance === 0
                                       ? "text-emerald-600 dark:text-emerald-400"
                                       : imprest?.accounting.balance > 0
-                                      ? "text-amber-600 dark:text-amber-400"
-                                      : "text-red-600 dark:text-red-400"
+                                        ? "text-amber-600 dark:text-amber-400"
+                                        : "text-red-600 dark:text-red-400",
                                   )}
                                 >
                                   {formatCurrency(
                                     Math.abs(imprest?.accounting.balance),
-                                    imprest?.currency
+                                    imprest?.currency,
                                   )}
                                 </p>
                               </div>
@@ -1574,7 +1629,7 @@ export function ImprestDetailsDrawer({
                                           <p className="font-semibold">
                                             {formatCurrency(
                                               receipt.amount,
-                                              imprest?.currency
+                                              imprest?.currency,
                                             )}
                                           </p>
                                         </div>
@@ -1606,7 +1661,7 @@ export function ImprestDetailsDrawer({
                                           </Tooltip>
                                         </TooltipProvider>
                                       </div>
-                                    )
+                                    ),
                                   )}
                                 </div>
                               ) : (
@@ -1652,6 +1707,63 @@ export function ImprestDetailsDrawer({
 
                   <TabsContent value="actions" className="m-0">
                     <AnimatePresence>
+                      {/* Request Summary Context Card */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="mb-5"
+                      >
+                        <div className="rounded-xl border bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-900/50 dark:to-slate-800/30 p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
+                              <FileText className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            <h4 className="font-semibold text-sm">
+                              Request Summary
+                            </h4>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200/60 dark:border-slate-700/50">
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                                Requester
+                              </p>
+                              <p className="text-sm font-semibold mt-0.5 truncate">
+                                {imprest?.requestedBy?.firstName}{" "}
+                                {imprest?.requestedBy?.lastName}
+                              </p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200/60 dark:border-slate-700/50">
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                                Amount
+                              </p>
+                              <p className="text-sm font-semibold mt-0.5">
+                                {formatCurrency(
+                                  imprest?.amount,
+                                  imprest?.currency,
+                                )}
+                              </p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200/60 dark:border-slate-700/50">
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                                Date
+                              </p>
+                              <p className="text-sm font-semibold mt-0.5">
+                                {formatDate(imprest?.requestDate)}
+                              </p>
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 rounded-lg p-2.5 border border-slate-200/60 dark:border-slate-700/50">
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                                Type
+                              </p>
+                              <p className="text-sm font-semibold mt-0.5 truncate">
+                                {imprest?.paymentType}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+
                       {imprest?.status === "pending_hod" && (
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
@@ -1659,92 +1771,158 @@ export function ImprestDetailsDrawer({
                           exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.2 }}
                         >
+                          {/* Step Indicator */}
+                          <div className="flex items-center gap-2 mb-4 px-1">
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                              1
+                            </div>
+                            <div className="h-0.5 flex-1 bg-muted rounded" />
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-muted text-muted-foreground text-xs font-bold">
+                              2
+                            </div>
+                            <div className="h-0.5 flex-1 bg-muted rounded" />
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-muted text-muted-foreground text-xs font-bold">
+                              3
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mb-5 px-1 text-[11px] text-muted-foreground">
+                            <span className="font-semibold text-primary">
+                              HOD Review
+                            </span>
+                            <span>Finance Review</span>
+                            <span>Disbursement</span>
+                          </div>
+
                           <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                            <div className="bg-muted/30 px-5 py-3 border-b">
-                              <h3 className="font-medium flex items-center">
-                                <User className="h-4 w-4 mr-2 text-primary" />
-                                HOD Approval Action
-                              </h3>
+                            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/20 px-5 py-4 border-b">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                                  <User className="h-4.5 w-4.5 text-blue-600 dark:text-blue-400" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-sm">
+                                    HOD Review Required
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    Review this request and decide whether to
+                                    approve, reject, or request changes
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                             <div className="p-5">
-                              {!showRejectForm ? (
-                                <div className="space-y-4">
+                              {!showRejectForm && !showRevisionForm ? (
+                                <div className="space-y-5">
                                   <div>
-                                    <Label htmlFor="hod-comments">
-                                      Approval Comments
+                                    <Label
+                                      htmlFor="hod-comments"
+                                      className="text-sm font-medium"
+                                    >
+                                      Your Review Comments
                                     </Label>
+                                    <p className="text-xs text-muted-foreground mt-0.5 mb-2">
+                                      Add any remarks or conditions for this
+                                      approval
+                                    </p>
                                     <Textarea
                                       id="hod-comments"
-                                      placeholder="Enter your comments for this approval..."
+                                      placeholder="e.g. Approved for project activities as per the budget..."
                                       value={comments}
                                       onChange={(e) =>
                                         setComments(e.target.value)
                                       }
-                                      className="mt-1.5 min-h-[120px]"
+                                      className="min-h-[100px] bg-slate-50/50 dark:bg-slate-900/30"
                                     />
                                   </div>
-                                  <div className="flex flex-col sm:flex-row gap-3">
-                                    <Button
-                                      onClick={handleApproveHOD}
-                                      disabled={isSubmitting}
-                                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                    >
-                                      {isSubmitting ? (
-                                        <>
-                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          Processing...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <CheckCircle className="mr-2 h-4 w-4" />
-                                          Approve Request
-                                        </>
-                                      )}
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setShowRejectForm(true)}
-                                      disabled={isSubmitting}
-                                      className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                                    >
-                                      <XCircle className="mr-2 h-4 w-4" />
-                                      Reject Request
-                                    </Button>
+                                  <div className="border-t pt-4">
+                                    <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                                      Choose an Action
+                                    </p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                      <Button
+                                        onClick={handleApproveHOD}
+                                        disabled={isSubmitting}
+                                        className="h-auto py-3 bg-emerald-600 hover:bg-emerald-700 text-white flex-col gap-1"
+                                      >
+                                        {isSubmitting ? (
+                                          <Loader2 className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                          <CheckCircle className="h-5 w-5" />
+                                        )}
+                                        <span className="text-xs font-semibold">
+                                          {isSubmitting
+                                            ? "Processing..."
+                                            : "Approve"}
+                                        </span>
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                          setShowRevisionForm(true)
+                                        }
+                                        disabled={isSubmitting}
+                                        className="h-auto py-3 border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 flex-col gap-1"
+                                      >
+                                        <Pencil className="h-5 w-5" />
+                                        <span className="text-xs font-semibold">
+                                          Request Revision
+                                        </span>
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setShowRejectForm(true)}
+                                        disabled={isSubmitting}
+                                        className="h-auto py-3 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 flex-col gap-1"
+                                      >
+                                        <XCircle className="h-5 w-5" />
+                                        <span className="text-xs font-semibold">
+                                          Reject
+                                        </span>
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
-                              ) : (
+                              ) : showRejectForm ? (
                                 <div className="space-y-4">
-                                  <div className="bg-red-50 border border-red-200 rounded-md p-4 flex items-start gap-3">
-                                    <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+                                  <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/40 rounded-lg p-4 flex items-start gap-3">
+                                    <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
                                     <div>
-                                      <h4 className="font-medium text-red-700 mb-1">
-                                        Reject Imprest Request
+                                      <h4 className="font-semibold text-red-700 dark:text-red-400 text-sm">
+                                        Reject This Request
                                       </h4>
-                                      <p className="text-sm text-red-600">
-                                        Please provide a reason for rejecting
-                                        this imprest request. This information
-                                        will be shared with the requester.
+                                      <p className="text-xs text-red-600 dark:text-red-300/80 mt-1">
+                                        The requester will be notified with your
+                                        reason. This action cannot be undone.
                                       </p>
                                     </div>
                                   </div>
                                   <div>
                                     <Label
                                       htmlFor="rejection-reason"
-                                      className="text-red-700"
+                                      className="text-sm font-medium text-red-700 dark:text-red-400"
                                     >
-                                      Rejection Reason
+                                      Reason for Rejection
                                     </Label>
                                     <Textarea
                                       id="rejection-reason"
-                                      placeholder="Please provide a detailed reason for rejection..."
+                                      placeholder="Please explain why this request is being rejected..."
                                       value={reason}
                                       onChange={(e) =>
                                         setReason(e.target.value)
                                       }
-                                      className="mt-1.5 min-h-[120px] border-red-200 focus-visible:ring-red-400"
+                                      className="mt-1.5 min-h-[100px] border-red-200 focus-visible:ring-red-400 bg-red-50/30"
                                     />
                                   </div>
-                                  <div className="flex flex-col sm:flex-row gap-3">
+                                  <div className="flex gap-3">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => setShowRejectForm(false)}
+                                      disabled={isRejecting}
+                                      className="flex-1"
+                                    >
+                                      <ArrowLeft className="mr-2 h-4 w-4" /> Go
+                                      Back
+                                    </Button>
                                     <Button
                                       variant="destructive"
                                       onClick={handleRejectImprest}
@@ -1752,25 +1930,74 @@ export function ImprestDetailsDrawer({
                                       className="flex-1"
                                     >
                                       {isRejecting ? (
-                                        <>
-                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                          Processing...
-                                        </>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                       ) : (
-                                        <>
-                                          <XCircle className="mr-2 h-4 w-4" />
-                                          Confirm Rejection
-                                        </>
+                                        <XCircle className="mr-2 h-4 w-4" />
                                       )}
+                                      {isRejecting
+                                        ? "Processing..."
+                                        : "Confirm Rejection"}
                                     </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-lg p-4 flex items-start gap-3">
+                                    <Pencil className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <h4 className="font-semibold text-amber-700 dark:text-amber-400 text-sm">
+                                        Request Changes
+                                      </h4>
+                                      <p className="text-xs text-amber-600 dark:text-amber-300/80 mt-1">
+                                        The request will be sent back for
+                                        revision. The requester will be notified
+                                        with your feedback.
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <Label
+                                      htmlFor="revision-reason-hod"
+                                      className="text-sm font-medium text-amber-700 dark:text-amber-400"
+                                    >
+                                      What needs to be changed?
+                                    </Label>
+                                    <Textarea
+                                      id="revision-reason-hod"
+                                      placeholder="Describe the changes needed..."
+                                      value={revisionReason}
+                                      onChange={(e) =>
+                                        setRevisionReason(e.target.value)
+                                      }
+                                      className="mt-1.5 min-h-[100px] border-amber-200 focus-visible:ring-amber-400 bg-amber-50/30"
+                                    />
+                                  </div>
+                                  <div className="flex gap-3">
                                     <Button
                                       variant="outline"
-                                      onClick={() => setShowRejectForm(false)}
-                                      disabled={isRejecting}
+                                      onClick={() => setShowRevisionForm(false)}
+                                      disabled={isRequestingRevision}
                                       className="flex-1"
                                     >
-                                      <ArrowLeft className="mr-2 h-4 w-4" />
-                                      Back to Approval
+                                      <ArrowLeft className="mr-2 h-4 w-4" /> Go
+                                      Back
+                                    </Button>
+                                    <Button
+                                      onClick={handleRequestRevision}
+                                      disabled={
+                                        isRequestingRevision ||
+                                        !revisionReason.trim()
+                                      }
+                                      className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                                    >
+                                      {isRequestingRevision ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                      )}
+                                      {isRequestingRevision
+                                        ? "Processing..."
+                                        : "Send for Revision"}
                                     </Button>
                                   </div>
                                 </div>
@@ -1787,12 +2014,46 @@ export function ImprestDetailsDrawer({
                           exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.2 }}
                         >
+                          {/* Step Indicator */}
+                          <div className="flex items-center gap-2 mb-4 px-1">
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-emerald-500 text-white text-xs font-bold">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                            </div>
+                            <div className="h-0.5 flex-1 bg-emerald-400 rounded" />
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                              2
+                            </div>
+                            <div className="h-0.5 flex-1 bg-muted rounded" />
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-muted text-muted-foreground text-xs font-bold">
+                              3
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mb-5 px-1 text-[11px] text-muted-foreground">
+                            <span className="text-emerald-600 font-medium">
+                              HOD Approved
+                            </span>
+                            <span className="font-semibold text-primary">
+                              Finance Review
+                            </span>
+                            <span>Disbursement</span>
+                          </div>
+
                           <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                            <div className="bg-muted/30 px-5 py-3 border-b">
-                              <h3 className="font-medium flex items-center">
-                                <Landmark className="h-4 w-4 mr-2 text-primary" />
-                                Finance Approval Action
-                              </h3>
+                            <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20 px-5 py-4 border-b">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center">
+                                  <Landmark className="h-4.5 w-4.5 text-violet-600 dark:text-violet-400" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-sm">
+                                    Finance Review Required
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    Verify budget availability and approve for
+                                    disbursement
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                             <div className="p-5">
                               {!showRejectForm ? (
@@ -1838,6 +2099,15 @@ export function ImprestDetailsDrawer({
                                       <XCircle className="mr-2 h-4 w-4" />
                                       Reject Request
                                     </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => setShowRevisionForm(true)}
+                                      disabled={isSubmitting}
+                                      className="flex-1 border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                                    >
+                                      <Pencil className="mr-2 h-4 w-4" />
+                                      Request Revision
+                                    </Button>
                                   </div>
                                 </div>
                               ) : (
@@ -1903,6 +2173,72 @@ export function ImprestDetailsDrawer({
                                   </div>
                                 </div>
                               )}
+
+                              {showRevisionForm && (
+                                <div className="space-y-4">
+                                  <div className="bg-amber-50 border border-amber-200 rounded-md p-4 flex items-start gap-3">
+                                    <Pencil className="h-5 w-5 text-amber-500 mt-0.5" />
+                                    <div>
+                                      <h4 className="font-medium text-amber-700 mb-1">
+                                        Request Revision
+                                      </h4>
+                                      <p className="text-sm text-amber-600">
+                                        The imprest will be sent back to the
+                                        requester for updates. They will be
+                                        notified with your feedback.
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <Label
+                                      htmlFor="revision-reason-acc"
+                                      className="text-amber-700"
+                                    >
+                                      Revision Reason
+                                    </Label>
+                                    <Textarea
+                                      id="revision-reason-acc"
+                                      placeholder="Explain what needs to be updated..."
+                                      value={revisionReason}
+                                      onChange={(e) =>
+                                        setRevisionReason(e.target.value)
+                                      }
+                                      className="mt-1.5 min-h-[120px] border-amber-200 focus-visible:ring-amber-400"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row gap-3">
+                                    <Button
+                                      onClick={handleRequestRevision}
+                                      disabled={
+                                        isRequestingRevision ||
+                                        !revisionReason.trim()
+                                      }
+                                      className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                                    >
+                                      {isRequestingRevision ? (
+                                        <>
+                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          Processing...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Pencil className="mr-2 h-4 w-4" />
+                                          Send for Revision
+                                        </>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => setShowRevisionForm(false)}
+                                      disabled={isRequestingRevision}
+                                      className="flex-1"
+                                    >
+                                      <ArrowLeft className="mr-2 h-4 w-4" />
+                                      Back to Approval
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </motion.div>
@@ -1916,11 +2252,21 @@ export function ImprestDetailsDrawer({
                           transition={{ duration: 0.2 }}
                         >
                           <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                            <div className="bg-muted/30 px-5 py-3 border-b">
-                              <h3 className="font-medium flex items-center">
-                                <FileCheck className="h-4 w-4 mr-2 text-primary" />
-                                Accounting Approval Action
-                              </h3>
+                            <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/20 px-5 py-4 border-b">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-teal-100 dark:bg-teal-900/50 flex items-center justify-center">
+                                  <FileCheck className="h-4.5 w-4.5 text-teal-600 dark:text-teal-400" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-sm">
+                                    Accounting Final Approval
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    Final review before marking this imprest as
+                                    fully accounted
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                             <div className="p-5">
                               <div className="space-y-4">
@@ -1939,59 +2285,191 @@ export function ImprestDetailsDrawer({
                                     disabled={isSubmitting}
                                   />
                                 </div>
-                                <Button
-                                  onClick={async () => {
-                                    if (!comments.trim()) {
-                                      toast({
-                                        title: "Missing information",
-                                        description:
-                                          "Please provide approval comments",
-                                        variant: "destructive",
-                                      });
-                                      return;
-                                    }
-                                    try {
-                                      setIsSubmitting(true);
-                                      await approveImprestAccounting(
-                                        imprest?._id,
-                                        comments
-                                      );
-                                      toast({
-                                        title: "Approval successful",
-                                        description:
-                                          "Imprest accounting has been approved",
-                                      });
-                                      onClose();
-                                    } catch (error: any) {
-                                      toast({
-                                        title: "Approval failed",
-                                        description:
-                                          error.message ||
-                                          "Failed to approve accounting",
-                                        variant: "destructive",
-                                      });
-                                    } finally {
-                                      setIsSubmitting(false);
-                                      setTimeout(() => {
-                                        window.location.reload();
-                                      }, 2000);
-                                    }
-                                  }}
-                                  disabled={isSubmitting}
-                                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                                >
-                                  {isSubmitting ? (
-                                    <>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Processing...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <CheckCircle className="mr-2 h-4 w-4" />
-                                      Approve Accounting
-                                    </>
-                                  )}
-                                </Button>
+                                {!showAccountingRevisionForm ? (
+                                  <div className="flex flex-col sm:flex-row gap-3">
+                                    <Button
+                                      onClick={async () => {
+                                        if (!comments.trim()) {
+                                          toast({
+                                            title: "Missing information",
+                                            description:
+                                              "Please provide approval comments",
+                                            variant: "destructive",
+                                          });
+                                          return;
+                                        }
+                                        try {
+                                          setIsSubmitting(true);
+                                          await approveImprestAccounting(
+                                            imprest?._id,
+                                            comments,
+                                          );
+                                          toast({
+                                            title: "Approval successful",
+                                            description:
+                                              "Imprest accounting has been approved",
+                                          });
+                                          onClose();
+                                        } catch (error: any) {
+                                          toast({
+                                            title: "Approval failed",
+                                            description:
+                                              error.message ||
+                                              "Failed to approve accounting",
+                                            variant: "destructive",
+                                          });
+                                        } finally {
+                                          setIsSubmitting(false);
+                                          setTimeout(() => {
+                                            window.location.reload();
+                                          }, 2000);
+                                        }
+                                      }}
+                                      disabled={isSubmitting}
+                                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    >
+                                      {isSubmitting ? (
+                                        <>
+                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          Processing...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <CheckCircle className="mr-2 h-4 w-4" />
+                                          Approve Accounting
+                                        </>
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      onClick={() =>
+                                        setShowAccountingRevisionForm(true)
+                                      }
+                                      disabled={isSubmitting}
+                                      className="flex-1 border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                                    >
+                                      <Pencil className="mr-2 h-4 w-4" />
+                                      Request Revision
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-4">
+                                    <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-md p-4 flex items-start gap-3">
+                                      <Pencil className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                                      <div>
+                                        <h4 className="font-medium text-amber-700 dark:text-amber-400 mb-1 text-sm">
+                                          Request Accounting Revision
+                                        </h4>
+                                        <p className="text-xs text-amber-600 dark:text-amber-300/80">
+                                          The accounting will be sent back for
+                                          revision. The requester will need to
+                                          resubmit their receipts and amounts.
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <Label
+                                        htmlFor="accounting-revision-reason"
+                                        className="text-sm font-medium text-amber-700 dark:text-amber-400"
+                                      >
+                                        Reason for Revision
+                                      </Label>
+                                      <Textarea
+                                        id="accounting-revision-reason"
+                                        placeholder="Explain what needs to be corrected in the accounting..."
+                                        value={accountingRevisionReason}
+                                        onChange={(e) =>
+                                          setAccountingRevisionReason(
+                                            e.target.value,
+                                          )
+                                        }
+                                        className="mt-1.5 min-h-[100px] border-amber-200 focus-visible:ring-amber-400 bg-amber-50/30"
+                                      />
+                                    </div>
+                                    <div className="flex gap-3">
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                          setShowAccountingRevisionForm(false);
+                                          setAccountingRevisionReason("");
+                                        }}
+                                        disabled={
+                                          isRequestingAccountingRevision
+                                        }
+                                        className="flex-1"
+                                      >
+                                        <ArrowLeft className="mr-2 h-4 w-4" />
+                                        Go Back
+                                      </Button>
+                                      <Button
+                                        onClick={async () => {
+                                          if (
+                                            !accountingRevisionReason.trim()
+                                          ) {
+                                            toast({
+                                              title: "Missing information",
+                                              description:
+                                                "Please provide a reason for the revision",
+                                              variant: "destructive",
+                                            });
+                                            return;
+                                          }
+                                          try {
+                                            setIsRequestingAccountingRevision(
+                                              true,
+                                            );
+                                            await requestAccountingRevision(
+                                              imprest?._id,
+                                              accountingRevisionReason,
+                                            );
+                                            toast({
+                                              title: "Revision requested",
+                                              description:
+                                                "Accounting has been sent back for revision",
+                                            });
+                                            onClose();
+                                          } catch (error: any) {
+                                            toast({
+                                              title: "Request failed",
+                                              description:
+                                                error.message ||
+                                                "Failed to request accounting revision",
+                                              variant: "destructive",
+                                            });
+                                          } finally {
+                                            setIsRequestingAccountingRevision(
+                                              false,
+                                            );
+                                            setShowAccountingRevisionForm(
+                                              false,
+                                            );
+                                            setAccountingRevisionReason("");
+                                            setTimeout(() => {
+                                              window.location.reload();
+                                            }, 2000);
+                                          }
+                                        }}
+                                        disabled={
+                                          isRequestingAccountingRevision ||
+                                          !accountingRevisionReason.trim()
+                                        }
+                                        className="flex-1 bg-amber-600 hover:bg-amber-700 text-white"
+                                      >
+                                        {isRequestingAccountingRevision ? (
+                                          <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Processing...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Pencil className="mr-2 h-4 w-4" />
+                                            Send for Revision
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -2005,12 +2483,48 @@ export function ImprestDetailsDrawer({
                           exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.2 }}
                         >
+                          {/* Step Indicator - All approved */}
+                          <div className="flex items-center gap-2 mb-4 px-1">
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-emerald-500 text-white text-xs font-bold">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                            </div>
+                            <div className="h-0.5 flex-1 bg-emerald-400 rounded" />
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-emerald-500 text-white text-xs font-bold">
+                              <CheckCircle className="h-3.5 w-3.5" />
+                            </div>
+                            <div className="h-0.5 flex-1 bg-emerald-400 rounded" />
+                            <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                              3
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mb-5 px-1 text-[11px] text-muted-foreground">
+                            <span className="text-emerald-600 font-medium">
+                              HOD Approved
+                            </span>
+                            <span className="text-emerald-600 font-medium">
+                              Finance Approved
+                            </span>
+                            <span className="font-semibold text-primary">
+                              Disbursement
+                            </span>
+                          </div>
+
                           <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                            <div className="bg-muted/30 px-5 py-3 border-b">
-                              <h3 className="font-medium flex items-center">
-                                <Banknote className="h-4 w-4 mr-2 text-primary" />
-                                Disburse Funds
-                              </h3>
+                            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/20 px-5 py-4 border-b">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                                  <Banknote className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-sm">
+                                    Ready for Disbursement
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    All approvals complete — enter disbursement
+                                    details below
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                             <div className="p-5">
                               <div className="space-y-4">
@@ -2041,7 +2555,7 @@ export function ImprestDetailsDrawer({
                                         value={disbursementAmount}
                                         onChange={(e) =>
                                           setDisbursementAmount(
-                                            Number(e.target.value)
+                                            Number(e.target.value),
                                           )
                                         }
                                         className="pl-12"
@@ -2056,12 +2570,12 @@ export function ImprestDetailsDrawer({
                                         Disbursing{" "}
                                         {formatCurrency(
                                           disbursementAmount,
-                                          imprest?.currency
+                                          imprest?.currency,
                                         )}{" "}
                                         of{" "}
                                         {formatCurrency(
                                           imprest?.amount,
-                                          imprest?.currency
+                                          imprest?.currency,
                                         )}
                                       </p>
                                     )}
@@ -2136,11 +2650,21 @@ export function ImprestDetailsDrawer({
                           transition={{ duration: 0.2 }}
                         >
                           <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-                            <div className="bg-muted/30 px-5 py-3 border-b">
-                              <h3 className="font-medium flex items-center">
-                                <ShieldCheck className="h-4 w-4 mr-2 text-primary" />
-                                Resolve Dispute (Admin Only)
-                              </h3>
+                            <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/20 px-5 py-4 border-b">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                                  <ShieldCheck className="h-4.5 w-4.5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-sm">
+                                    Dispute Resolution Required
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    Investigate the dispute and choose an
+                                    appropriate resolution
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                             <div className="p-5">
                               <div className="space-y-4">
@@ -2227,6 +2751,77 @@ export function ImprestDetailsDrawer({
                                     </>
                                   )}
                                 </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {imprest?.status === "resolved_dispute" && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+                            <div className="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/20 px-5 py-4 border-b">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                                  <CheckCircle className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
+                                </div>
+                                <div>
+                                  <h3 className="font-semibold text-sm">
+                                    Dispute Resolved
+                                  </h3>
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    The dispute has been resolved by admin —
+                                    awaiting user acceptance
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="p-5">
+                              <div className="space-y-4">
+                                {imprest?.disputeResolution && (
+                                  <div className="bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 rounded-md p-4">
+                                    <h4 className="font-medium text-purple-700 dark:text-purple-400 mb-2 text-sm">
+                                      Resolution Details
+                                    </h4>
+                                    <dl className="space-y-2 text-sm">
+                                      <div className="flex justify-between">
+                                        <dt className="text-muted-foreground">
+                                          Resolution:
+                                        </dt>
+                                        <dd className="font-medium capitalize">
+                                          {imprest.disputeResolution.resolution}
+                                        </dd>
+                                      </div>
+                                      {imprest.disputeResolution
+                                        .adminComments && (
+                                        <div>
+                                          <dt className="text-muted-foreground mb-1">
+                                            Admin Comments:
+                                          </dt>
+                                          <dd className="bg-white dark:bg-gray-900 p-2 rounded border text-sm">
+                                            {
+                                              imprest.disputeResolution
+                                                .adminComments
+                                            }
+                                          </dd>
+                                        </div>
+                                      )}
+                                    </dl>
+                                  </div>
+                                )}
+                                <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 rounded-md p-4 flex items-start gap-3">
+                                  <Info className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                                    Once the user accepts this resolution, the
+                                    imprest will move to &quot;disbursed&quot;
+                                    status and they can submit their accounting.
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>

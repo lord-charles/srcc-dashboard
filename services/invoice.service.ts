@@ -141,10 +141,7 @@ export async function approveInvoice(id: string, comments: string = "") {
   }
 }
 
-export async function approverRequestChanges(
-  id: string,
-  comments: string,
-) {
+export async function approverRequestChanges(id: string, comments: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Invoice>(
@@ -162,7 +159,7 @@ export async function approverRequestChanges(
       error?.response?.data?.message ||
       error?.response?.data?.error ||
       error?.message ||
-      'Failed to request changes as approver';
+      "Failed to request changes as approver";
 
     return { success: false, error: errorMessage };
   }
@@ -237,5 +234,27 @@ export async function requestInvoiceRevision(
       "Failed to request invoice revision";
 
     return { success: false, error: errorMessage };
+  }
+}
+
+export async function addCreditNote(
+  invoiceId: string,
+  creditNoteData: Record<string, any>,
+): Promise<Invoice> {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post<Invoice>(
+      `${API_URL}/invoices/${invoiceId}/credit-notes`,
+      creditNoteData,
+      config,
+    );
+    return response.data;
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    throw new Error(
+      error.response?.data?.message || "Failed to add credit note",
+    );
   }
 }

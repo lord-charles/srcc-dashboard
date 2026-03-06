@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -16,10 +16,12 @@ import {
   addTeamMember,
   addTeamMemberToMilestone,
 } from "@/services/projects-service";
-import { Loader2 } from "lucide-react";
+import { Loader2, X, Plus, Calendar, User, Briefcase } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ProjectMilestone } from "@/types/project";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface AddTeamMemberDialogProps {
   open: boolean;
@@ -120,140 +122,224 @@ export function AddTeamMemberDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Add Team Member</DialogTitle>
-          <DialogDescription>
-            Add {user?.firstName} {user?.lastName} to project {projectName}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" value={user?.email} disabled />
-          </div>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-[540px] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-xl font-semibold">
+            Add Team Member
+          </SheetTitle>
+          <SheetDescription className="text-base">
+            Assign {user?.firstName} {user?.lastName} to {projectName}
+          </SheetDescription>
+        </SheetHeader>
 
-          {milestones.length > 0 && (
-            <div className="grid gap-2">
-              <Label htmlFor="milestone">Milestone (Optional)</Label>
-              <select
-                id="milestone"
-                className="border rounded h-9 px-2"
-                value={selectedMilestoneId}
-                onChange={(e) => setSelectedMilestoneId(e.target.value)}
-              >
-                <option value="">Project-wide (No specific milestone)</option>
-                {milestones.map((milestone) => (
-                  <option key={milestone._id} value={milestone._id}>
-                    {milestone.title}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">
-                Select a milestone to assign this member to specific project
-                phases, or leave blank for project-wide assignment.
-              </p>
+        <div className="mt-6 space-y-6">
+          {/* Member Information */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>Member Information</span>
             </div>
-          )}
-
-          <div className="grid gap-2">
-            <Label htmlFor="start-date">Start Date</Label>
-            <Input
-              id="start-date"
-              type="date"
-              value={startDate ? startDate.toISOString().split("T")[0] : ""}
-              onChange={(e) =>
-                setStartDate(
-                  e.target.value ? new Date(e.target.value) : undefined,
-                )
-              }
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="end-date">End Date</Label>
-            <Input
-              id="end-date"
-              type="date"
-              value={endDate ? endDate.toISOString().split("T")[0] : ""}
-              onChange={(e) =>
-                setEndDate(
-                  e.target.value ? new Date(e.target.value) : undefined,
-                )
-              }
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="responsibility">Responsibilities</Label>
-            <div className="flex gap-2">
-              <Input
-                id="responsibility"
-                placeholder="Add a responsibility and press Enter"
-                value={respInput}
-                onChange={(e) => setRespInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const v = respInput.trim();
-                    if (v && !responsibilities.includes(v)) {
-                      setResponsibilities((prev) => [...prev, v]);
-                      setRespInput("");
-                    }
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                onClick={() => {
-                  const v = respInput.trim();
-                  if (v && !responsibilities.includes(v)) {
-                    setResponsibilities((prev) => [...prev, v]);
-                    setRespInput("");
-                  }
-                }}
-              >
-                Add
-              </Button>
-            </div>
-            {responsibilities.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-1">
-                {responsibilities.map((r) => (
-                  <div
-                    key={r}
-                    className="flex items-center gap-2 rounded border px-2 py-1 text-sm"
-                  >
-                    <span>{r}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        setResponsibilities((prev) =>
-                          prev.filter((x) => x !== r),
-                        )
-                      }
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                ))}
+            <div className="space-y-3 pl-6">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  value={user?.email}
+                  disabled
+                  className="bg-muted"
+                />
               </div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Examples: Frontend Development, UI/UX Design, Code Review
-            </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Assignment Details */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Briefcase className="h-4 w-4" />
+              <span>Assignment Details</span>
+            </div>
+            <div className="space-y-4 pl-6">
+              {milestones.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="milestone" className="text-sm font-medium">
+                    Milestone Assignment
+                  </Label>
+                  <select
+                    id="milestone"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={selectedMilestoneId}
+                    onChange={(e) => setSelectedMilestoneId(e.target.value)}
+                  >
+                    <option value="">
+                      Project-wide (No specific milestone)
+                    </option>
+                    {milestones.map((milestone) => (
+                      <option key={milestone._id} value={milestone._id}>
+                        {milestone.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Assign to a specific milestone or leave blank for
+                    project-wide access
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="start-date"
+                    className="text-sm font-medium flex items-center gap-1.5"
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    Start Date
+                  </Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={
+                      startDate ? startDate.toISOString().split("T")[0] : ""
+                    }
+                    onChange={(e) =>
+                      setStartDate(
+                        e.target.value ? new Date(e.target.value) : undefined,
+                      )
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="end-date"
+                    className="text-sm font-medium flex items-center gap-1.5"
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    End Date
+                  </Label>
+                  <Input
+                    id="end-date"
+                    type="date"
+                    value={endDate ? endDate.toISOString().split("T")[0] : ""}
+                    onChange={(e) =>
+                      setEndDate(
+                        e.target.value ? new Date(e.target.value) : undefined,
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Responsibilities */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <Briefcase className="h-4 w-4" />
+              <span>Responsibilities</span>
+            </div>
+            <div className="space-y-3 pl-6">
+              <div className="space-y-1.5">
+                <Label htmlFor="responsibility" className="text-sm font-medium">
+                  Add Responsibilities
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="responsibility"
+                    placeholder="e.g., Frontend Development"
+                    value={respInput}
+                    onChange={(e) => setRespInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const v = respInput.trim();
+                        if (v && !responsibilities.includes(v)) {
+                          setResponsibilities((prev) => [...prev, v]);
+                          setRespInput("");
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    onClick={() => {
+                      const v = respInput.trim();
+                      if (v && !responsibilities.includes(v)) {
+                        setResponsibilities((prev) => [...prev, v]);
+                        setRespInput("");
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Examples: Frontend Development, UI/UX Design, Code Review
+                </p>
+              </div>
+
+              {responsibilities.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Added Responsibilities
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {responsibilities.map((r) => (
+                      <Badge
+                        key={r}
+                        variant="secondary"
+                        className="pl-2.5 pr-1 py-1 gap-1.5"
+                      >
+                        <span>{r}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 p-0 hover:bg-transparent"
+                          onClick={() =>
+                            setResponsibilities((prev) =>
+                              prev.filter((x) => x !== r),
+                            )
+                          }
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+
+        <SheetFooter className="mt-8 gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            className="flex-1 sm:flex-1"
+          >
             Cancel
           </Button>
-          <Button onClick={handleAddMember} disabled={isLoading}>
+          <Button
+            onClick={handleAddMember}
+            disabled={isLoading}
+            className="flex-1 sm:flex-1"
+          >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Add to {selectedMilestoneId ? "Milestone" : "Project"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

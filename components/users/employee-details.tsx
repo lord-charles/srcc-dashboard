@@ -36,6 +36,7 @@ import { useRouter } from "next/navigation";
 import {
   approveConsultant,
   rejectConsultant,
+  manualVerifyConsultant,
 } from "@/services/consultant.service";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -66,9 +67,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { updateEmployee } from "@/services/employees.service";
+import { getProjectConfig } from "@/services/system-config.service";
 import type { UserRole } from "@/types/user";
 
 const updateUserRoles = async (userId: string, roles: UserRole[]) => {
@@ -96,7 +98,7 @@ const availableRoles: any[] = [
   "approver",
   "coach_finance",
   "srcc_invoice_request",
-  "invoice_approver"
+  "invoice_approver",
 ];
 
 // Roles that require department assignment
@@ -112,18 +114,7 @@ const departmentRequiredRoles = [
   "finance",
   "coach_finance",
   "srcc_invoice_request",
-  "invoice_approver"
-];
-
-// Available departments
-const availableDepartments = [
-  "SRCC",
-  "SU",
-  "SBS",
-  "ILAB",
-  "SERC",
-  "SIMS",
-  "SHSS",
+  "invoice_approver",
 ];
 
 export default function EmployeeDetailsPage({ employee }: any) {
@@ -135,8 +126,10 @@ export default function EmployeeDetailsPage({ employee }: any) {
   const { toast } = useToast();
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
 
   // Role management states
   const [userRoles, setUserRoles] = useState<UserRole[]>(employee?.roles || []);
@@ -147,6 +140,23 @@ export default function EmployeeDetailsPage({ employee }: any) {
   const [isUpdatingRoles, setIsUpdatingRoles] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [showDepartmentWarning, setShowDepartmentWarning] = useState(false);
+  const [availableDepartments, setAvailableDepartments] = useState<string[]>(
+    [],
+  );
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const config = await getProjectConfig();
+        if (config && config.data.departments) {
+          setAvailableDepartments(config.data.departments);
+        }
+      } catch (error) {
+        console.error("Failed to fetch departments", error);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   const filteredAvailableRoles = availableRoles
     .filter((role: UserRole) => !userRoles.includes(role))
@@ -276,6 +286,36 @@ export default function EmployeeDetailsPage({ employee }: any) {
     }
   };
 
+  const manualVerifyConsultantHandler = async (id: string) => {
+    try {
+      setIsVerifying(true);
+      const success = await manualVerifyConsultant(id);
+      if (success) {
+        toast({
+          title: "Success",
+          description:
+            "Consultant email and phone verified successfully. Status set to pending.",
+          variant: "default",
+        });
+        router.refresh();
+      } else {
+        throw new Error("Failed to verify consultant");
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to verify consultant",
+        variant: "destructive",
+      });
+    } finally {
+      setIsVerifying(false);
+      setShowVerifyDialog(false);
+    }
+  };
+
   return (
     <div className="p-2 md:p-6 min-h-screen ">
       <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -354,8 +394,28 @@ export default function EmployeeDetailsPage({ employee }: any) {
               >
                 {employee?.status || "unknown"}
               </Badge>
-              {employee?.status === "pending" && (
+              {(employee?.status === "pending_verification" ||
+                employee?.status === "pending") && (
                 <>
+                  {/* Show verify button if email or phone not verified */}
+                  {(!employee?.isEmailVerified ||
+                    !employee?.isPhoneVerified) && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowVerifyDialog(true)}
+                        disabled={isVerifying}
+                        className="border-blue-500 text-blue-500"
+                      >
+                        {isVerifying && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Verify Email & Phone
+                      </Button>
+                    </div>
+                  )}
+
                   <div className="flex gap-2 mt-2">
                     <Button
                       variant="default"
@@ -380,6 +440,52 @@ export default function EmployeeDetailsPage({ employee }: any) {
                       Reject
                     </Button>
                   </div>
+
+                  <AlertDialog
+                    open={showVerifyDialog}
+                    onOpenChange={setShowVerifyDialog}
+                  >
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Manual Verification</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will manually verify both the email and phone
+                          number for this consultant. The consultant&apos;s
+                          status will be set to pending for approval.
+                          <br />
+                          <br />
+                          <strong>Current Status:</strong>
+                          <br />
+                          Email:{" "}
+                          {employee?.isEmailVerified
+                            ? "✓ Verified"
+                            : "✗ Not Verified"}
+                          <br />
+                          Phone:{" "}
+                          {employee?.isPhoneVerified
+                            ? "✓ Verified"
+                            : "✗ Not Verified"}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isVerifying}>
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() =>
+                            manualVerifyConsultantHandler(employee._id)
+                          }
+                          disabled={isVerifying}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {isVerifying && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Verify
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
 
                   <AlertDialog
                     open={showApproveDialog}

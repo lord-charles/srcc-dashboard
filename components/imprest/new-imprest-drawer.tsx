@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { AlertCircle, Check, CreditCard, Info, Loader2, X } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  CreditCard,
+  Info,
+  Loader2,
+  Pencil,
+  X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +49,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { FileUpload } from "../ui/file-upload2";
 import { cloudinaryService } from "@/lib/cloudinary-service";
+import type { Imprest } from "@/types/imprest";
+import { updateImprest } from "@/services/imprest.service";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FILE_TYPES = [
@@ -109,13 +119,17 @@ interface NewImprestDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: FormValues) => Promise<void>;
+  editImprest?: Imprest | null;
 }
 
 export function NewImprestDrawer({
   open,
   onOpenChange,
   onSubmit,
+  editImprest,
 }: NewImprestDrawerProps) {
+  const isEditMode =
+    !!editImprest && editImprest.status === "revision_requested";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +149,21 @@ export function NewImprestDrawer({
       attachmentUrls: [],
     },
   });
+
+  // Pre-fill form when editing a revision_requested imprest
+  useEffect(() => {
+    if (isEditMode && editImprest) {
+      form.reset({
+        paymentReason: editImprest.paymentReason || "",
+        currency: editImprest.currency || "KES",
+        amount: editImprest.amount,
+        paymentType: editImprest.paymentType || "Contingency Cash",
+        explanation: editImprest.explanation || "",
+        attachmentUrls: editImprest.attachments?.map((a) => a.fileUrl) || [],
+      });
+      setUploadedUrls(editImprest.attachments?.map((a) => a.fileUrl) || []);
+    }
+  }, [isEditMode, editImprest]);
 
   const handleFileUpload = async (files: File[]) => {
     if (files.length === 0) return;
@@ -184,14 +213,20 @@ export function NewImprestDrawer({
         attachmentUrls: uploadedUrls,
       };
 
-      if (onSubmit) {
+      if (isEditMode && editImprest) {
+        await updateImprest(editImprest._id, formData);
+        toast({
+          title: "Imprest resubmitted",
+          description:
+            "Your revised imprest request has been resubmitted for approval.",
+        });
+      } else if (onSubmit) {
         await onSubmit(formData);
+        toast({
+          title: "Imprest request submitted",
+          description: "Your imprest request has been submitted successfully.",
+        });
       }
-
-      toast({
-        title: "Imprest request submitted",
-        description: "Your imprest request has been submitted successfully.",
-      });
 
       setTimeout(() => {
         onOpenChange(false);
@@ -204,7 +239,7 @@ export function NewImprestDrawer({
       setError(
         err instanceof Error
           ? err.message
-          : "An error occurred while submitting your request."
+          : "An error occurred while submitting your request.",
       );
 
       toast({
@@ -228,15 +263,25 @@ export function NewImprestDrawer({
         <div className="h-full flex flex-col  w-full">
           <DrawerHeader className="pb-4 border-b">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-full text-primary">
-                <CreditCard className="h-6 w-6" />
+              <div
+                className={`p-2 rounded-full ${isEditMode ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"}`}
+              >
+                {isEditMode ? (
+                  <Pencil className="h-6 w-6" />
+                ) : (
+                  <CreditCard className="h-6 w-6" />
+                )}
               </div>
               <div>
                 <DrawerTitle className="text-2xl font-semibold">
-                  New Imprest Request
+                  {isEditMode
+                    ? "Edit & Resubmit Imprest"
+                    : "New Imprest Request"}
                 </DrawerTitle>
                 <DrawerDescription className="text-sm mt-1">
-                  Create a new imprest application for approval
+                  {isEditMode
+                    ? "Update your imprest request and resubmit for approval"
+                    : "Create a new imprest application for approval"}
                 </DrawerDescription>
               </div>
             </div>
@@ -249,6 +294,18 @@ export function NewImprestDrawer({
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Error</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {isEditMode && editImprest?.revision && (
+                <Alert className="mb-6 border-amber-200 bg-amber-50">
+                  <Pencil className="h-4 w-4 text-amber-600" />
+                  <AlertTitle className="text-amber-700">
+                    Revision Requested
+                  </AlertTitle>
+                  <AlertDescription className="text-amber-600">
+                    {editImprest.revision.reason}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -397,7 +454,7 @@ export function NewImprestDrawer({
                                         field.onChange(
                                           value === ""
                                             ? undefined
-                                            : Number.parseFloat(value)
+                                            : Number.parseFloat(value),
                                         );
                                       }}
                                     />
@@ -501,7 +558,7 @@ export function NewImprestDrawer({
                                   size="sm"
                                   onClick={() => {
                                     setUploadedUrls((prev) =>
-                                      prev.filter((_, i) => i !== index)
+                                      prev.filter((_, i) => i !== index),
                                     );
                                   }}
                                   disabled={isSubmitting}
@@ -592,7 +649,7 @@ export function NewImprestDrawer({
                     ) : (
                       <>
                         <Check className="h-4 w-4" />
-                        Submit Request
+                        {isEditMode ? "Resubmit Request" : "Submit Request"}
                       </>
                     )}
                   </Button>

@@ -10,9 +10,16 @@ import {
   Trash2,
   SendIcon,
   AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -67,7 +74,7 @@ export function ImprestAccountabilitySection({
   const updateReceipt = (
     index: number,
     field: keyof Receipt,
-    value: string | number
+    value: string | number,
   ) => {
     const updatedReceipts = [...receipts];
     updatedReceipts[index] = {
@@ -143,6 +150,27 @@ export function ImprestAccountabilitySection({
     <TableRow>
       <TableCell colSpan={7} className="p-0 border-t-0">
         <div className="bg-emerald-50/30 dark:bg-emerald-950/10 p-6 border-t border-emerald-200/30 dark:border-emerald-800/30">
+          {imprest.accountingRevision && (
+            <Alert
+              variant="destructive"
+              className="mb-6 border-red-200 bg-red-50 text-red-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>
+                Action Required: Accounting Revision Requested
+              </AlertTitle>
+              <AlertDescription className="mt-2">
+                <p className="font-medium mb-1">Reason for revision:</p>
+                <p className="text-sm bg-white/50 dark:bg-black/20 p-2 rounded border border-red-200/50">
+                  {imprest.accountingRevision.reason}
+                </p>
+                <p className="mt-2 text-xs opacity-80">
+                  Please update your accounting details below and resubmit.
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Approval Comments Card */}
             <Card className="shadow-sm border-border/50 overflow-hidden">
@@ -230,8 +258,8 @@ export function ImprestAccountabilitySection({
                       {balanceStatus === "deficit"
                         ? " (Deficit)"
                         : balanceStatus === "surplus"
-                        ? " (Surplus)"
-                        : " (Balanced)"}
+                          ? " (Surplus)"
+                          : " (Balanced)"}
                     </span>
                   </div>
                 </div>
@@ -316,7 +344,7 @@ export function ImprestAccountabilitySection({
                               updateReceipt(
                                 index,
                                 "description",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                             placeholder="Enter receipt description"

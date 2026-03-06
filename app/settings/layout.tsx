@@ -2,7 +2,11 @@ import Link from "next/link";
 import React from "react";
 import DashboardProvider from "../dashboard-provider";
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default function SettingsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <DashboardProvider>
     <div className="flex min-h-[80vh]">
@@ -11,6 +15,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         <nav className="space-y-2 text-sm">
           <Link className="block hover:underline" href="/settings">General</Link>
           <Link className="block hover:underline" href="/settings/contract-templates">Contract Templates</Link>
+               <Link
+              className="block hover:underline"
+              href="/settings/departments"
+            >
+              Departments
+            </Link>
           <Link className="block hover:underline" href="/settings/charts-of-accounts">Charts of Accounts</Link>
         </nav>
       </aside>

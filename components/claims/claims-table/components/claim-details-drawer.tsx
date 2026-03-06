@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Claim, ClaimStatus, PaymentDetails } from "@/types/claim";
+import {
+  Claim,
+  ClaimDocument,
+  ClaimStatus,
+  PaymentDetails,
+} from "@/types/claim";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -168,6 +173,29 @@ const getInitials = (firstName: string, lastName: string): string => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 };
 
+const isClaimDocumentObject = (doc: unknown): doc is ClaimDocument => {
+  return !!doc && typeof doc === "object" && "url" in doc;
+};
+
+const normalizeClaimDocuments = (
+  docs: Array<ClaimDocument | string> | undefined,
+): Array<ClaimDocument> => {
+  if (!docs?.length) return [];
+  return docs
+    .map((d) => {
+      if (typeof d === "string") {
+        return {
+          url: d,
+          name: "Attachment",
+          type: "other",
+        } as ClaimDocument;
+      }
+      if (isClaimDocumentObject(d)) return d;
+      return null;
+    })
+    .filter(Boolean) as ClaimDocument[];
+};
+
 export function ClaimDetailsDrawer({
   claim,
   trigger,
@@ -206,11 +234,10 @@ export function ClaimDetailsDrawer({
     }
   };
 
-  
   const isApprovalPending = claim.status.startsWith("pending_");
   // const currentStep = claim.approvalFlow?.steps.find(step => step.nextStatus === claim.status);
   const currentStep = claim.approvalFlow?.steps.find((step) =>
-    claim.status?.toLowerCase().includes(step.role.toLowerCase())
+    claim.status?.toLowerCase().includes(step.role.toLowerCase()),
   );
   const isDeadlinePassed =
     claim.currentLevelDeadline &&
@@ -349,7 +376,7 @@ export function ClaimDetailsDrawer({
                     variant="outline"
                     className={cn(
                       "border px-3 py-1.5 flex items-center",
-                      getStatusColor(claim.status)
+                      getStatusColor(claim.status),
                     )}
                   >
                     {getStatusIcon(claim.status)}
@@ -482,7 +509,7 @@ export function ClaimDetailsDrawer({
                                   <p className="font-semibold text-lg">
                                     {formatCurrency(
                                       claim.contractId?.contractValue || 0,
-                                      claim?.currency
+                                      claim?.currency,
                                     )}
                                   </p>
                                 </div>
@@ -494,7 +521,7 @@ export function ClaimDetailsDrawer({
                                   <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
                                     {formatCurrency(
                                       claim?.amount || 0,
-                                      claim?.currency
+                                      claim?.currency,
                                     )}
                                   </p>
                                 </div>
@@ -517,6 +544,96 @@ export function ClaimDetailsDrawer({
                                   </p>
                                 </div>
                               </div>
+
+                              {claim.coachClaim && (
+                                <>
+                                  <Separator className="my-6" />
+                                  <div className="space-y-4">
+                                    <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                      <Briefcase className="h-4 w-4 mr-1.5" />
+                                      Coach Claim Details
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-muted/30 p-4 rounded-lg">
+                                      <div className="space-y-1">
+                                        <span className="text-sm text-muted-foreground">
+                                          Units (hours/sessions)
+                                        </span>
+                                        <p className="font-semibold">
+                                          {claim.coachClaim.units}
+                                        </p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="text-sm text-muted-foreground">
+                                          Rate (
+                                          {claim.coachClaim.rateUnit.replace(
+                                            "_",
+                                            " ",
+                                          )}
+                                          )
+                                        </span>
+                                        <p className="font-semibold">
+                                          {formatCurrency(
+                                            claim.coachClaim.rate,
+                                            claim.currency,
+                                          )}
+                                        </p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="text-sm text-muted-foreground">
+                                          Total
+                                        </span>
+                                        <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                          {formatCurrency(
+                                            claim.coachClaim.totalAmount,
+                                            claim.currency,
+                                          )}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+
+                              {normalizeClaimDocuments(claim.documents).length >
+                                0 && (
+                                <>
+                                  <Separator className="my-6" />
+                                  <div className="space-y-3">
+                                    <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                      <FileText className="h-4 w-4 mr-1.5" />
+                                      Supporting Documents
+                                    </div>
+                                    <div className="space-y-2">
+                                      {normalizeClaimDocuments(
+                                        claim.documents,
+                                      ).map((doc, idx) => (
+                                        <div
+                                          key={`${doc.url}-${idx}`}
+                                          className="flex items-start justify-between gap-3 rounded-lg border bg-background/70 px-3 py-2"
+                                        >
+                                          <div className="min-w-0">
+                                            <p className="text-sm font-medium truncate">
+                                              {doc.name || "Attachment"}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              {doc.type || "document"}
+                                            </p>
+                                          </div>
+                                          <a
+                                            href={doc.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+                                          >
+                                            <FileText className="h-3.5 w-3.5 mr-1.5" />
+                                            View
+                                          </a>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </CardContent>
                           </Card>
 
@@ -536,7 +653,7 @@ export function ClaimDetailsDrawer({
                                   <div
                                     className={cn(
                                       "px-3 py-2 rounded-md flex items-center font-medium",
-                                      getStatusColor(claim.status)
+                                      getStatusColor(claim.status),
                                     )}
                                   >
                                     {getStatusIcon(claim.status)}
@@ -555,7 +672,7 @@ export function ClaimDetailsDrawer({
                                         "font-medium",
                                         isDeadlinePassed
                                           ? "text-red-600 dark:text-red-400"
-                                          : ""
+                                          : "",
                                       )}
                                     >
                                       {formatDate(claim.currentLevelDeadline)}
@@ -639,7 +756,7 @@ export function ClaimDetailsDrawer({
                                             className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
                                           >
                                             {milestone.percentageClaimed?.toFixed(
-                                              2
+                                              2,
                                             )}
                                             % Claimed
                                           </Badge>
@@ -655,7 +772,7 @@ export function ClaimDetailsDrawer({
                                         <div>
                                           <span className="text-xs font-semibold inline-block text-emerald-600">
                                             {milestone.percentageClaimed?.toFixed(
-                                              2
+                                              2,
                                             )}
                                             % Complete
                                           </span>
@@ -664,7 +781,7 @@ export function ClaimDetailsDrawer({
                                           <span className="text-xs font-semibold inline-block text-emerald-600">
                                             {formatCurrency(
                                               calculatedCurrentClaim,
-                                              claim.currency
+                                              claim.currency,
                                             )}
                                           </span>
                                         </div>
@@ -673,7 +790,7 @@ export function ClaimDetailsDrawer({
                                         <div
                                           style={{
                                             width: `${milestone.percentageClaimed?.toFixed(
-                                              2
+                                              2,
                                             )}%`,
                                           }}
                                           className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-emerald-500"
@@ -690,7 +807,7 @@ export function ClaimDetailsDrawer({
                                         <p className="font-medium text-lg">
                                           {formatCurrency(
                                             calculatedMaxClaimable,
-                                            claim.currency
+                                            claim.currency,
                                           )}
                                         </p>
                                       </div>
@@ -702,7 +819,7 @@ export function ClaimDetailsDrawer({
                                         <p className="font-medium text-lg text-emerald-600 dark:text-emerald-400">
                                           {formatCurrency(
                                             calculatedCurrentClaim,
-                                            claim.currency
+                                            claim.currency,
                                           )}
                                         </p>
                                       </div>
@@ -714,7 +831,7 @@ export function ClaimDetailsDrawer({
                                         <p className="font-medium text-lg">
                                           {formatCurrency(
                                             calculatedRemaining,
-                                            claim.currency
+                                            claim.currency,
                                           )}
                                         </p>
                                       </div>
@@ -757,7 +874,7 @@ export function ClaimDetailsDrawer({
                                   <AvatarFallback className="text-2xl">
                                     {getInitials(
                                       claim?.claimantId?.firstName || "john",
-                                      claim?.claimantId?.lastName || "doe"
+                                      claim?.claimantId?.lastName || "doe",
                                     )}
                                   </AvatarFallback>
                                 </Avatar>
@@ -799,7 +916,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-semibold text-lg text-blue-700 dark:text-blue-400">
                                         {formatCurrency(
                                           claim.amount,
-                                          claim.currency
+                                          claim.currency,
                                         )}
                                       </p>
                                     </div>
@@ -876,7 +993,7 @@ export function ClaimDetailsDrawer({
                                     {formatCurrency(
                                       claim.contractId?.contractValue || 0,
                                       claim.contractId?.currency ||
-                                        claim.currency
+                                        claim.currency,
                                     )}
                                   </p>
                                 </div>
@@ -970,7 +1087,7 @@ export function ClaimDetailsDrawer({
                                               claim.contractId.contractedUserId
                                                 .firstName || "U",
                                               claim.contractId.contractedUserId
-                                                .lastName || "N"
+                                                .lastName || "N",
                                             )}
                                           </AvatarFallback>
                                         </Avatar>
@@ -1012,7 +1129,7 @@ export function ClaimDetailsDrawer({
                                               claim.contractId.createdBy
                                                 .firstName || "C",
                                               claim.contractId.createdBy
-                                                .lastName || "B"
+                                                .lastName || "B",
                                             )}
                                           </AvatarFallback>
                                         </Avatar>
@@ -1111,7 +1228,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-semibold text-lg text-purple-600 dark:text-purple-400">
                                         {formatCurrency(
                                           claim?.amount || 0,
-                                          claim?.currency
+                                          claim?.currency,
                                         )}
                                       </p>
                                     </div>
@@ -1124,7 +1241,7 @@ export function ClaimDetailsDrawer({
                                           "font-medium",
                                           isDeadlinePassed
                                             ? "text-red-600 dark:text-red-400"
-                                            : ""
+                                            : "",
                                         )}
                                       >
                                         {formatDate(claim.currentLevelDeadline)}
@@ -1176,7 +1293,7 @@ export function ClaimDetailsDrawer({
                                     <span className="font-bold text-purple-700 dark:text-purple-400">
                                       {formatCurrency(
                                         claim?.amount || 0,
-                                        claim?.currency
+                                        claim?.currency,
                                       )}
                                     </span>
                                     .
@@ -1325,7 +1442,8 @@ export function ClaimDetailsDrawer({
                                                   ? getInitials(
                                                       entry.performedBy
                                                         .firstName,
-                                                      entry.performedBy.lastName
+                                                      entry.performedBy
+                                                        .lastName,
                                                     )
                                                   : "UN"}
                                               </AvatarFallback>
@@ -1388,7 +1506,7 @@ export function ClaimDetailsDrawer({
                                         <div className="text-sm text-muted-foreground">
                                           {formatDate(
                                             claim.approval.checkerApproval
-                                              .approvedAt
+                                              .approvedAt,
                                           )}
                                         </div>
                                       </div>
@@ -1423,7 +1541,7 @@ export function ClaimDetailsDrawer({
                                         <div className="text-sm text-muted-foreground">
                                           {formatDate(
                                             claim.approval.managerApproval
-                                              .approvedAt
+                                              .approvedAt,
                                           )}
                                         </div>
                                       </div>
@@ -1458,7 +1576,7 @@ export function ClaimDetailsDrawer({
                                         <div className="text-sm text-muted-foreground">
                                           {formatDate(
                                             claim.approval.financeApproval
-                                              .approvedAt
+                                              .approvedAt,
                                           )}
                                         </div>
                                       </div>
@@ -1522,7 +1640,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
                                         {formatCurrency(
                                           claim?.amount || 0,
-                                          claim?.currency
+                                          claim?.currency,
                                         )}
                                       </p>
                                     </div>
@@ -1601,7 +1719,7 @@ export function ClaimDetailsDrawer({
                                           try {
                                             const url =
                                               await cloudinaryService.uploadFile(
-                                                files[0]
+                                                files[0],
                                               );
                                             setPaymentAdviceUrl(url);
                                             toast({
@@ -1707,7 +1825,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-semibold text-lg text-green-600 dark:text-green-400">
                                         {formatCurrency(
                                           claim.amount || 0,
-                                          claim.currency
+                                          claim.currency,
                                         )}
                                       </p>
                                     </div>
@@ -1720,7 +1838,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-medium capitalize">
                                         {claim.payment.paymentMethod.replace(
                                           "_",
-                                          " "
+                                          " ",
                                         )}
                                       </p>
                                     </div>
