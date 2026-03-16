@@ -18,11 +18,16 @@ import ObjectCodeFormDialog from "../dialogs/object-code-form-dialog";
 
 interface ObjectCodesTabProps {
   chart: ChartOfAccounts;
-  onUpdate: () => void;
+  onUpdate: (updatedChart: ChartOfAccounts) => void;
 }
 
 export default function ObjectCodesTab({ chart, onUpdate }: ObjectCodesTabProps) {
   const [objectCodes, setObjectCodes] = useState<ObjectCode[]>(chart.objectCodes || []);
+
+  // Sync state with props
+  React.useEffect(() => {
+    setObjectCodes(chart.objectCodes || []);
+  }, [chart.objectCodes]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingObjectCode, setEditingObjectCode] = useState<ObjectCode | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,6 +51,7 @@ export default function ObjectCodesTab({ chart, onUpdate }: ObjectCodesTabProps)
       const updatedObjectCodes = objectCodes.filter((o) => o.objectCode !== objectCode);
       await updateChart(chart.chartCode, { objectCodes: updatedObjectCodes });
       setObjectCodes(updatedObjectCodes);
+      onUpdate({ ...chart, objectCodes: updatedObjectCodes });
       toast({
         title: "Success",
         description: "Object code deleted successfully",
@@ -76,6 +82,7 @@ export default function ObjectCodesTab({ chart, onUpdate }: ObjectCodesTabProps)
 
       await updateChart(chart.chartCode, { objectCodes: updatedObjectCodes });
       setObjectCodes(updatedObjectCodes);
+      onUpdate({ ...chart, objectCodes: updatedObjectCodes });
       setDialogOpen(false);
       setEditingObjectCode(null);
 

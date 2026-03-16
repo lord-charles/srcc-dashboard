@@ -47,10 +47,8 @@ export default function CreateChartDialog({
       setLoading(true);
       const payload: CreateChartPayload = {
         chartCode: formatChartCode(chartCode),
-        data: {
-          accounts: [],
-          objectCodes: [],
-        },
+        accounts: [],
+        objectCodes: [],
       };
 
       await createChart(payload);

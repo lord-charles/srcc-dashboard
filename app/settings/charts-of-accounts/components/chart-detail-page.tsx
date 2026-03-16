@@ -79,11 +79,11 @@ export default function ChartDetailPage({ chart, onBack }: ChartDetailPageProps)
             </TabsList>
 
             <TabsContent value="accounts" className="mt-6">
-              <AccountsTab chart={chart} onUpdate={onBack} />
+              <AccountsTab chart={chart} onUpdate={() => onBack()} />
             </TabsContent>
 
             <TabsContent value="objectCodes" className="mt-6">
-              <ObjectCodesTab chart={chart} onUpdate={onBack} />
+              <ObjectCodesTab chart={chart} onUpdate={() => onBack()} />
             </TabsContent>
           </Tabs>
         </CardContent>

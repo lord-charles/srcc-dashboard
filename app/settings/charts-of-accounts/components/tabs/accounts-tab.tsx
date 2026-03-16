@@ -19,11 +19,16 @@ import AccountFormDialog from "../dialogs/account-form-dialog";
 
 interface AccountsTabProps {
   chart: ChartOfAccounts;
-  onUpdate: () => void;
+  onUpdate: (updatedChart: ChartOfAccounts) => void;
 }
 
 export default function AccountsTab({ chart, onUpdate }: AccountsTabProps) {
   const [accounts, setAccounts] = useState<Account[]>(chart.accounts || []);
+
+  // Update accounts when chart prop changes
+  React.useEffect(() => {
+    setAccounts(chart.accounts || []);
+  }, [chart.accounts]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -58,6 +63,7 @@ export default function AccountsTab({ chart, onUpdate }: AccountsTabProps) {
       const updatedAccounts = accounts.filter((a) => a.accountNumber !== accountNumber);
       await updateChart(chart.chartCode, { accounts: updatedAccounts });
       setAccounts(updatedAccounts);
+      onUpdate({ ...chart, accounts: updatedAccounts });
       toast({
         title: "Success",
         description: "Account deleted successfully",
@@ -88,6 +94,7 @@ export default function AccountsTab({ chart, onUpdate }: AccountsTabProps) {
 
       await updateChart(chart.chartCode, { accounts: updatedAccounts });
       setAccounts(updatedAccounts);
+      onUpdate({ ...chart, accounts: updatedAccounts });
       setDialogOpen(false);
       setEditingAccount(null);
 
