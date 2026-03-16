@@ -138,7 +138,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <div className="relative w-[250px] h-[80px]">
               <Image
-                src="/srcc-logo.webp"
+                src="https://res.cloudinary.com/dn3q6mcwp/image/upload/v1773654512/consultant-cvs/srcc-logo_lvykej.png"
                 alt="Logo"
                 fill
                 className="object-contain"
