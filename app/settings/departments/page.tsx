@@ -33,10 +33,10 @@ export default function DepartmentsPage() {
 
   const fetchConfig = async () => {
     try {
-      const data = await getProjectConfig();
-      if (data) {
-        setConfig(data);
-        setDepartments(data.data.departments || []);
+      const result = await getProjectConfig();
+      if (result.success && result.data) {
+        setConfig(result.data);
+        setDepartments(result.data.data?.departments || []);
       } else {
         // Handle case where project_config doesn't exist yet
         setConfig(null);
@@ -70,25 +70,35 @@ export default function DepartmentsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      let result;
       if (config) {
-        await updateSystemConfig("project_config", { departments });
+        result = await updateSystemConfig("project_config", { departments });
       } else {
-        await createSystemConfig({
+        result = await createSystemConfig({
           key: "project_config",
           type: "project" as any,
           data: { departments },
           description: "Project related configurations",
         });
       }
-      toast({
-        title: "Success",
-        description: "Departments updated successfully",
-      });
-      fetchConfig();
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Departments updated successfully",
+        });
+        fetchConfig();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to save departments",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save departments",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {

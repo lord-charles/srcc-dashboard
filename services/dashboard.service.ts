@@ -29,53 +29,57 @@ export const getAxiosConfig = async () => {
   };
 };
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats() {
   try {
     const config = await getAxiosConfig();
     const { data } = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/statistics/dashboard`,
       config
     );
-    return data;
-  } catch (error) {
+    return { success: true as const, data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
 
     console.error("Failed to fetch dashboard statistics:", error);
-    // Return default values when the API call fails
-    return {
-      employees: {
-        total: 0,
-        quarterlyGrowth: "0.0",
-        description: "No data available",
-      },
-      advances: {
-        total: {
-          amount: 0,
-          outstanding: 0,
-          repaymentRate: 0,
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch dashboard stats";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message),
+      data: {
+        employees: {
+          total: 0,
+          quarterlyGrowth: "0.0",
+          description: "No data available",
         },
-        active: {
-          count: 0,
-          percentageOfTotal: 0,
-          dueThisMonth: 0,
+        advances: {
+          total: {
+            amount: 0,
+            outstanding: 0,
+            repaymentRate: 0,
+          },
+          active: {
+            count: 0,
+            percentageOfTotal: 0,
+            dueThisMonth: 0,
+          },
+          utilization: {
+            rate: 0,
+            employeesWithAdvances: 0,
+            monthlyChange: 0,
+          },
+          interest: {
+            monthlyRate: 0,
+            earned: 0,
+          },
+          atRisk: {
+            count: 0,
+            percentageOfTotal: 0,
+            changeFromLastMonth: 0,
+          },
         },
-        utilization: {
-          rate: 0,
-          employeesWithAdvances: 0,
-          monthlyChange: 0,
-        },
-        interest: {
-          monthlyRate: 0,
-          earned: 0,
-        },
-        atRisk: {
-          count: 0,
-          percentageOfTotal: 0,
-          changeFromLastMonth: 0,
-        },
-      },
+      }
     };
   }
 }
@@ -91,23 +95,28 @@ export interface ChartDataResponse {
   }>;
 }
 
-export async function getOverviewCharts(): Promise<ChartDataResponse> {
+export async function getOverviewCharts() {
   try {
     const config = await getAxiosConfig();
     const { data } = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/statistics/overview-charts`,
       config
     );
-    return data;
-  } catch (error) {
+    return { success: true as const, data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
 
     console.error("Failed to fetch overview charts:", error);
-    return {
-      lineChart: [],
-      pieChart: [],
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch overview charts";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message),
+      data: {
+        lineChart: [],
+        pieChart: [],
+      }
     };
   }
 }
@@ -119,55 +128,71 @@ export async function getDetailedStats() {
       `${process.env.NEXT_PUBLIC_API_URL}/statistics/detailed-stats`,
       config
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
     console.error("Failed to fetch detailed stats:", error);
-    throw error?.response?.data || error;
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch detailed stats";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function getMonthlyTrends(
   months: number = 6
-): Promise<MonthlyTrends[]> {
+) {
   try {
     const config = await getAxiosConfig();
     const { data } = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/statistics/monthly-trends?months=${months}`,
       config
     );
-    return data;
-  } catch (error) {
+    return { success: true as const, data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
 
     console.error("Failed to fetch monthly trends:", error);
-    return [];
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch monthly trends";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message),
+      data: []
+    };
   }
 }
 
-export async function getRecentAdvanceStats(): Promise<RecentAdvanceStats> {
+export async function getRecentAdvanceStats() {
   try {
     const config = await getAxiosConfig();
     const { data } = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/statistics/recent-advance-stats`,
       config
     );
-    return data;
-  } catch (error) {
+    return { success: true as const, data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
 
     console.error("Failed to fetch recent advance stats:", error);
-    throw error;
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch recent advance stats";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function getRecentAdvances(
   page: number = 1,
   limit: number = 30
-): Promise<PaginatedAdvances> {
+) {
   try {
     const config = await getAxiosConfig();
     const endDate = new Date().toISOString().split("T")[0];
@@ -187,18 +212,23 @@ export async function getRecentAdvances(
         },
       }
     );
-    return data;
-  } catch (error) {
+    return { success: true as const, data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
 
     console.error("Failed to fetch recent advances:", error);
-    return {
-      data: [],
-      total: 0,
-      page: 1,
-      limit: 30,
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch recent advances";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message),
+      data: {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 30,
+      }
     };
   }
 }
@@ -206,7 +236,7 @@ export async function getRecentAdvances(
 export async function getSystemLogs(
   startDate?: string,
   endDate?: string
-): Promise<SystemLog[]> {
+) {
   try {
     const config = await getAxiosConfig();
 
@@ -225,13 +255,18 @@ export async function getSystemLogs(
         },
       }
     );
-    return data.data;
-  } catch (error) {
+    return { success: true as const, data: data.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
 
     console.error("Failed to fetch system logs:", error);
-    return [];
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch system logs";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message),
+      data: []
+    };
   }
 }

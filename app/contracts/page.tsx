@@ -12,7 +12,7 @@ export default async function ContractsPage() {
   return (
     <DashboardProvider>
       <Header />
-      <ContractModule initialData={initialData} />
+      <ContractModule initialData={initialData?.data} />
     </DashboardProvider>
   );
 }

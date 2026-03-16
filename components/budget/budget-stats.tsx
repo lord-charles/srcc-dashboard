@@ -1,248 +1,280 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Skeleton } from "@/components/ui/skeleton"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Cell, ResponsiveContainer, PieChart, Pie, Sector } from "recharts"
+import { useEffect, useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Cell, ResponsiveContainer, PieChart, Pie, Sector } from "recharts";
 import {
   ClockIcon,
   AlertCircleIcon,
   DollarSignIcon,
-  CalendarIcon,
   BarChart3Icon,
   PieChartIcon,
   CheckCircleIcon,
   CloudyIcon as PendingIcon,
   FileIcon,
-} from "lucide-react"
-import { formatCurrency, formatDate, formatPercentage } from "@/lib/utils"
+} from "lucide-react";
+import { formatCurrency, formatDate, formatPercentage } from "@/lib/utils";
 
 // Types
-type BudgetStatus = any
+type BudgetStatus = any;
 type BudgetCategory = {
-  name: string
-  description: string
-  items: BudgetItem[]
-  tags: string[]
-}
+  name: string;
+  description: string;
+  items: BudgetItem[];
+  tags: string[];
+};
 type BudgetItem = {
-  name: string
-  description: string
-  estimatedAmount: number
-  actualAmount: number
-  tags: string[]
-  frequency: string
-  startDate: string
-  endDate: string
-}
+  name: string;
+  description: string;
+  estimatedAmount: number;
+  actualAmount: number;
+  tags: string[];
+  frequency: string;
+  startDate: string;
+  endDate: string;
+};
 type Budget = {
-  _id: string
-  projectId: {
-    _id: string
-    name: string
-    description: string
-    status: string
-  }
-  internalCategories: BudgetCategory[]
-  externalCategories: BudgetCategory[]
-  currency: string
-  totalInternalBudget: number
-  totalExternalBudget: number
-  totalInternalSpent: number
-  totalExternalSpent: number
-  version: number
-  status: BudgetStatus
+  _id: string;
+  projectId: { _id: string; name: string; description: string; status: string };
+  internalCategories: BudgetCategory[];
+  externalCategories: BudgetCategory[];
+  currency: string;
+  totalInternalBudget: number;
+  totalExternalBudget: number;
+  totalInternalSpent: number;
+  totalExternalSpent: number;
+  version: number;
+  status: BudgetStatus;
   createdBy: {
-    _id: string
-    firstName: string
-    lastName: string
-    email: string
-  }
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   updatedBy: {
-    _id: string
-    firstName: string
-    lastName: string
-    email: string
-  }
-  notes: string
-  auditTrail: any[]
-  createdAt: string
-  updatedAt: string
-  approvedAt?: string
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  notes: string;
+  auditTrail: any[];
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
   approvedBy?: {
-    _id: string
-    firstName: string
-    lastName: string
-    email: string
-  }
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   approvalFlow?: {
-    checkerApprovals?: any[]
-    managerApprovals?: any[]
-    financeApprovals?: any[]
-  }
-}
-
+    checkerApprovals?: any[];
+    managerApprovals?: any[];
+    financeApprovals?: any[];
+  };
+};
 
 // Helper functions
 const getStatusColor = (status: BudgetStatus): string => {
   switch (status) {
     case "approved":
-      return "bg-emerald-500"
+      return "bg-emerald-500";
     case "draft":
-      return "bg-slate-400"
+      return "bg-slate-400";
     case "revision_requested":
-      return "bg-amber-500"
+      return "bg-amber-500";
     default:
-      return status.includes("pending") ? "bg-sky-500" : "bg-slate-400"
+      return status.includes("pending") ? "bg-sky-500" : "bg-slate-400";
   }
-}
+};
 
 const getStatusBadgeVariant = (status: BudgetStatus): string => {
   switch (status) {
     case "approved":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
     case "draft":
-      return "bg-slate-100 text-slate-800 dark:bg-slate-800/30 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+      return "bg-slate-100 text-slate-800 dark:bg-slate-800/30 dark:text-slate-300 border-slate-200 dark:border-slate-700";
     case "revision_requested":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800";
     default:
       return status.includes("pending")
         ? "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300 border-sky-200 dark:border-sky-800"
-        : "bg-slate-100 text-slate-800 dark:bg-slate-800/30 dark:text-slate-300 border-slate-200 dark:border-slate-700"
+        : "bg-slate-100 text-slate-800 dark:bg-slate-800/30 dark:text-slate-300 border-slate-200 dark:border-slate-700";
   }
-}
+};
 
 const getStatusIcon = (status: BudgetStatus) => {
   switch (status) {
     case "approved":
-      return <CheckCircleIcon className="h-3 w-3 text-emerald-500 mr-1" />
+      return <CheckCircleIcon className="h-3 w-3 text-emerald-500 mr-1" />;
     case "draft":
-      return <FileIcon className="h-3 w-3 text-slate-500 mr-1" />
+      return <FileIcon className="h-3 w-3 text-slate-500 mr-1" />;
     case "revision_requested":
-      return <AlertCircleIcon className="h-3 w-3 text-amber-500 mr-1" />
+      return <AlertCircleIcon className="h-3 w-3 text-amber-500 mr-1" />;
     default:
       return status.includes("pending") ? (
         <PendingIcon className="h-3 w-3 text-sky-500 mr-1" />
       ) : (
         <FileIcon className="h-3 w-3 text-slate-500 mr-1" />
-      )
+      );
   }
-}
+};
 
 const getReadableStatus = (status: BudgetStatus): string => {
   switch (status) {
     case "draft":
-      return "Draft"
+      return "Draft";
     case "pending_checker_approval":
-      return "Pending Checker"
+      return "Pending Checker";
     case "pending_manager_approval":
-      return "Pending Manager"
+      return "Pending Manager";
     case "pending_finance_approval":
-      return "Pending Finance"
+      return "Pending Finance";
     case "approved":
-      return "Approved"
+      return "Approved";
     case "revision_requested":
-      return "Revision Requested"
+      return "Revision Requested";
     default:
-      return status.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
+      return status
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l: string) => l.toUpperCase());
   }
-}
+};
 
 const getApprovalTime = (budget: Budget): number | null => {
-  if (!budget.approvedAt || !budget.createdAt) return null
-
-  const created = new Date(budget.createdAt).getTime()
-  const approved = new Date(budget.approvedAt).getTime()
-
-  return (approved - created) / (1000 * 60 * 60) // hours
-}
+  if (!budget.approvedAt || !budget.createdAt) return null;
+  return (
+    (new Date(budget.approvedAt).getTime() -
+      new Date(budget.createdAt).getTime()) /
+    (1000 * 60 * 60)
+  );
+};
 
 const getCategoryTotals = (budgets: Budget[]) => {
-  const categoryMap = new Map<string, number>()
-
+  const categoryMap = new Map<string, number>();
   budgets.forEach((budget) => {
-    budget.internalCategories.forEach((category) => {
-      const current = categoryMap.get(category.description) || 0
-      const categoryTotal = category.items.reduce((sum, item) => sum + (item.estimatedAmount || 0), 0)
-      categoryMap.set(category.description, current + categoryTotal)
-    })
-
-    budget.externalCategories.forEach((category) => {
-      const current = categoryMap.get(category.description) || 0
-      const categoryTotal = category.items.reduce((sum, item) => sum + (item.estimatedAmount || 0), 0)
-      categoryMap.set(category.description, current + categoryTotal)
-    })
-  })
-
-  // Convert to array and sort by value
-  const sortedCategories = Array.from(categoryMap.entries())
+    [...budget.internalCategories, ...budget.externalCategories].forEach(
+      (category) => {
+        const total = category.items.reduce(
+          (sum, item) => sum + (item.estimatedAmount || 0),
+          0,
+        );
+        categoryMap.set(
+          category.description,
+          (categoryMap.get(category.description) || 0) + total,
+        );
+      },
+    );
+  });
+  const sorted = Array.from(categoryMap.entries())
     .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-
-  // If we have more than 5 categories, group the smaller ones as "Others"
-  if (sortedCategories.length > 5) {
-    const topCategories = sortedCategories.slice(0, 4)
-    const otherCategories = sortedCategories.slice(4)
-
-    const othersTotal = otherCategories.reduce((sum, category) => sum + category.value, 0)
-
-    return [...topCategories, { name: `Others (${otherCategories.length})`, value: othersTotal }]
+    .sort((a, b) => b.value - a.value);
+  if (sorted.length > 5) {
+    const others = sorted.slice(4);
+    return [
+      ...sorted.slice(0, 4),
+      {
+        name: `Others (${others.length})`,
+        value: others.reduce((s, c) => s + c.value, 0),
+      },
+    ];
   }
-
-  return sortedCategories
-}
+  return sorted;
+};
 
 const getFrequencyDistribution = (budgets: Budget[]) => {
-  const frequencyMap = new Map<string, number>()
-
+  const frequencyMap = new Map<string, number>();
   budgets.forEach((budget) => {
-    const allCategories = [...budget.internalCategories, ...budget.externalCategories]
-
-    allCategories.forEach((category) => {
-      category.items.forEach((item) => {
-        const frequency = item.frequency || "unknown"
-        const current = frequencyMap.get(frequency) || 0
-        frequencyMap.set(frequency, current + (item.estimatedAmount || 0))
-      })
-    })
-  })
-
+    [...budget.internalCategories, ...budget.externalCategories].forEach(
+      (category) => {
+        category.items.forEach((item) => {
+          const freq = item.frequency || "unknown";
+          frequencyMap.set(
+            freq,
+            (frequencyMap.get(freq) || 0) + (item.estimatedAmount || 0),
+          );
+        });
+      },
+    );
+  });
   return Array.from(frequencyMap.entries())
     .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
+    .sort((a, b) => b.value - a.value);
+};
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+
+// Shared card shell for consistent sizing
+function StatCard({
+  icon,
+  iconColor,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  iconColor: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-900 hover:shadow-md transition-shadow duration-200 flex flex-col">
+      <CardHeader className="px-4 pt-4 pb-2 flex-shrink-0">
+        <CardTitle className="flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
+          <span className={iconColor}>{icon}</span>
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 flex flex-col flex-1 gap-3">
+        {children}
+      </CardContent>
+    </Card>
+  );
 }
 
-// Enhanced color palette with better contrast
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82ca9d", "#ffc658", "#8dd1e1"]
+// Compact label-value row
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs font-medium text-slate-800 dark:text-slate-100">
+        {value}
+      </span>
+    </div>
+  );
+}
 
-export function BudgetStats({budgetData}: {budgetData: any}) {
-  const [loading, setLoading] = useState(true)
-  const [budgets, setBudgets] = useState<Budget[]>([])
-  const [activeIndex, setActiveIndex] = useState(0)
+export function BudgetStats({ budgetData }: { budgetData: any }) {
+  const [loading, setLoading] = useState(true);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    // Simulate API call
     const fetchData = async () => {
       try {
-        // In a real app, this would be an API call
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        setBudgets(budgetData)
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        setBudgets(budgetData);
       } catch (error) {
-        console.error("Error fetching budget data:", error)
+        console.error("Error fetching budget data:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-
-    fetchData()
-  }, [])
+    };
+    fetchData();
+  }, []);
 
   const stats = useMemo(() => {
-    if (!budgets.length) {
+    if (!budgets.length)
       return {
         totalBudgets: 0,
         totalAmount: 0,
@@ -255,377 +287,382 @@ export function BudgetStats({budgetData}: {budgetData: any}) {
         averageApprovalTime: 0,
         currency: "KES",
         spendingRate: 0,
-      }
-    }
-
-    const totalBudgets = budgets.length
+      };
     const totalAmount = budgets.reduce(
-      (sum, budget) => sum + (budget.totalInternalBudget || 0) + (budget.totalExternalBudget || 0),
+      (s, b) => s + (b.totalInternalBudget || 0) + (b.totalExternalBudget || 0),
       0,
-    )
+    );
     const totalSpent = budgets.reduce(
-      (sum, budget) => sum + (budget.totalInternalSpent || 0) + (budget.totalExternalSpent || 0),
+      (s, b) => s + (b.totalInternalSpent || 0) + (b.totalExternalSpent || 0),
       0,
-    )
-    const approvedBudgets = budgets.filter((b) => b.status === "approved").length
-    const pendingBudgets = budgets.filter((b) => b.status.includes("pending")).length
-    const draftBudgets = budgets.filter((b) => b.status === "draft").length
-    const revisionRequestedBudgets = budgets.filter((b) => b.status === "revision_requested").length
-
-    const approvalTimes = budgets.map(getApprovalTime).filter((time): time is number => time !== null)
-
-    const averageApprovalTime = approvalTimes.length
-      ? approvalTimes.reduce((sum, time) => sum + time, 0) / approvalTimes.length
-      : 0
-
+    );
+    const approvedBudgets = budgets.filter(
+      (b) => b.status === "approved",
+    ).length;
+    const pendingBudgets = budgets.filter((b) =>
+      b.status.includes("pending"),
+    ).length;
+    const draftBudgets = budgets.filter((b) => b.status === "draft").length;
+    const approvalTimes = budgets
+      .map(getApprovalTime)
+      .filter((t): t is number => t !== null);
     return {
-      totalBudgets,
+      totalBudgets: budgets.length,
       totalAmount,
       totalSpent,
-      averageBudgetAmount: totalBudgets ? totalAmount / totalBudgets : 0,
+      averageBudgetAmount: budgets.length ? totalAmount / budgets.length : 0,
       approvedBudgets,
       pendingBudgets,
       draftBudgets,
-      revisionRequestedBudgets,
-      averageApprovalTime,
+      revisionRequestedBudgets: budgets.filter(
+        (b) => b.status === "revision_requested",
+      ).length,
+      averageApprovalTime: approvalTimes.length
+        ? approvalTimes.reduce((s, t) => s + t, 0) / approvalTimes.length
+        : 0,
       currency: budgets[0]?.currency || "KES",
       spendingRate: totalAmount > 0 ? (totalSpent / totalAmount) * 100 : 0,
-    }
-  }, [budgets])
+    };
+  }, [budgets]);
 
   const statusDistribution = useMemo(() => {
-    const statusMap = new Map<BudgetStatus, number>()
+    const map = new Map<BudgetStatus, number>();
+    budgets.forEach((b) => map.set(b.status, (map.get(b.status) || 0) + 1));
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [budgets]);
 
-    budgets.forEach((budget) => {
-      const status = budget.status
-      const current = statusMap.get(status) || 0
-      statusMap.set(status, current + 1)
-    })
-
-    return Array.from(statusMap.entries()).sort((a, b) => b[1] - a[1])
-  }, [budgets])
-
-  const categoryData = useMemo(() => getCategoryTotals(budgets), [budgets])
-  const frequencyData = useMemo(() => getFrequencyDistribution(budgets), [budgets])
-
-  const onPieEnter = (_: any, index: number) => {
-    setActiveIndex(index)
-  }
+  const categoryData = useMemo(() => getCategoryTotals(budgets), [budgets]);
+  const frequencyData = useMemo(
+    () => getFrequencyDistribution(budgets),
+    [budgets],
+  );
 
   const renderActiveShape = (props: any) => {
-    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props
-
+    const {
+      cx,
+      cy,
+      innerRadius,
+      outerRadius,
+      startAngle,
+      endAngle,
+      fill,
+      payload,
+      percent,
+      value,
+    } = props;
     return (
       <g>
-        <text x={cx} y={cy} dy={-20} textAnchor="middle" fill="#888">
+        <text x={cx} y={cy - 14} textAnchor="middle" fill="#888" fontSize={10}>
           {payload.name}
         </text>
-        <text x={cx} y={cy} textAnchor="middle" fill="#333" className="text-lg font-semibold">
+        <text
+          x={cx}
+          y={cy + 2}
+          textAnchor="middle"
+          fill="#333"
+          fontSize={11}
+          fontWeight={600}
+        >
           {formatCurrency(value, stats.currency)}
         </text>
-        <text x={cx} y={cy} dy={20} textAnchor="middle" fill="#999">
+        <text x={cx} y={cy + 16} textAnchor="middle" fill="#999" fontSize={10}>
           {`${(percent * 100).toFixed(1)}%`}
         </text>
         <Sector
           cx={cx}
           cy={cy}
           innerRadius={innerRadius}
-          outerRadius={outerRadius + 5}
+          outerRadius={outerRadius + 4}
           startAngle={startAngle}
           endAngle={endAngle}
           fill={fill}
         />
       </g>
-    )
-  }
+    );
+  };
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {Array(4)
           .fill(0)
           .map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-1/2 mb-2" />
-                <Skeleton className="h-6 w-3/4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-24 w-full mb-4" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-4 w-4/6" />
-                </div>
-              </CardContent>
+            <Card key={i} className="p-4 space-y-3">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-2 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
             </Card>
           ))}
       </div>
-    )
+    );
   }
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
-        {/* Financial Overview Card */}
-        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-900/80">
-            <CardTitle className="flex items-center text-lg font-semibold">
-              <DollarSignIcon className="mr-2 h-5 w-5 text-emerald-500" />
-              Financial Overview
-            </CardTitle>
-            <CardDescription>Budget allocation and spending</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-4">
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {formatCurrency(stats.totalAmount, stats.currency)}
-                </h3>
-                <span className="text-sm text-muted-foreground">Total Budget</span>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* 1 — Financial Overview */}
+        <StatCard
+          icon={<DollarSignIcon className="h-4 w-4" />}
+          iconColor="text-emerald-500"
+          title="Financial Overview"
+        >
+          {/* Big number */}
+          <div>
+            <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-tight">
+              {formatCurrency(stats.totalAmount, stats.currency)}
+            </p>
+            <p className="text-xs text-muted-foreground">Total Budget</p>
+          </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Spent</span>
-                  <span className="font-medium">
-                    {formatCurrency(stats.totalSpent, stats.currency)} ({formatPercentage(stats.spendingRate)})
+          {/* Spend bar */}
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Spent</span>
+              <span className="font-medium">
+                {formatCurrency(stats.totalSpent, stats.currency)} ·{" "}
+                {formatPercentage(stats.spendingRate)}
+              </span>
+            </div>
+            <Progress value={stats.spendingRate} className="h-1.5" />
+          </div>
+
+          {/* Two-col grid */}
+          <div className="grid grid-cols-2 gap-x-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <div>
+              <p className="text-xs text-muted-foreground">Budgets</p>
+              <p className="text-sm font-semibold">{stats.totalBudgets}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Avg. Amount</p>
+              <p className="text-sm font-semibold">
+                {formatCurrency(stats.averageBudgetAmount, stats.currency)}
+              </p>
+            </div>
+          </div>
+        </StatCard>
+
+        {/* 2 — Approval Status */}
+        <StatCard
+          icon={<BarChart3Icon className="h-4 w-4" />}
+          iconColor="text-sky-500"
+          title="Approval Status"
+        >
+          {/* Big number + avg time side by side */}
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xl font-bold text-sky-600 dark:text-sky-400 leading-tight">
+                {stats.approvedBudgets}
+                <span className="text-sm font-normal text-muted-foreground ml-1">
+                  / {stats.totalBudgets}
+                </span>
+              </p>
+              <p className="text-xs text-muted-foreground">Approved</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-semibold">
+                {stats.averageApprovalTime.toFixed(1)} hrs
+              </p>
+              <p className="text-xs text-muted-foreground">Avg. approval</p>
+            </div>
+          </div>
+
+          {/* Stacked bar */}
+          <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            {statusDistribution.map(([status, count], i) => (
+              <div
+                key={i}
+                className={getStatusColor(status)}
+                style={{
+                  width: `${stats.totalBudgets > 0 ? (count / stats.totalBudgets) * 100 : 0}%`,
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Badges */}
+          <div className="flex flex-wrap gap-1">
+            {statusDistribution.map(([status, count], i) => (
+              <Tooltip key={i}>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] px-1.5 py-0 h-5 ${getStatusBadgeVariant(status)}`}
+                  >
+                    <span className="flex items-center">
+                      {getStatusIcon(status)}
+                      {getReadableStatus(status)}: {count}
+                    </span>
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {Math.round((count / stats.totalBudgets) * 100)}% of total
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+
+          {/* Pending / Drafts */}
+          <div className="grid grid-cols-2 gap-x-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <div>
+              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-sm font-semibold">{stats.pendingBudgets}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Drafts</p>
+              <p className="text-sm font-semibold">{stats.draftBudgets}</p>
+            </div>
+          </div>
+        </StatCard>
+
+        {/* 3 — Budget Categories */}
+        <StatCard
+          icon={<PieChartIcon className="h-4 w-4" />}
+          iconColor="text-violet-500"
+          title="Budget Categories"
+        >
+          {/* Compact donut */}
+          <div className="h-[140px] w-full flex-shrink-0">
+            {categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    activeIndex={activeIndex}
+                    activeShape={renderActiveShape}
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={42}
+                    outerRadius={58}
+                    dataKey="value"
+                    onMouseEnter={(_, index) => setActiveIndex(index)}
+                  >
+                    {categoryData.map((_, index) => (
+                      <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-xs text-muted-foreground">No data</p>
+              </div>
+            )}
+          </div>
+
+          {/* Category list */}
+          <ScrollArea className="h-[72px] rounded border border-slate-100 dark:border-slate-800 px-2 py-1">
+            <div className="space-y-1">
+              {categoryData.map((cat, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between text-xs"
+                >
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="h-2 w-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: COLORS[i % COLORS.length] }}
+                    />
+                    <span
+                      className="truncate text-slate-600 dark:text-slate-300"
+                      title={cat.name}
+                    >
+                      {cat.name}
+                    </span>
+                  </div>
+                  <span className="font-medium ml-2 flex-shrink-0">
+                    {formatCurrency(cat.value, stats.currency)}
                   </span>
                 </div>
-                <Progress value={stats.spendingRate} className="h-2" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Total Budgets</p>
-                  <p className="text-lg font-semibold">{stats.totalBudgets}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Avg. Amount</p>
-                  <p className="text-lg font-semibold">{formatCurrency(stats.averageBudgetAmount, stats.currency)}</p>
-                </div>
-              </div>
-
-              <div className="pt-2 text-xs text-muted-foreground border-t">
-                <div className="flex items-center">
-                  <CalendarIcon className="mr-1 h-3 w-3" />
-                  Last updated: {budgets.length ? formatDate(budgets[0].updatedAt) : "N/A"}
-                </div>
-              </div>
+              ))}
             </div>
-          </CardContent>
-        </Card>
+          </ScrollArea>
+        </StatCard>
 
-        {/* Status Distribution Card */}
-        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-900/80">
-            <CardTitle className="flex items-center text-lg font-semibold">
-              <BarChart3Icon className="mr-2 h-5 w-5 text-sky-500" />
-              Approval Status
-            </CardTitle>
-            <CardDescription>Budget approval workflow</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-sky-600 dark:text-sky-400">
-                    {stats.approvedBudgets}
-                    <span className="text-sm font-normal text-muted-foreground ml-1">/ {stats.totalBudgets}</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">Approved Budgets</p>
-                </div>
+        {/* 4 — Budget Timeline */}
+        <StatCard
+          icon={<ClockIcon className="h-4 w-4" />}
+          iconColor="text-amber-500"
+          title="Budget Timeline"
+        >
+          {/* Top frequency */}
+          <div>
+            <p className="text-xl font-bold text-amber-600 dark:text-amber-400 capitalize leading-tight">
+              {frequencyData[0]?.name ?? "N/A"}
+            </p>
+            <p className="text-xs text-muted-foreground">Top Frequency</p>
+          </div>
 
-                <div className="text-right">
-                  <p className="text-lg font-semibold">
-                    {stats.averageApprovalTime.toFixed(1)}
-                    <span className="text-sm font-normal ml-1">hrs</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">Avg. Approval Time</p>
+          {/* Frequency bars */}
+          <div className="space-y-1.5">
+            {frequencyData.slice(0, 3).map((item, i) => (
+              <div key={i} className="space-y-0.5">
+                <div className="flex justify-between text-xs">
+                  <span className="capitalize text-slate-600 dark:text-slate-300">
+                    {item.name}
+                  </span>
+                  <span className="font-medium">
+                    {formatCurrency(item.value, stats.currency)}
+                  </span>
                 </div>
+                <Progress
+                  value={
+                    frequencyData[0]?.value > 0
+                      ? (item.value / frequencyData[0].value) * 100
+                      : 0
+                  }
+                  className="h-1.5"
+                />
               </div>
+            ))}
+          </div>
 
-              <div>
-                <p className="text-sm font-medium mb-2">Status Distribution</p>
-                <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                  {statusDistribution.map(([status, count], i) => (
-                    <div
-                      key={i}
-                      className={`${getStatusColor(status)}`}
-                      style={{
-                        width: `${stats.totalBudgets > 0 ? (count / stats.totalBudgets) * 100 : 0}%`,
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {statusDistribution.map(([status, count], i) => (
-                    <Tooltip key={i}>
-                      <TooltipTrigger asChild>
-                        <Badge variant="outline" className={`${getStatusBadgeVariant(status)}`}>
-                          <span className="flex items-center">
-                            {getStatusIcon(status)}
-                            {getReadableStatus(status)}: {count}
-                          </span>
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{Math.round((count / stats.totalBudgets) * 100)}% of total budgets</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Pending</p>
-                  <p className="text-lg font-semibold">{stats.pendingBudgets}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Drafts</p>
-                  <p className="text-lg font-semibold">{stats.draftBudgets}</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Category Distribution Card */}
-        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-900/80">
-            <CardTitle className="flex items-center text-lg font-semibold">
-              <PieChartIcon className="mr-2 h-5 w-5 text-violet-500" />
-              Budget Categories
-            </CardTitle>
-            <CardDescription>Distribution by category</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[180px] w-full">
-              {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      activeIndex={activeIndex}
-                      activeShape={renderActiveShape}
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      fill="#8884d8"
-                      dataKey="value"
-                      onMouseEnter={onPieEnter}
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <p className="text-muted-foreground">No category data available</p>
-                </div>
-              )}
-            </div>
-
+          {/* Newest / Last approved */}
+          <div className="grid grid-cols-2 gap-x-2 pt-1 border-t border-slate-100 dark:border-slate-800">
             <div>
-              <p className="text-sm font-medium mb-1">Top Categories</p>
-              <ScrollArea className="h-[80px] rounded-md border p-2">
-                <div className="space-y-1">
-                  {categoryData.map((category, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center">
-                        <div
-                          className="h-3 w-3 rounded-full mr-2"
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span className="truncate max-w-[180px]" title={category.name}>
-                          {category.name}
-                        </span>
-                      </div>
-                      <span className="font-medium">{formatCurrency(category.value, stats.currency)}</span>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+              <p className="text-xs text-muted-foreground">Newest</p>
+              <p className="text-xs font-medium">
+                {budgets.length
+                  ? formatDate(
+                      [...budgets].sort(
+                        (a, b) =>
+                          new Date(b.createdAt).getTime() -
+                          new Date(a.createdAt).getTime(),
+                      )[0].createdAt,
+                    )
+                  : "N/A"}
+              </p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Budget Timeline Card */}
-        <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 hover:shadow-xl transition-shadow duration-300">
-          <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-900/80">
-            <CardTitle className="flex items-center text-lg font-semibold">
-              <ClockIcon className="mr-2 h-5 w-5 text-amber-500" />
-              Budget Timeline
-            </CardTitle>
-            <CardDescription>Frequency and duration analysis</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-4">
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 capitalize">
-                  {frequencyData.length > 0 ? frequencyData[0].name : "N/A"}
-                </h3>
-                <span className="text-sm text-muted-foreground">Top Frequency</span>
-              </div>
-
-              <div className="space-y-2">
-                {frequencyData.slice(0, 3).map((item, index) => (
-                  <div key={index} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="capitalize">{item.name}</span>
-                      <span className="font-medium">{formatCurrency(item.value, stats.currency)}</span>
-                    </div>
-                    <Progress
-                      value={frequencyData[0].value > 0 ? (item.value / frequencyData[0].value) * 100 : 0}
-                      className="h-2"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Newest Budget</p>
-                  <p className="text-sm font-medium">
-                    {budgets.length
-                      ? formatDate(
-                          budgets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
-                            .createdAt,
-                        )
-                      : "N/A"}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Last Approved</p>
-                  <p className="text-sm font-medium">
-                    {budgets.filter((b) => b.approvedAt).length
-                      ? formatDate(
-                          budgets
-                            .filter((b) => b.approvedAt)
-                            .sort((a, b) => new Date(b.approvedAt!).getTime() - new Date(a.approvedAt!).getTime())[0]
-                            .approvedAt!,
-                        )
-                      : "N/A"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-2 text-xs text-muted-foreground border-t">
-                <div className="flex items-center">
-                  <AlertCircleIcon className="mr-1 h-3 w-3 text-amber-500" />
-                  {stats.pendingBudgets > 0
-                    ? `${stats.pendingBudgets} budget${stats.pendingBudgets > 1 ? "s" : ""} awaiting approval`
-                    : "No pending approvals"}
-                </div>
-              </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Last Approved</p>
+              <p className="text-xs font-medium">
+                {budgets.some((b) => b.approvedAt)
+                  ? formatDate(
+                      [...budgets]
+                        .filter((b) => b.approvedAt)
+                        .sort(
+                          (a, b) =>
+                            new Date(b.approvedAt!).getTime() -
+                            new Date(a.approvedAt!).getTime(),
+                        )[0].approvedAt!,
+                    )
+                  : "N/A"}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Footer notice */}
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <AlertCircleIcon className="h-3 w-3 text-amber-500 flex-shrink-0" />
+            {stats.pendingBudgets > 0
+              ? `${stats.pendingBudgets} budget${stats.pendingBudgets > 1 ? "s" : ""} awaiting approval`
+              : "No pending approvals"}
+          </div>
+        </StatCard>
       </div>
     </TooltipProvider>
-  )
+  );
 }

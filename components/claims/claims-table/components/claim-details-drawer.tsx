@@ -270,13 +270,29 @@ export function ClaimDetailsDrawer({
       setActionType(type);
 
       if (type === "approve") {
-        await approveClaim(claim._id, comments || "Approved");
+        const result = await approveClaim(claim._id, comments || "Approved");
+        if (!result.success) {
+          toast({
+            title: "Approval Failed",
+            description: result.error,
+            variant: "destructive",
+          });
+          return;
+        }
         toast({
           title: "Claim Approved",
           description: "The claim has been successfully approved.",
         });
       } else {
-        await rejectClaim(claim._id, comments);
+        const result = await rejectClaim(claim._id, comments);
+        if (!result.success) {
+          toast({
+            title: "Rejection Failed",
+            description: result.error,
+            variant: "destructive",
+          });
+          return;
+        }
         toast({
           title: "Claim Rejected",
           description: "The claim has been rejected.",
@@ -290,7 +306,7 @@ export function ClaimDetailsDrawer({
     } catch (error: any) {
       toast({
         title: type === "approve" ? "Approval Failed" : "Rejection Failed",
-        description: error.message || `Failed to ${type} claim`,
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
@@ -323,12 +339,21 @@ export function ClaimDetailsDrawer({
       setIsSubmitting(true);
       setActionType("payment");
 
-      await markClaimAsPaid(claim._id, {
+      const result = await markClaimAsPaid(claim._id, {
         paymentMethod,
         transactionId,
         reference: paymentReference,
         paymentAdviceUrl,
       });
+
+      if (!result.success) {
+        toast({
+          title: "Payment Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Claim Marked as Paid",
@@ -340,7 +365,7 @@ export function ClaimDetailsDrawer({
     } catch (error: any) {
       toast({
         title: "Payment Failed",
-        description: error.message || "Failed to mark claim as paid",
+        description: "An unexpected error occurred while marking as paid",
         variant: "destructive",
       });
     } finally {

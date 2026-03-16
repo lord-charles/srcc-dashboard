@@ -166,7 +166,7 @@ export default function LoginPage() {
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center justify-center ">
             <Image
-              src="https://i0.wp.com/srcc.strathmore.edu/wp-content/uploads/2024/05/SRCC-White-Logo-White-01.png"
+              src="https://res.cloudinary.com/dn3q6mcwp/image/upload/v1773654512/consultant-cvs/srcc-logo_lvykej.png"
               alt="SRCC Logo"
               width={400}
               height={400}

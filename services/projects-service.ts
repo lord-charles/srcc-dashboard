@@ -37,7 +37,7 @@ export async function addCoach(
   projectId: string,
   milestoneId: string,
   data: AddCoachPayload,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -45,12 +45,17 @@ export async function addCoach(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to add coach:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add coach";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -59,7 +64,7 @@ export async function updateCoach(
   milestoneId: string,
   coachUserId: string,
   data: Partial<AddCoachPayload>,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -67,12 +72,17 @@ export async function updateCoach(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to update coach:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update coach";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -80,19 +90,24 @@ export async function deleteCoach(
   projectId: string,
   milestoneId: string,
   coachUserId: string,
-): Promise<boolean> {
+) {
   try {
     const config = await getAxiosConfig();
     await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/coaches/${coachUserId}`,
       config,
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to delete coach:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to delete coach";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -100,20 +115,25 @@ export async function addCoachManager(
   projectId: string,
   userId: string,
   responsibilities: string[] = [],
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-managers`,
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/ coach-managers`,
       { userId, responsibilities },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to add coach manager:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add coach manager";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -121,7 +141,7 @@ export async function updateCoachManager(
   projectId: string,
   managerUserId: string,
   responsibilities: string[],
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -129,31 +149,41 @@ export async function updateCoachManager(
       { responsibilities },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to update coach manager:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update coach manager";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function deleteCoachManager(
   projectId: string,
   managerUserId: string,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-managers/${managerUserId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to delete coach manager:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to delete coach manager";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -161,7 +191,7 @@ export async function addCoachAssistant(
   projectId: string,
   userId: string,
   responsibilities: string[] = [],
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -169,12 +199,17 @@ export async function addCoachAssistant(
       { userId, responsibilities },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to add coach assistant:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add coach assistant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -182,7 +217,7 @@ export async function updateCoachAssistant(
   projectId: string,
   assistantUserId: string,
   responsibilities: string[],
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -190,31 +225,41 @@ export async function updateCoachAssistant(
       { responsibilities },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to update coach assistant:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update coach assistant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function deleteCoachAssistant(
   projectId: string,
   assistantUserId: string,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-assistants/${assistantUserId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    console.error("Failed to delete coach assistant:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to delete coach assistant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -226,7 +271,7 @@ export interface ProjectDocumentPayload {
 export async function addProjectDocument(
   projectId: string,
   document: ProjectDocumentPayload,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -234,19 +279,24 @@ export async function addProjectDocument(
       document,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error("Failed to add project document:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add project document";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function updateProject(
   projectId: string,
   data: Partial<Project>,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -254,19 +304,24 @@ export async function updateProject(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error("Failed to update project:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update project";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function updateProjectDetails(
   projectId: string,
   data: any,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -274,12 +329,17 @@ export async function updateProjectDetails(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error("Failed to update project details:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update project details";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -306,30 +366,38 @@ export async function getProjects() {
       `${process.env.NEXT_PUBLIC_API_URL}/projects`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch projects:", error);
-    return null;
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch projects";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function getProjectById(id: string) {
   try {
     const config = await getAxiosConfig();
-    const { data } = await axios.get(
+    const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
       config,
     );
-    return data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to fetch PROJECT details:", error);
-    throw error;
+    console.error(`Failed to fetch project details for ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch project details";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -350,30 +418,38 @@ export const createProject = async (data: any) => {
       config,
     );
 
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
-    if (axios.isAxiosError(error)) {
-      const errorMessage =
-        error.response?.data?.message || "Failed to create project";
-      throw new Error(errorMessage);
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error("Failed to create project:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to create project";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 };
 
-export async function deleteProject(id: string): Promise<boolean> {
+export async function deleteProject(id: string) {
   try {
     const config = await getAxiosConfig();
     await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
       config,
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to delete project ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to delete project";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -385,19 +461,24 @@ interface UpdateTeamMemberPayload {
   responsibilities: string[];
 }
 
-export async function getProject(id: string): Promise<Project> {
+export async function getProject(id: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to fetch project ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch project";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -405,7 +486,7 @@ export async function updateTeamMember(
   projectId: string,
   teamMemberId: string,
   data: UpdateTeamMemberPayload,
-): Promise<TeamMember> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -413,31 +494,41 @@ export async function updateTeamMember(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to update team member ${teamMemberId} in project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update team member";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function deleteTeamMember(
   projectId: string,
   teamMemberId: string,
-): Promise<boolean> {
+) {
   try {
     const config = await getAxiosConfig();
-    const res = await axios.delete(
+    await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/team-members/${teamMemberId}`,
       config,
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to delete team member ${teamMemberId} from project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to delete team member";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -452,7 +543,7 @@ export interface AddTeamMemberPayload {
 export async function addTeamMember(
   projectId: string,
   data: AddTeamMemberPayload,
-): Promise<TeamMember> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -460,12 +551,17 @@ export async function addTeamMember(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to add team member to project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add team member";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -474,7 +570,7 @@ export async function addTeamMemberToMilestone(
   projectId: string,
   milestoneId: string,
   data: AddTeamMemberPayload,
-): Promise<TeamMember> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -482,12 +578,17 @@ export async function addTeamMemberToMilestone(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to add team member to milestone ${milestoneId} in project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add team member to milestone";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -496,7 +597,7 @@ export async function updateTeamMemberInMilestone(
   milestoneId: string,
   teamMemberId: string,
   data: AddTeamMemberPayload,
-): Promise<TeamMember> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -504,12 +605,17 @@ export async function updateTeamMemberInMilestone(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to update team member ${teamMemberId} in milestone ${milestoneId} in project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update team member in milestone";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -517,26 +623,31 @@ export async function removeTeamMemberFromMilestone(
   projectId: string,
   milestoneId: string,
   teamMemberId: string,
-): Promise<boolean> {
+) {
   try {
     const config = await getAxiosConfig();
     await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}/team-members/${teamMemberId}`,
       config,
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || error;
+    console.error(`Failed to remove team member ${teamMemberId} from milestone ${milestoneId} in project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to remove team member from milestone";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function updateProjectManager(
   projectId: string,
   projectManagerId: string,
-): Promise<Project | null> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -544,13 +655,17 @@ export async function updateProjectManager(
       { projectManagerId },
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to update project manager:", error);
-    return null;
+    console.error(`Failed to update project manager for project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update project manager";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -559,7 +674,7 @@ export async function addAssistantProjectManager(
   userId: string,
   responsibilities: string[],
   contractId?: string,
-): Promise<Project | null> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -567,33 +682,41 @@ export async function addAssistantProjectManager(
       { userId, responsibilities, contractId },
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to add assistant project manager:", error);
-    throw error;
+    console.error(`Failed to add assistant project manager to project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add assistant PM";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function removeAssistantProjectManager(
   projectId: string,
   assistantUserId: string,
-): Promise<Project | null> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/assistant-project-managers/${assistantUserId}`,
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to remove assistant project manager:", error);
-    throw error;
+    console.error(`Failed to remove assistant project manager ${assistantUserId} from project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to remove assistant PM";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -632,7 +755,7 @@ export interface UpdateMilestonePayload extends Partial<
 export async function addMilestone(
   projectId: string,
   data: AddMilestonePayload,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -640,12 +763,17 @@ export async function addMilestone(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || "Failed to add milestone";
+    console.error(`Failed to add milestone to project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add milestone";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -653,7 +781,7 @@ export async function updateMilestone(
   projectId: string,
   milestoneId: string,
   data: UpdateMilestonePayload,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -661,35 +789,45 @@ export async function updateMilestone(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || "Failed to update milestone";
+    console.error(`Failed to update milestone ${milestoneId} in project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update milestone";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function deleteMilestone(
   projectId: string,
   milestoneId: string,
-): Promise<Project> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.delete(
       `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/milestones/${milestoneId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data.message || "Failed to delete milestone";
+    console.error(`Failed to delete milestone ${milestoneId} from project ${projectId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to delete milestone";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function createContract(contractData: any): Promise<any> {
+export async function createContract(contractData: any) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -697,12 +835,16 @@ export async function createContract(contractData: any): Promise<any> {
       contractData,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to create contract:", error);
-    throw error?.response?.data.message || "Failed to create contract";
+    const message = error?.response?.data?.message || error?.message || "Failed to create contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }

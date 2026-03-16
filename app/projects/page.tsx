@@ -14,7 +14,7 @@ export default async function ProjectsPage() {
     <DashboardProvider>
       <Header />
       <Suspense fallback={<div>Loading projects...</div>}>
-        <ProjectsModule initialData={projectsData} />
+        <ProjectsModule initialData={projectsData?.data || []} />
       </Suspense>
     </DashboardProvider>
   );

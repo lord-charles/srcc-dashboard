@@ -18,7 +18,10 @@ export async function createTemplateAction(formData: FormData) {
     throw new Error("Name and content are required");
   }
 
-  await createContractTemplate({ name, category, version, contentType, content, variablesCsv, active });
+  const result = await createContractTemplate({ name, category, version, contentType, content, variablesCsv, active });
+  if (!result.success) {
+    throw new Error(result.error || "Failed to create template");
+  }
   revalidatePath("/settings/contract-templates");
 }
 
@@ -44,13 +47,19 @@ export async function updateTemplateAction(formData: FormData) {
   if (variablesCsv) payload.variablesCsv = variablesCsv;
   if (activeStr !== null) payload.active = ["true", "on", "1", "yes"].includes(activeStr);
 
-  await updateContractTemplate(id, payload);
+  const result = await updateContractTemplate(id, payload);
+  if (!result.success) {
+    throw new Error(result.error || "Failed to update template");
+  }
   revalidatePath("/settings/contract-templates");
 }
 
 export async function deleteTemplateAction(formData: FormData) {
   const id = String(formData.get("id") || "");
   if (!id) throw new Error("Missing template id");
-  await deleteContractTemplate(id);
+  const result = await deleteContractTemplate(id);
+  if (!result.success) {
+    throw new Error(result.error || "Failed to delete template");
+  }
   revalidatePath("/settings/contract-templates");
 }

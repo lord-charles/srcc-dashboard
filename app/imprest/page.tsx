@@ -11,7 +11,7 @@ export default async function ImprestPage() {
   return (
     <DashboardProvider>
       <Header />
-      <ImprestModule initialData={initialData} />
+      <ImprestModule initialData={initialData?.data || []} />
     </DashboardProvider>
   );
 }

@@ -22,8 +22,8 @@ export default async function EmployeesPage() {
 
       <Suspense fallback={<div>Loading consultants...</div>}>
         <EmployeeModule
-          initialData={employeesData}
-          organizations={organizationsData}
+          initialData={employeesData?.data || { data: [], total: 0, page: 1, limit: 100 }}
+          organizations={organizationsData?.data || []}
         />
       </Suspense>
     </DashboardProvider>

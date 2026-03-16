@@ -105,12 +105,14 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const data = await getContractTemplates({ active: true });
-        // Filter to only coach templates for coaches
-        const filteredData = (data || []).filter(
-          (t: any) => t.category === "coach",
-        );
-        setTemplates(filteredData);
+        const result = await getContractTemplates({ active: true });
+        if (result.success) {
+          // Filter to only coach templates for coaches
+          const filteredData = (result.data || []).filter(
+            (t: any) => t.category === "coach",
+          );
+          setTemplates(filteredData);
+        }
       } catch (error) {
         console.error("Failed to fetch contract templates:", error);
       }
@@ -224,7 +226,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
 
       const result = await createContract(contractData);
 
-      if (result) {
+      if (result.success) {
         toast({
           title: "Coach contract created",
           description: "Coach contract has been created successfully",
@@ -232,6 +234,12 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
 
         // Delay reload to ensure any dialogs close first
         setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Failed to create coach contract",
+          description: result.error || "An error occurred while creating the contract",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to create coach contract:", error);
@@ -285,7 +293,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
 
       const result = await updateContract(selectedContract._id, contractData);
 
-      if (result) {
+      if (result.success) {
         // Synchronize milestone transition if it's a project-wide coach getting assigned a milestone
         if (
           !selectedContract.milestoneId &&
@@ -320,6 +328,12 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
 
         // Delay reload to ensure any dialogs close first
         setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Failed to update coach contract",
+          description: result.error || "An error occurred while updating the contract",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to update coach contract:", error);
@@ -355,12 +369,20 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
           : coach.userId?._id || "";
       if (!userId || !coach.milestoneId)
         throw new Error("Missing coach identifiers");
-      await deleteCoach(projectId, String(coach.milestoneId), String(userId));
-      toast({
-        title: "Coach removed",
-        description: "Coach has been removed from the milestone.",
-      });
-      setTimeout(() => window.location.reload(), 100);
+      const result = await deleteCoach(projectId, String(coach.milestoneId), String(userId));
+      if (result.success) {
+        toast({
+          title: "Coach removed",
+          description: "Coach has been removed from the milestone.",
+        });
+        setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to remove coach",
+          variant: "destructive",
+        });
+      }
     } catch (e: any) {
       toast({
         title: "Error",
@@ -379,12 +401,20 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
           ? manager.userId
           : manager.userId?._id || "";
       if (!userId) throw new Error("Missing manager user");
-      await deleteCoachManager(projectId, String(userId));
-      toast({
-        title: "Coach manager removed",
-        description: "Coach manager has been removed.",
-      });
-      setTimeout(() => window.location.reload(), 100);
+      const result = await deleteCoachManager(projectId, String(userId));
+      if (result.success) {
+        toast({
+          title: "Coach manager removed",
+          description: "Coach manager has been removed.",
+        });
+        setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to remove coach manager",
+          variant: "destructive",
+        });
+      }
     } catch (e: any) {
       toast({
         title: "Error",
@@ -401,12 +431,20 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
           ? assistant.userId
           : assistant.userId?._id || "";
       if (!userId) throw new Error("Missing assistant user");
-      await deleteCoachAssistant(projectId, String(userId));
-      toast({
-        title: "Coach assistant removed",
-        description: "Coach assistant has been removed.",
-      });
-      setTimeout(() => window.location.reload(), 100);
+      const result = await deleteCoachAssistant(projectId, String(userId));
+      if (result.success) {
+        toast({
+          title: "Coach assistant removed",
+          description: "Coach assistant has been removed.",
+        });
+        setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to remove coach assistant",
+          variant: "destructive",
+        });
+      }
     } catch (e: any) {
       toast({
         title: "Error",

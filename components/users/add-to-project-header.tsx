@@ -53,7 +53,7 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
       ) {
         try {
           const proj = await getProject(projectId);
-          setMilestones(proj?.milestones || []);
+          setMilestones(proj?.data?.milestones || []);
         } catch {}
       }
     };

@@ -55,7 +55,16 @@ export function DataTableRowActions<TData>({
     try {
       setIsDeleting(true);
       const { deleteClaim } = await import("@/services/claims.service");
-      await deleteClaim(claim._id);
+      const result = await deleteClaim(claim._id);
+
+      if (!result.success) {
+        toast({
+          title: "Delete Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Claim Deleted",
@@ -63,19 +72,17 @@ export function DataTableRowActions<TData>({
       });
 
       setIsDeleteDialogOpen(false);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Delete Failed",
-        description:
-          error.message ||
-          "Failed to delete claim. Only draft or cancelled claims can be deleted.",
+        description: "An unexpected error occurred while deleting the claim.",
         variant: "destructive",
       });
     } finally {
       setIsDeleting(false);
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
     }
   };
 
@@ -83,7 +90,16 @@ export function DataTableRowActions<TData>({
     try {
       setIsCancelling(true);
       const { cancelClaim } = await import("@/services/claims.service");
-      await cancelClaim(claim._id);
+      const result = await cancelClaim(claim._id);
+
+      if (!result.success) {
+        toast({
+          title: "Cancel Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Claim Cancelled",
@@ -92,19 +108,17 @@ export function DataTableRowActions<TData>({
       });
 
       setIsCancelDialogOpen(false);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Cancel Failed",
-        description:
-          error.message ||
-          "Failed to cancel claim. Only draft or pending claims can be cancelled.",
+        description: "An unexpected error occurred while cancelling the claim.",
         variant: "destructive",
       });
     } finally {
       setIsCancelling(false);
-      setTimeout(() => {
-        window.location.reload();
-      }, 3000);
     }
   };
 

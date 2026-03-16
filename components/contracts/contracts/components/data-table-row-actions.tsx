@@ -44,16 +44,24 @@ export function DataTableRowActions<TData>({
   const handleDeleteContract = async () => {
     try {
       setIsDeleting(true);
-      await deleteContract(contract._id);
+      const result = await deleteContract(contract._id);
 
-      toast({
-        title: "Contract deleted",
-        description: "The contract has been successfully deleted.",
-      });
+      if (result.success) {
+        toast({
+          title: "Contract deleted",
+          description: "The contract has been successfully deleted.",
+        });
+      } else {
+        toast({
+          title: "Delete Failed",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Unknown error",
+        description: "An unexpected error occurred while deleting the contract.",
         variant: "destructive",
       });
     } finally {
@@ -61,7 +69,7 @@ export function DataTableRowActions<TData>({
       setIsDeleteDialogOpen(false);
       setTimeout(() => {
         window.location.reload();
-      }, 3000);
+      }, 1500);
     }
   };
   return (

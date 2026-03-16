@@ -122,13 +122,13 @@ export function NewProjectComponent() {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const config = await getProjectConfig();
-        if (config && config.data.departments) {
-          setAvailableDepartments(config.data.departments);
-          if (config.data.departments.length > 0) {
+        const result = await getProjectConfig();
+        if (result.success && result.data?.data?.departments) {
+          setAvailableDepartments(result.data.data.departments);
+          if (result.data.data.departments.length > 0) {
             setFormData((prev) => ({
               ...prev,
-              department: config.data.departments[0],
+              department: result.data.data.departments[0],
             }));
           }
         }
@@ -246,14 +246,22 @@ export function NewProjectComponent() {
 
       const result = await createProject(projectData);
 
-      toast({
-        title: "Project Created",
-        description: "Project has been created successfully.",
-      });
+      if (result.success) {
+        toast({
+          title: "Project Created",
+          description: "Project has been created successfully.",
+        });
 
-      setTimeout(() => {
-        router.push("/projects");
-      }, 2000);
+        setTimeout(() => {
+          router.push("/projects");
+        }, 2000);
+      } else {
+        toast({
+          title: "Creation Failed",
+          description: result.error || "Failed to create project",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       toast({

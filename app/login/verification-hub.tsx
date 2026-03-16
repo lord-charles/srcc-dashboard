@@ -43,13 +43,16 @@ export function VerificationHub({
     const fetchStatus = async () => {
       try {
         setIsLoading(true);
-        const newStatus =
+        const result =
           userType === "user"
             ? await getVerificationStatus(email)
             : await getCompanyVerificationStatus(email);
-        setStatus(newStatus);
-        if (newStatus.isEmailVerified && newStatus.isPhoneVerified) {
-          onBothVerified();
+
+        if (result.success && result.data) {
+          setStatus(result.data);
+          if (result.data.isEmailVerified && result.data.isPhoneVerified) {
+            onBothVerified();
+          }
         }
       } catch (error) {
         console.error("Failed to fetch verification status", error);

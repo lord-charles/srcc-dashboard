@@ -16,24 +16,28 @@ const getAxiosConfig = async () => {
   };
 };
 
-export async function getAllOrganizations(): Promise<Organization[]> {
+export async function getAllOrganizations() {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/organizations`,
       config
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch organizations:", error);
-    throw error.response?.data.message || error.message;
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch organizations";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function approveOrganization(organizationId: string): Promise<boolean> {
+export async function approveOrganization(organizationId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -41,17 +45,21 @@ export async function approveOrganization(organizationId: string): Promise<boole
       {},
       config
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to approve organization:", error);
-    throw error.response?.data.message || error.message;
+    const message = error?.response?.data?.message || error?.message || "Failed to approve organization";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function rejectOrganization(organizationId: string): Promise<boolean> {
+export async function rejectOrganization(organizationId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -59,12 +67,16 @@ export async function rejectOrganization(organizationId: string): Promise<boolea
       {},
       config
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to reject organization:", error);
-    throw error.response?.data.message || error.message;
+    const message = error?.response?.data?.message || error?.message || "Failed to reject organization";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }

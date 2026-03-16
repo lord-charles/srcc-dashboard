@@ -12,21 +12,22 @@ async function Page({ params }) {
   const projectId = await params.project;
 
   try {
-    const project = await getProjectById(projectId);
+    const result = await getProjectById(projectId);
 
-    
-    if (!project) {
+    if (!result.success || !result.data) {
       return (
         <DashboardProvider>
           <Header />
           <div className="flex items-center justify-center h-screen">
             <p className="text-xl text-gray-600">
-              Project not found or has incomplete details
+              Project not found: {result.error || "incomplete details"}
             </p>
           </div>
         </DashboardProvider>
       );
     }
+
+    const project = result.data;
 
     return (
       <DashboardProvider>

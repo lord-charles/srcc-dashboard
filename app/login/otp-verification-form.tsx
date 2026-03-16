@@ -51,11 +51,15 @@ export function OTPVerificationForm({
     setError(null);
 
     try {
-      await onVerify(otp);
-      setIsSuccess(true);
-      setTimeout(() => {
-        onSuccess();
-      }, 1500);
+      const result = await onVerify(otp);
+      if (result.success) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          onSuccess();
+        }, 1500);
+      } else {
+        setError(result.error || "Verification failed");
+      }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred.");
     } finally {

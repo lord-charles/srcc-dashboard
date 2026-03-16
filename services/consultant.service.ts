@@ -15,7 +15,7 @@ const getAxiosConfig = async (isMultipart = false) => {
   };
 };
 
-export async function registerConsultant(formData: FormData): Promise<any> {
+export async function registerConsultant(formData: FormData) {
   try {
     const config = await getAxiosConfig(true);
     const response = await axios.post(
@@ -29,22 +29,23 @@ export async function registerConsultant(formData: FormData): Promise<any> {
         },
       },
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Consultant registration error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message;
+    console.error("Consultant registration error:", error);
+    const message = error.response?.data?.message || error.message || "Consultant registration failed";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function approveConsultant(
   consultantId: string,
-): Promise<boolean> {
+) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -52,17 +53,21 @@ export async function approveConsultant(
       {},
       config,
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to approve consultant:", error);
-    throw error.response?.data.message;
+    const message = error.response?.data?.message || error.message || "Failed to approve consultant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function rejectConsultant(consultantId: string): Promise<boolean> {
+export async function rejectConsultant(consultantId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -70,17 +75,21 @@ export async function rejectConsultant(consultantId: string): Promise<boolean> {
       {},
       config,
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to reject consultant:", error);
-    throw error.response?.data.message;
+    const message = error.response?.data?.message || error.message || "Failed to reject consultant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function requestPasswordReset(email: string): Promise<any> {
+export async function requestPasswordReset(email: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -88,20 +97,21 @@ export async function requestPasswordReset(email: string): Promise<any> {
       { email },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Password reset request error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || error.message;
+    console.error("Password reset request error:", error);
+    const message = error.response?.data?.message || error.message || "Password reset request failed";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function registerOrganization(formData: FormData): Promise<any> {
+export async function registerOrganization(formData: FormData) {
   try {
     const config = await getAxiosConfig(true);
     const response = await axios.post(
@@ -115,16 +125,17 @@ export async function registerOrganization(formData: FormData): Promise<any> {
         },
       },
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Organization registration error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || error.message;
+    console.error("Organization registration error:", error);
+    const message = error.response?.data?.message || error.message || "Organization registration failed";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -135,7 +146,7 @@ export async function quickRegister(data: {
   phoneNumber: string;
   nationalId: string;
   password: string;
-}): Promise<any> {
+}) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -143,16 +154,17 @@ export async function quickRegister(data: {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Quick registration error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || "An unexpected error occurred.";
+    console.error("Quick registration error:", error);
+    const message = error.response?.data?.message || error.message || "Quick registration failed";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -162,7 +174,7 @@ export async function quickCompanyRegister(data: {
   registrationNumber: string;
   kraPin: string;
   password: string;
-}): Promise<any> {
+}) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -170,16 +182,17 @@ export async function quickCompanyRegister(data: {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Quick company registration error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || "An unexpected error occurred.";
+    console.error("Quick company registration error:", error);
+    const message = error.response?.data?.message || error.message || "Quick company registration failed";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -187,7 +200,7 @@ export async function verifyOtp(data: {
   email: string;
   pin: string;
   verificationType: "email" | "phone";
-}): Promise<any> {
+}) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -195,16 +208,17 @@ export async function verifyOtp(data: {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "OTP verification error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || "An unexpected error occurred.";
+    console.error("OTP verification error:", error);
+    const message = error.response?.data?.message || error.message || "OTP verification failed";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -212,7 +226,7 @@ export async function verifyCompanyOtp(data: {
   businessEmail: string;
   pin: string;
   verificationType: "email" | "phone";
-}): Promise<any> {
+}) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -220,16 +234,17 @@ export async function verifyCompanyOtp(data: {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Company OTP verification error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || "An unexpected error occurred.";
+    console.error("Company OTP verification error:", error);
+    const message = error.response?.data?.message || error.message || "Company OTP verification failed";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -241,7 +256,7 @@ export const verifyPhoneOtp = async (email: string, pin: string) =>
 
 export async function getVerificationStatus(
   email: string,
-): Promise<{ isEmailVerified: boolean; isPhoneVerified: boolean }> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
@@ -251,22 +266,23 @@ export async function getVerificationStatus(
         params: { email },
       },
     );
-    return response.data;
+    return { success: true as const, data: response.data as { isEmailVerified: boolean; isPhoneVerified: boolean } };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Get verification status error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || "An unexpected error occurred.";
+    console.error("Get verification status error:", error);
+    const message = error.response?.data?.message || error.message || "Failed to get verification status";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function getCompanyVerificationStatus(
   businessEmail: string,
-): Promise<{ isEmailVerified: boolean; isPhoneVerified: boolean }> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
@@ -276,38 +292,42 @@ export async function getCompanyVerificationStatus(
         params: { businessEmail },
       },
     );
-    return response.data;
+    return { success: true as const, data: response.data as { isEmailVerified: boolean; isPhoneVerified: boolean } };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(
-      "Get company verification status error:",
-      error.response?.data || error.message,
-    );
-    throw error.response?.data.message || "An unexpected error occurred.";
+    console.error("Get company verification status error:", error);
+    const message = error.response?.data?.message || error.message || "Failed to get company verification status";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function getOrganization(id: string): Promise<any> {
+export async function getOrganization(id: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${id}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    const errorMsg = error.response?.data?.message || error.message;
-    console.error(`Failed to fetch organization:`, errorMsg);
-    throw errorMsg;
+    console.error(`Failed to fetch organization ${id}:`, error);
+    const message = error.response?.data?.message || error.message || "Failed to fetch organization";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function updateOrganization(id: string, data: any): Promise<any> {
+export async function updateOrganization(id: string, data: any) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -315,36 +335,42 @@ export async function updateOrganization(id: string, data: any): Promise<any> {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    const errorMsg = error.response?.data?.message || error.message;
-    console.error(`Failed to update organization:`, errorMsg);
-    throw errorMsg;
+    console.error(`Failed to update organization ${id}:`, error);
+    const message = error.response?.data?.message || error.message || "Failed to update organization";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function getConsultant(id: string): Promise<any> {
+export async function getConsultant(id: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/user/${id}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    const errorText = error.response?.data?.message || error.message;
-    console.error(`Failed to fetch consultant:`, errorText);
-    throw new Error(errorText);
+    console.error(`Failed to fetch consultant ${id}:`, error);
+    const message = error.response?.data?.message || error.message || "Failed to fetch consultant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function updateConsultant(id: string, data: any): Promise<any> {
+export async function updateConsultant(id: string, data: any) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -352,20 +378,23 @@ export async function updateConsultant(id: string, data: any): Promise<any> {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    const errorText = error.response?.data?.message || error.message;
-    console.error(`Failed to update consultant:`, errorText);
-    throw new Error(errorText);
+    console.error(`Failed to update consultant ${id}:`, error);
+    const message = error.response?.data?.message || error.message || "Failed to update consultant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function completeConsultantRegistration(
   consultantId: string,
-): Promise<any> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -373,20 +402,23 @@ export async function completeConsultantRegistration(
       {},
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    const errorText = error.response?.data?.message || error.message;
-    console.error(`Failed to complete consultant registration:`, errorText);
-    throw new Error(errorText);
+    console.error(`Failed to complete consultant registration ${consultantId}:`, error);
+    const message = error.response?.data?.message || error.message || "Failed to complete registration";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function completeOrganizationRegistration(
   organizationId: string,
-): Promise<any> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -394,20 +426,23 @@ export async function completeOrganizationRegistration(
       {},
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    const errorMsg = error.response?.data?.message || error.message;
-    console.error(`Failed to complete organization registration:`, errorMsg);
-    throw errorMsg;
+    console.error(`Failed to complete organization registration ${organizationId}:`, error);
+    const message = error.response?.data?.message || error.message || "Failed to complete registration";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function manualVerifyConsultant(
   consultantId: string,
-): Promise<boolean> {
+) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -415,12 +450,16 @@ export async function manualVerifyConsultant(
       {},
       config,
     );
-    return true;
+    return { success: true as const, data: true };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to manually verify consultant:", error);
-    throw error.response?.data?.message || "Failed to verify consultant";
+    console.error(`Failed to manually verify consultant ${consultantId}:`, error);
+    const message = error.response?.data?.message || error.message || "Failed to verify consultant";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }

@@ -14,36 +14,45 @@ export async function createInvoice(invoiceData: any) {
       invoiceData,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error;
+    console.error("Failed to create invoice:", error);
+    const message = error?.response?.data?.message || error?.message || "Failed to create invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
-export async function getInvoiceById(id: string): Promise<Invoice | null> {
+export async function getInvoiceById(id: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get<Invoice>(
       `${API_URL}/invoices/${id}`,
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to fetch invoice:", error);
-    return null;
+    console.error(`Failed to fetch invoice ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function updateInvoice(
   id: string,
   invoiceData: Partial<Invoice>,
-): Promise<Invoice | null> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.put<Invoice>(
@@ -51,29 +60,35 @@ export async function updateInvoice(
       invoiceData,
       config,
     );
-    return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError && error.response?.status === 401) {
-      await handleUnauthorized();
-    }
-    console.error("Failed to update invoice:", error);
-    return null;
-  }
-}
-
-export async function deleteInvoice(id: string): Promise<boolean> {
-  try {
-    const config = await getAxiosConfig();
-    await axios.delete(`${API_URL}/invoices/${id}`, config);
-    return true;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to delete invoice:", error);
-    throw new Error(
-      error.response?.data?.message || "Failed to delete invoice",
-    );
+    console.error(`Failed to update invoice ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
+  }
+}
+
+export async function deleteInvoice(id: string) {
+  try {
+    const config = await getAxiosConfig();
+    await axios.delete(`${API_URL}/invoices/${id}`, config);
+    return { success: true as const, data: true };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(`Failed to delete invoice ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to delete invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -85,17 +100,17 @@ export async function editInvoice(invoiceId: string, invoiceData: any) {
       invoiceData,
       config,
     );
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      if (error.response?.status === 401) {
-        await handleUnauthorized();
-      }
-      throw new Error(
-        error.response?.data?.message || "Failed to edit invoice",
-      );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
     }
-    throw error;
+    console.error(`Failed to edit invoice ${invoiceId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to edit invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -107,14 +122,17 @@ export async function submitInvoice(id: string) {
       {},
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw new Error(
-      error.response?.data?.message || "Failed to submit invoice",
-    );
+    console.error(`Failed to submit invoice ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to submit invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -126,18 +144,17 @@ export async function approveInvoice(id: string, comments: string = "") {
       { comments },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-
-    throw new Error(
-      error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        "Failed to approve invoice",
-    );
+    console.error(`Failed to approve invoice ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to approve invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -149,26 +166,24 @@ export async function approverRequestChanges(id: string, comments: string) {
       { comments },
       config,
     );
-    return { success: true, data: response.data };
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-
-    const errorMessage =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      "Failed to request changes as approver";
-
-    return { success: false, error: errorMessage };
+    console.error(`Failed to request changes for invoice ${id}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to request changes";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function recordPayment(
   invoiceId: string,
   paymentData: Record<string, any>,
-): Promise<Invoice> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Invoice>(
@@ -176,21 +191,24 @@ export async function recordPayment(
       paymentData,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw new Error(
-      error.response?.data?.message || "Failed to record payment",
-    );
+    console.error(`Failed to record payment for invoice ${invoiceId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to record payment";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function attachActualInvoice(
   invoiceId: string,
   url: string,
-): Promise<Invoice> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch<Invoice>(
@@ -198,14 +216,17 @@ export async function attachActualInvoice(
       { url },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw new Error(
-      error.response?.data?.message || "Failed to attach actual invoice URL",
-    );
+    console.error(`Failed to attach actual invoice to invoice ${invoiceId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to attach actual invoice";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -221,26 +242,24 @@ export async function requestInvoiceRevision(
       { comments, changes },
       config,
     );
-    return { success: true, data: response.data };
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-
-    const errorMessage =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      "Failed to request invoice revision";
-
-    return { success: false, error: errorMessage };
+    console.error(`Failed to request revision for invoice ${invoiceId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to request revision";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
 export async function addCreditNote(
   invoiceId: string,
   creditNoteData: Record<string, any>,
-): Promise<Invoice> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Invoice>(
@@ -248,13 +267,16 @@ export async function addCreditNote(
       creditNoteData,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw new Error(
-      error.response?.data?.message || "Failed to add credit note",
-    );
+    console.error(`Failed to add credit note to invoice ${invoiceId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to add credit note";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }

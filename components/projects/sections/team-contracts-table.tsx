@@ -18,9 +18,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
-  DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
@@ -91,15 +89,12 @@ const ContractsTable = ({
   const currency = contracts[0]?.currency || "KES";
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
   const [showCreateClaimDialog, setShowCreateClaimDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [isUpdatingContract, setIsUpdatingContract] = useState(false);
   const [isDeletingContract, setIsDeletingContract] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const itemsPerPage = 10;
   const [templates, setTemplates] = useState<
     Array<{
       _id: string;
@@ -115,12 +110,22 @@ const ContractsTable = ({
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const data = await getContractTemplates({ active: true });
-        // Filter out coach templates for team members
-        const filteredData = (data || []).filter(
-          (t: any) => t.category !== "coach",
-        );
-        setTemplates(filteredData);
+        const result = await getContractTemplates({ active: true });
+        if (result.success) {
+          // Filter out coach templates for team members
+          const templatesData = (result.data || []) as any[];
+          const filteredData = templatesData.filter(
+            (t: any) => t.category !== "coach",
+          );
+          setTemplates(filteredData);
+        } else {
+          console.error("Failed to fetch contract templates:", result.error);
+          toast({
+            title: "Error",
+            description: result.error || "Failed to fetch contract templates",
+            variant: "destructive",
+          });
+        }
       } catch (error) {
         console.error("Failed to fetch contract templates:", error);
       }
@@ -201,13 +206,6 @@ const ContractsTable = ({
     return Object.values(groups);
   }, [filteredContracts]);
 
-  const paginatedContracts = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredContracts.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredContracts, currentPage]);
-
-  const totalPages = Math.ceil(filteredContracts.length / itemsPerPage);
-
   const handleEditContract = (contract: Contract) => {
     setSelectedContract(contract);
     setShowEditContractDialog(true);
@@ -250,27 +248,28 @@ const ContractsTable = ({
 
       const result = await updateContract(selectedContract._id, contractData);
 
-      if (result) {
+      if (result.success) {
         toast({
           title: "Contract updated",
           description: "Contract has been updated successfully",
         });
 
-        // Refresh the contracts data
-        setRefreshTrigger((prev) => prev + 1);
         // Optionally call a refresh function if passed as prop
         if (typeof window !== "undefined" && window.location?.reload) {
-          setTimeout(() => window.location.reload(), 100);
+          setTimeout(() => window.location.reload(), 1000);
         }
+      } else {
+        toast({
+          title: "Failed to update contract",
+          description: result.error,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to update contract:", error);
       toast({
         title: "Failed to update contract",
-        description:
-          typeof error === "string"
-            ? error
-            : "An error occurred while updating the contract",
+        description: "An unexpected error occurred while updating the contract",
         variant: "destructive",
       });
     } finally {
@@ -287,27 +286,28 @@ const ContractsTable = ({
 
       const result = await deleteContract(contractToDelete._id);
 
-      if (result) {
+      if (result.success) {
         toast({
           title: "Contract deleted",
           description: "Contract has been deleted successfully",
         });
 
-        // Refresh the contracts data
-        setRefreshTrigger((prev) => prev + 1);
         // Optionally call a refresh function if passed as prop
         if (typeof window !== "undefined" && window.location?.reload) {
           setTimeout(() => window.location.reload(), 100);
         }
+      } else {
+        toast({
+          title: "Failed to delete contract",
+          description: result.error,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to delete contract:", error);
       toast({
         title: "Failed to delete contract",
-        description:
-          typeof error === "string"
-            ? error
-            : "An error occurred while deleting the contract",
+        description: "An unexpected error occurred while deleting the contract",
         variant: "destructive",
       });
     } finally {
@@ -526,7 +526,6 @@ const ContractsTable = ({
             setShowViewDialog(false);
             setSelectedContract(null);
             // Refresh data when dialog closes
-            setRefreshTrigger((prev) => prev + 1);
             if (typeof window !== "undefined" && window.location?.reload) {
               setTimeout(() => window.location.reload(), 100);
             }

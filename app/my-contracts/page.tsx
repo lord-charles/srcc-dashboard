@@ -11,8 +11,7 @@ export default async function ContractsPage() {
   return (
     <DashboardProvider>
       <Header />
-      <MyContracts initialData={initialData} />
+      <MyContracts initialData={initialData?.data || []} />
     </DashboardProvider>
   );
-
 }

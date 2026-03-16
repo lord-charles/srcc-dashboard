@@ -1,5 +1,4 @@
-
-import { ClaimingInfo } from "./claims/claiming-info"
+import { ClaimingInfo } from "./claims/claiming-info";
 import { getMyClaims } from "@/services/claims.service";
 import { ClaimsStatCards } from "./claims/stat-cards";
 import { ClaimsTable } from "./claims/claims-table";
@@ -16,13 +15,12 @@ export default async function MyClaimsPage() {
       <Header />
 
       <div className="space-y-4 p-2">
-
         <ClaimingInfo />
 
-        <ClaimsStatCards claims={initialData} />
+        <ClaimsStatCards claims={initialData?.data || []} />
 
-        <ClaimsTable claims={initialData} />
+        <ClaimsTable claims={initialData?.data || []} />
       </div>
     </DashboardProvider>
-  )
+  );
 }

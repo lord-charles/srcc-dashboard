@@ -33,7 +33,7 @@ export function ProjectClaimsSection({
       try {
         setIsLoading(true);
         const data = await getClaimsByProject(projectId);
-        setClaims(data);
+        setClaims(data?.data || []);
       } catch (error) {
         console.error("Failed to fetch project claims:", error);
       } finally {

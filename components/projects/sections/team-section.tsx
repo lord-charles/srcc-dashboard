@@ -98,12 +98,14 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const data = await getContractTemplates({ active: true });
-        // Filter out coach templates for team members
-        const filteredData = (data || []).filter(
-          (t: any) => t.category !== "coach",
-        );
-        setTemplates(filteredData);
+        const result = await getContractTemplates({ active: true });
+        if (result.success) {
+          // Filter out coach templates for team members
+          const filteredData = (result.data || []).filter(
+            (t: any) => t.category !== "coach",
+          );
+          setTemplates(filteredData);
+        }
       } catch (error) {
         console.error("Failed to fetch contract templates:", error);
       }
@@ -229,7 +231,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 
       const result = await createContract(contractData);
 
-      if (result) {
+      if (result.success) {
         toast({
           title: "Contract created",
           description: "Contract has been created successfully",
@@ -237,6 +239,12 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 
         // Delay reload to ensure any dialogs close first
         setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Failed to create contract",
+          description: result.error || "An error occurred while creating the contract",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to create contract:", error);
@@ -296,7 +304,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 
       const result = await updateContract(selectedContract._id, contractData);
 
-      if (result) {
+      if (result.success) {
         // Synchronize milestone transition if it's a project-wide member getting assigned a milestone
         if (
           !selectedContract.milestoneId &&
@@ -328,6 +336,12 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
 
         // Delay reload to ensure any dialogs close first
         setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Failed to update contract",
+          description: result.error || "An error occurred while updating the contract",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Failed to update contract:", error);
@@ -348,13 +362,21 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
   const handleDeleteTeamMember = async (memberId: string) => {
     setIsDeleting(true);
     try {
-      await deleteTeamMember(projectId, memberId);
-      toast({
-        title: "Team member removed",
-        description: "The team member has been removed from the project.",
-      });
-      // Delay reload to ensure any dialogs close first
-      setTimeout(() => window.location.reload(), 100);
+      const result = await deleteTeamMember(projectId, memberId);
+      if (result.success) {
+        toast({
+          title: "Team member removed",
+          description: "The team member has been removed from the project.",
+        });
+        // Delay reload to ensure any dialogs close first
+        setTimeout(() => window.location.reload(), 100);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to remove team member. Please try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       console.error("Error deleting team member:", error);
       toast({
@@ -729,19 +751,28 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                     try {
                                       const { removeAssistantProjectManager } =
                                         await import("@/services/projects-service");
-                                      await removeAssistantProjectManager(
+                                      const result = await removeAssistantProjectManager(
                                         projectId,
                                         assistant.userId._id,
                                       );
-                                      toast({
-                                        title: "Assistant PM removed",
-                                        description:
-                                          "The assistant project manager has been removed successfully.",
-                                      });
-                                      setTimeout(
-                                        () => window.location.reload(),
-                                        100,
-                                      );
+                                      if (result.success) {
+                                        toast({
+                                          title: "Assistant PM removed",
+                                          description:
+                                            "The assistant project manager has been removed successfully.",
+                                        });
+                                        setTimeout(
+                                          () => window.location.reload(),
+                                          100,
+                                        );
+                                      } else {
+                                        toast({
+                                          title: "Error",
+                                          description:
+                                            result.error || "Failed to remove assistant project manager",
+                                          variant: "destructive",
+                                        });
+                                      }
                                     } catch (error) {
                                       toast({
                                         title: "Error",

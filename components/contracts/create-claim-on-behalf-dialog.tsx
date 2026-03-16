@@ -299,7 +299,7 @@ export function CreateClaimOnBehalfDialog({
 
     setIsSubmitting(true);
     try {
-      await createClaim({
+      const result = await createClaim({
         projectId: contract.projectId,
         contractId: contract._id,
         claimantId: contract.contractedUserId._id,
@@ -319,6 +319,15 @@ export function CreateClaimOnBehalfDialog({
         documents: documents.length ? documents : undefined,
       });
 
+      if (!result.success) {
+        toast({
+          title: "Failed to Create Claim",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Claim Created",
         description: `Claim created successfully for ${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`,
@@ -329,9 +338,7 @@ export function CreateClaimOnBehalfDialog({
       console.error("Failed to create claim:", error);
       toast({
         title: "Failed to Create Claim",
-        description:
-          error?.response?.data?.message ||
-          "An error occurred while creating the claim",
+        description: "An unexpected error occurred while creating the claim",
         variant: "destructive",
       });
     } finally {

@@ -37,7 +37,15 @@ export function ConsultantProfileProvider({
     try {
       setLoading(true);
       const result = await getConsultant(consultantId);
-      setData(result);
+      if (result.success) {
+        setData(result.data);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to fetch consultant data",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -64,20 +72,28 @@ export function ConsultantProfileProvider({
   const updateSection = async (sectionData: Partial<ConsultantData>) => {
     setSaving(true);
     try {
-      await updateConsultant(consultantId, sectionData);
-      setData((prev) => ({
-        ...prev,
-        ...sectionData,
-        lastUpdated: new Date().toISOString(),
-      }));
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
+      const result = await updateConsultant(consultantId, sectionData);
+      if (result.success) {
+        setData((prev) => ({
+          ...prev,
+          ...sectionData,
+          lastUpdated: new Date().toISOString(),
+        }));
+        toast({
+          title: "Success",
+          description: "Profile updated successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update profile",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
       throw error;

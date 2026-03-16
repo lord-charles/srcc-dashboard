@@ -4,8 +4,7 @@ import axios, { AxiosError } from "axios";
 import { Claim } from "@/types/claim";
 import { getAxiosConfig, handleUnauthorized } from "./dashboard.service";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://innova.cognitron.co.ke/srcc/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type CreateClaimPayload = {
   projectId: string;
@@ -34,7 +33,7 @@ export type CreateClaimPayload = {
   };
 };
 
-export async function createClaim(payload: CreateClaimPayload): Promise<Claim> {
+export async function createClaim(payload: CreateClaimPayload) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Claim>(
@@ -42,19 +41,26 @@ export async function createClaim(payload: CreateClaimPayload): Promise<Claim> {
       payload,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message || error?.message || "An error occurred";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }
 
-export async function approveClaim(
-  claimId: string,
-  comments: string,
-): Promise<Claim | null> {
+export async function approveClaim(claimId: string, comments: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Claim>(
@@ -62,32 +68,53 @@ export async function approveClaim(
       { comments },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to approve claim";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }
 
-export async function getMyClaims(): Promise<Claim[]> {
+export async function getMyClaims() {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get<Claim[]>(`${API_URL}/claims`, config);
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch claims";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }
 
-export async function rejectClaim(
-  claimId: string,
-  reason: string,
-): Promise<Claim | null> {
+export async function rejectClaim(claimId: string, reason: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Claim>(
@@ -95,24 +122,49 @@ export async function rejectClaim(
       { reason },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to reject claim";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }
 
-export async function deleteClaim(claimId: string): Promise<void> {
+export async function deleteClaim(claimId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.delete(`${API_URL}/claims/${claimId}`, config);
+    return { success: true as const };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete claim";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }
 
@@ -124,7 +176,7 @@ export async function markClaimAsPaid(
     reference: string;
     paymentAdviceUrl: string;
   },
-): Promise<Claim | null> {
+) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Claim>(
@@ -132,32 +184,56 @@ export async function markClaimAsPaid(
       paymentDetails,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to mark as paid";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }
 
-export async function getClaimsByProject(projectId: string): Promise<Claim[]> {
+export async function getClaimsByProject(projectId: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get<Claim[]>(
       `${API_URL}/claims/by-project/${projectId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch claims";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }
 
-export async function cancelClaim(claimId: string): Promise<Claim | null> {
+export async function cancelClaim(claimId: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Claim>(
@@ -165,11 +241,23 @@ export async function cancelClaim(claimId: string): Promise<Claim | null> {
       {},
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    throw error?.response?.data?.message || error;
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to cancel claim";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
   }
 }

@@ -11,7 +11,7 @@ export default async function ClaimsPage() {
   return (
     <DashboardProvider>
       <Header />
-      <ClaimsModule initialData={initialData} />
+      <ClaimsModule initialData={initialData?.data} />
     </DashboardProvider>
   );
 }

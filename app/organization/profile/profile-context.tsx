@@ -40,7 +40,15 @@ export function ProfileProvider({
     try {
       setLoading(true);
       const result = await getOrganization(organizationId);
-      setData(result);
+      if (result.success) {
+        setData(result.data);
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to fetch organization data",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -65,20 +73,28 @@ export function ProfileProvider({
   const updateSection = async (sectionData: Partial<OrganizationData>) => {
     setSaving(true);
     try {
-      await updateOrganization(organizationId, sectionData);
-      setData((prev) => ({
-        ...prev,
-        ...sectionData,
-        lastUpdated: new Date().toISOString(),
-      }));
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
+      const result = await updateOrganization(organizationId, sectionData);
+      if (result.success) {
+        setData((prev) => ({
+          ...prev,
+          ...sectionData,
+          lastUpdated: new Date().toISOString(),
+        }));
+        toast({
+          title: "Success",
+          description: "Profile updated successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to update profile",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
       throw error;
@@ -91,16 +107,24 @@ export function ProfileProvider({
     setSaving(true);
     try {
       const url = await cloudinaryService.uploadFile(file);
-      await updateOrganization(organizationId, { [field]: url });
-      setData((prev) => ({
-        ...prev,
-        [field]: url,
-        lastUpdated: new Date().toISOString(),
-      }));
-      toast({
-        title: "Upload Successful",
-        description: "Document uploaded and saved successfully.",
-      });
+      const result = await updateOrganization(organizationId, { [field]: url });
+      if (result.success) {
+        setData((prev) => ({
+          ...prev,
+          [field]: url,
+          lastUpdated: new Date().toISOString(),
+        }));
+        toast({
+          title: "Upload Successful",
+          description: "Document uploaded and saved successfully.",
+        });
+      } else {
+        toast({
+          title: "Update Failed",
+          description: result.error || "Failed to update profile with upload link",
+          variant: "destructive",
+        });
+      }
       return url;
     } catch (error) {
       console.error("Upload failed:", error);

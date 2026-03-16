@@ -27,7 +27,7 @@ async function Page({ params }) {
     return (
       <DashboardProvider>
         <Header />
-        <EmployeeDetailsPage employee={employee} />
+        <EmployeeDetailsPage employee={employee.data} />
       </DashboardProvider>
     );
   } catch (error) {

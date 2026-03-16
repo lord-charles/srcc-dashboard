@@ -80,7 +80,9 @@ const MyContracts = ({
   const [quickClaimOpen, setQuickClaimOpen] = useState(false);
   const [quickClaimSubmitting, setQuickClaimSubmitting] = useState(false);
   const [quickClaimError, setQuickClaimError] = useState<string | null>(null);
-  const [quickSelectedMilestones, setQuickSelectedMilestones] = useState<Record<string, { amount: number; percentage: number }>>({});
+  const [quickSelectedMilestones, setQuickSelectedMilestones] = useState<
+    Record<string, { amount: number; percentage: number }>
+  >({});
   const [otpValue, setOtpValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -97,21 +99,36 @@ const MyContracts = ({
     if (!contract?.projectId?.milestones?.length) return 0;
     return contract.contractValue / contract.projectId.milestones.length;
   };
-  const handleQuickMilestoneAmountChange = (milestoneId: string, value: string, contract: any) => {
+  const handleQuickMilestoneAmountChange = (
+    milestoneId: string,
+    value: string,
+    contract: any,
+  ) => {
     const maxPerMilestone = calculateQuickMaxPerMilestone(contract);
     const amount = Math.max(0, Number(value) || 0);
-    const percentage = maxPerMilestone > 0 ? Math.min(100, (amount / maxPerMilestone) * 100) : 0;
-    setQuickSelectedMilestones((prev) => ({ ...prev, [milestoneId]: { amount, percentage } }));
+    const percentage =
+      maxPerMilestone > 0 ? Math.min(100, (amount / maxPerMilestone) * 100) : 0;
+    setQuickSelectedMilestones((prev) => ({
+      ...prev,
+      [milestoneId]: { amount, percentage },
+    }));
   };
-  const calculateQuickTotal = () => Object.values(quickSelectedMilestones).reduce((sum, v) => sum + (v.amount || 0), 0);
+  const calculateQuickTotal = () =>
+    Object.values(quickSelectedMilestones).reduce(
+      (sum, v) => sum + (v.amount || 0),
+      0,
+    );
   const handleQuickSubmitClaim = async () => {
     if (!selectedContract) return;
     const totalAmount = calculateQuickTotal();
     if (totalAmount <= 0) {
-      setQuickClaimError("Please enter a positive amount for at least one milestone");
+      setQuickClaimError(
+        "Please enter a positive amount for at least one milestone",
+      );
       toast({
         title: "Invalid Claim Amount",
-        description: "Please enter a positive amount for at least one milestone",
+        description:
+          "Please enter a positive amount for at least one milestone",
         variant: "destructive",
       });
       return;
@@ -120,7 +137,9 @@ const MyContracts = ({
     const milestones = Object.entries(quickSelectedMilestones)
       .filter(([_, v]) => (v.amount || 0) > 0)
       .map(([milestoneId, v]) => {
-        const m = selectedContract?.projectId?.milestones?.find((mi: any) => mi._id === milestoneId);
+        const m = selectedContract?.projectId?.milestones?.find(
+          (mi: any) => mi._id === milestoneId,
+        );
         return {
           milestoneId,
           title: m?.title || "",
@@ -131,20 +150,39 @@ const MyContracts = ({
     try {
       setQuickClaimError(null);
       setQuickClaimSubmitting(true);
-      await createClaim({
+      const result = await createClaim({
         projectId: selectedContract?.projectId?._id,
         contractId: selectedContract._id,
         amount: totalAmount,
         currency: selectedContract.currency,
         milestones,
       });
-      toast({ title: "Claim Submitted", description: "Your claim has been submitted successfully" });
+
+      if (!result.success) {
+        setQuickClaimError(result.error);
+        toast({
+          title: "Failed to Submit Claim",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Claim Submitted",
+        description: "Your claim has been submitted successfully",
+      });
       setQuickSelectedMilestones({});
       setQuickClaimOpen(false);
     } catch (error: any) {
-      const message = error?.message || "An error occurred while submitting your claim";
+      const message =
+        "An unexpected error occurred while submitting your claim";
       setQuickClaimError(message);
-      toast({ title: "Failed to Submit Claim", description: message, variant: "destructive" });
+      toast({
+        title: "Failed to Submit Claim",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setQuickClaimSubmitting(false);
     }
@@ -233,15 +271,15 @@ const MyContracts = ({
   };
 
   // Calculate contract statistics
-  const activeContracts = initialData.filter(
-    (c) => c.status.toLowerCase() === "active"
+  const activeContracts = initialData?.filter(
+    (c) => c?.status?.toLowerCase() === "active",
   ).length;
-  const pendingContracts = initialData.filter(
-    (c) => c.status.toLowerCase() === "pending_acceptance"
+  const pendingContracts = initialData?.filter(
+    (c) => c?.status?.toLowerCase() === "pending_acceptance",
   ).length;
-  const totalValue = initialData.reduce(
+  const totalValue = initialData?.reduce(
     (sum, contract) => sum + contract.contractValue,
-    0
+    0,
   );
 
   // Filter and sort contracts
@@ -538,7 +576,7 @@ const MyContracts = ({
                       </Progress>
                       <p className="text-xs text-green-800 dark:text-green-300 mt-1.5">
                         {Math.round(
-                          (activeContracts / (initialData.length || 1)) * 100
+                          (activeContracts / (initialData.length || 1)) * 100,
                         )}
                         % of total contracts
                       </p>
@@ -582,7 +620,7 @@ const MyContracts = ({
                       </Progress>
                       <p className="text-xs text-amber-800 dark:text-amber-300 mt-1.5">
                         {Math.round(
-                          (pendingContracts / (initialData.length || 1)) * 100
+                          (pendingContracts / (initialData.length || 1)) * 100,
                         )}
                         % of total contracts
                       </p>
@@ -685,7 +723,7 @@ const MyContracts = ({
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {filteredAndSortedContracts.map((contract) => {
                   const daysRemaining = calculateDaysRemaining(
-                    contract.endDate
+                    contract.endDate,
                   );
                   const progress = Math.min(
                     100,
@@ -695,8 +733,8 @@ const MyContracts = ({
                         new Date(contract.startDate).getTime()) /
                         (new Date(contract.endDate).getTime() -
                           new Date(contract.startDate).getTime())) *
-                        100
-                    )
+                        100,
+                    ),
                   );
                   const healthScore = getContractHealthScore(contract);
 
@@ -711,8 +749,8 @@ const MyContracts = ({
                             progress > 75
                               ? "bg-red-100 dark:bg-red-950/50"
                               : progress > 50
-                              ? "bg-amber-100 dark:bg-amber-950/50"
-                              : "bg-green-100 dark:bg-green-950/50"
+                                ? "bg-amber-100 dark:bg-amber-950/50"
+                                : "bg-green-100 dark:bg-green-950/50"
                           }`}
                         >
                           <div
@@ -720,8 +758,8 @@ const MyContracts = ({
                               progress > 75
                                 ? "bg-red-500 dark:bg-red-600"
                                 : progress > 50
-                                ? "bg-amber-500 dark:bg-amber-600"
-                                : "bg-green-500 dark:bg-green-600"
+                                  ? "bg-amber-500 dark:bg-amber-600"
+                                  : "bg-green-500 dark:bg-green-600"
                             } transition-all duration-500 ease-in-out`}
                             style={{ width: `${progress}%` }}
                           />
@@ -739,7 +777,7 @@ const MyContracts = ({
                           </div>
                           <Badge
                             className={`${statusColor(
-                              contract.status
+                              contract.status,
                             )} flex items-center gap-1 ml-2 border`}
                             variant="outline"
                           >
@@ -764,22 +802,21 @@ const MyContracts = ({
                             <Calendar className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0" />
                             <span>{`${format(
                               new Date(contract.startDate),
-                              "MMM d, yyyy"
+                              "MMM d, yyyy",
                             )} - ${format(
                               new Date(contract.endDate),
-                              "MMM d, yyyy"
+                              "MMM d, yyyy",
                             )}`}</span>
                           </div>
                           <div className="pt-1.5 border-t border-gray-100 dark:border-gray-800">
                             <div className="flex justify-between items-center text-xs mb-1.5">
-                         
                               <span
                                 className={`font-medium ${
                                   daysRemaining < 30
                                     ? "text-red-600 dark:text-red-400"
                                     : daysRemaining < 90
-                                    ? "text-amber-600 dark:text-amber-400"
-                                    : "text-green-600 dark:text-green-400"
+                                      ? "text-amber-600 dark:text-amber-400"
+                                      : "text-green-600 dark:text-green-400"
                                 }`}
                               >
                                 {daysRemaining} days left
@@ -844,7 +881,7 @@ const MyContracts = ({
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Timeline
                         </th>
-                    
+
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Actions
                         </th>
@@ -905,7 +942,7 @@ const MyContracts = ({
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Timeline
                         </th>
-                  
+
                         <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
                           Actions
                         </th>
@@ -914,7 +951,7 @@ const MyContracts = ({
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                       {filteredAndSortedContracts.map((contract) => {
                         const daysRemaining = calculateDaysRemaining(
-                          contract.endDate
+                          contract.endDate,
                         );
                         const progress = Math.min(
                           100,
@@ -924,8 +961,8 @@ const MyContracts = ({
                               new Date(contract.startDate).getTime()) /
                               (new Date(contract.endDate).getTime() -
                                 new Date(contract.startDate).getTime())) *
-                              100
-                          )
+                              100,
+                          ),
                         );
                         return (
                           <tr
@@ -953,7 +990,7 @@ const MyContracts = ({
                             <td className="px-4 py-3">
                               <Badge
                                 className={`${statusColor(
-                                  contract.status
+                                  contract.status,
                                 )} flex items-center gap-1 border`}
                                 variant="outline"
                               >
@@ -967,12 +1004,12 @@ const MyContracts = ({
                               <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                                 {format(
                                   new Date(contract.startDate),
-                                  "MMM d, yyyy"
+                                  "MMM d, yyyy",
                                 )}{" "}
                                 -{" "}
                                 {format(
                                   new Date(contract.endDate),
-                                  "MMM d, yyyy"
+                                  "MMM d, yyyy",
                                 )}
                               </div>
                               <div className="flex items-center gap-2">
@@ -987,15 +1024,15 @@ const MyContracts = ({
                                     daysRemaining < 30
                                       ? "text-red-600 dark:text-red-400"
                                       : daysRemaining < 90
-                                      ? "text-amber-600 dark:text-amber-400"
-                                      : "text-green-600 dark:text-green-400"
+                                        ? "text-amber-600 dark:text-amber-400"
+                                        : "text-green-600 dark:text-green-400"
                                   }`}
                                 >
                                   {daysRemaining} days left
                                 </span>
                               </div>
                             </td>
-                 
+
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
                                 <MyContractDetailsDrawer
@@ -1020,26 +1057,24 @@ const MyContracts = ({
                                   onGenerateOtp={handleGenerateOtp}
                                   otpGenerating={otpGenerating}
                                 />
-                                {
-                                  contract.status === "active" &&
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 text-xs"
-                                  onClick={() => {
-                                    setSelectedContract(contract);
-                                    setQuickSelectedMilestones({});
-                                    setQuickClaimError(null);
-                                    setQuickClaimOpen(true);
-                                  }}
-                                >
-                                
+                                {contract.status === "active" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs"
+                                    onClick={() => {
+                                      setSelectedContract(contract);
+                                      setQuickSelectedMilestones({});
+                                      setQuickClaimError(null);
+                                      setQuickClaimOpen(true);
+                                    }}
+                                  >
+                                    Submit Claim
+                                  </Button>
+                                )}
 
-                                  Submit Claim
-                                </Button>
-                                }
-
-                                {contract.status?.toLowerCase() === "pending_acceptance" && (
+                                {contract.status?.toLowerCase() ===
+                                  "pending_acceptance" && (
                                   <Button
                                     variant="default"
                                     size="sm"
@@ -1146,13 +1181,15 @@ const MyContracts = ({
           <DialogHeader>
             <DialogTitle>Submit Claim</DialogTitle>
             <DialogDescription>
-              Quickly submit a claim against contract {selectedContract?.contractNumber}.
+              Quickly submit a claim against contract{" "}
+              {selectedContract?.contractNumber}.
             </DialogDescription>
           </DialogHeader>
 
           {!selectedContract?.projectId?.milestones?.length ? (
             <div className="text-sm text-muted-foreground">
-              This contract has no milestones available for quick claim. Open details to submit a full claim.
+              This contract has no milestones available for quick claim. Open
+              details to submit a full claim.
             </div>
           ) : (
             <div className="space-y-4">
@@ -1162,20 +1199,30 @@ const MyContracts = ({
                 </Alert>
               )}
               <div className="text-sm text-muted-foreground">
-                Maximum per milestone: {(
-                  calculateQuickMaxPerMilestone(selectedContract)
-                ).toLocaleString()} {selectedContract?.currency}
+                Maximum per milestone:{" "}
+                {calculateQuickMaxPerMilestone(
+                  selectedContract,
+                ).toLocaleString()}{" "}
+                {selectedContract?.currency}
               </div>
               <div className="max-h-64 overflow-y-auto space-y-3 pr-1">
                 {selectedContract.projectId.milestones.map((m: any) => {
-                  const data = quickSelectedMilestones[m._id] || { amount: 0, percentage: 0 };
+                  const data = quickSelectedMilestones[m._id] || {
+                    amount: 0,
+                    percentage: 0,
+                  };
                   const disabled = !m.completed; // follow drawer behavior
                   return (
-                    <div key={m._id} className={`p-3 rounded border ${disabled ? 'opacity-50' : ''}`}>
+                    <div
+                      key={m._id}
+                      className={`p-3 rounded border ${disabled ? "opacity-50" : ""}`}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <div className="font-medium text-sm">{m.title}</div>
                         {disabled && (
-                          <Badge variant="outline" className="text-xs">Not Active</Badge>
+                          <Badge variant="outline" className="text-xs">
+                            Not Active
+                          </Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -1183,11 +1230,19 @@ const MyContracts = ({
                           type="number"
                           min={0}
                           placeholder="Amount"
-                          value={data.amount || ''}
-                          onChange={(e) => handleQuickMilestoneAmountChange(m._id, e.target.value, selectedContract)}
+                          value={data.amount || ""}
+                          onChange={(e) =>
+                            handleQuickMilestoneAmountChange(
+                              m._id,
+                              e.target.value,
+                              selectedContract,
+                            )
+                          }
                           disabled={disabled}
                         />
-                        <span className="text-xs text-muted-foreground w-16 text-right">{Math.round(data.percentage)}%</span>
+                        <span className="text-xs text-muted-foreground w-16 text-right">
+                          {Math.round(data.percentage)}%
+                        </span>
                       </div>
                     </div>
                   );
@@ -1196,14 +1251,19 @@ const MyContracts = ({
               <div className="flex items-center justify-between text-sm">
                 <div className="text-muted-foreground">Total</div>
                 <div className="font-medium">
-                  {calculateQuickTotal().toLocaleString()} {selectedContract?.currency}
+                  {calculateQuickTotal().toLocaleString()}{" "}
+                  {selectedContract?.currency}
                 </div>
               </div>
             </div>
           )}
 
           <DialogFooter className="sm:justify-between">
-            <Button variant="outline" onClick={() => setQuickClaimOpen(false)} disabled={quickClaimSubmitting}>
+            <Button
+              variant="outline"
+              onClick={() => setQuickClaimOpen(false)}
+              disabled={quickClaimSubmitting}
+            >
               Cancel
             </Button>
             {!selectedContract?.projectId?.milestones?.length ? (
@@ -1217,11 +1277,17 @@ const MyContracts = ({
                 Open Details
               </Button>
             ) : (
-              <Button onClick={handleQuickSubmitClaim} disabled={quickClaimSubmitting}>
+              <Button
+                onClick={handleQuickSubmitClaim}
+                disabled={quickClaimSubmitting}
+              >
                 {quickClaimSubmitting ? (
-                  <div className="flex items-center space-x-2"><Spinner /><span>Submitting...</span></div>
+                  <div className="flex items-center space-x-2">
+                    <Spinner />
+                    <span>Submitting...</span>
+                  </div>
                 ) : (
-                  'Submit Claim'
+                  "Submit Claim"
                 )}
               </Button>
             )}

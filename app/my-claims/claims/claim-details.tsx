@@ -63,8 +63,8 @@ export function ClaimDetailsDialog({
     claim.status === "approved" || claim.status === "paid"
       ? "default"
       : claim.status === "rejected"
-      ? "destructive"
-      : "outline";
+        ? "destructive"
+        : "outline";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

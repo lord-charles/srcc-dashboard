@@ -22,13 +22,17 @@ export async function getAllContracts() {
       `${process.env.NEXT_PUBLIC_API_URL}/contracts`,
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch contracts:", error);
-    return null;
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch contracts";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -40,13 +44,17 @@ export async function createContract(data: any) {
       data,
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to create contract:", error);
-    return null;
+    const message = error?.response?.data?.message || error?.message || "Failed to create contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -57,13 +65,17 @@ export async function getContractById(contractId: string) {
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}`,
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to fetch contract ${contractId}:`, error);
-    return null;
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -75,13 +87,17 @@ export async function updateContractStatus(contractId: string, status: string) {
       { status },
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to update contract status:`, error);
-    return null;
+    console.error(`Failed to update contract status for ${contractId}:`, error);
+    const message = error?.response?.data?.message || error?.message || "Failed to update contract status";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -92,13 +108,17 @@ export async function getContractsByProject(projectId: string) {
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/project/${projectId}`,
       config,
     );
-    return response.data;
-  } catch (error) {
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to fetch contracts for project ${projectId}:`, error);
-    return null;
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch project contracts";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -109,13 +129,17 @@ export async function getContractsByUser(userId: string) {
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/user/${userId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch user contracts:", error);
-    throw error?.response?.data.message || "Failed to fetch user contracts";
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch user contracts";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -126,13 +150,17 @@ export async function getMyContracts() {
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/my-contracts`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch my contracts:", error);
-    throw error?.response?.data.message || "Failed to fetch my contracts";
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch my contracts";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -144,13 +172,17 @@ export async function updateContract(contractId: string, contractData: any) {
       contractData,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to update contract ${contractId}:`, error);
-    throw error?.response?.data.message || "Failed to update contract";
+    const message = error?.response?.data?.message || error?.message || "Failed to update contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -161,13 +193,17 @@ export async function deleteContract(contractId: string) {
       `${process.env.NEXT_PUBLIC_API_URL}/contracts/${contractId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to delete contract ${contractId}:`, error);
-    throw error?.response?.data.message || "Failed to delete contract";
+    const message = error?.response?.data?.message || error?.message || "Failed to delete contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -179,13 +215,17 @@ export async function generateContractOtp(contractId: string) {
       {},
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to generate contract OTP:`, error);
-    throw error?.response?.data.message || "Failed to generate contract OTP";
+    const message = error?.response?.data?.message || error?.message || "Failed to generate contract OTP";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -197,13 +237,17 @@ export async function verifyContractOtp(contractId: string, otp: string) {
       { otp },
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to verify contract OTP:`, error);
-    throw error?.response?.data.message || "Failed to verify contract OTP";
+    const message = error?.response?.data?.message || error?.message || "Failed to verify contract OTP";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -215,22 +259,17 @@ export async function approveContract(contractId: string, comments: string) {
       { comments },
       config,
     );
-    return { success: true, data: response.data };
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to approve contract ${contractId}:`, error);
-
-    // Extract the error message from the backend response
-    const errorMessage =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      "Failed to approve contract";
-
-    // Return error as data instead of throwing to avoid Next.js sanitization
-    return { success: false, error: errorMessage };
+    const message = error?.response?.data?.message || error?.message || "Failed to approve contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -242,22 +281,17 @@ export async function rejectContract(contractId: string, reason: string) {
       { reason },
       config,
     );
-    return { success: true, data: response.data };
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error(`Failed to reject contract ${contractId}:`, error);
-
-    // Extract the error message from the backend response
-    const errorMessage =
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
-      error?.message ||
-      "Failed to reject contract";
-
-    // Return error as data instead of throwing to avoid Next.js sanitization
-    return { success: false, error: errorMessage };
+    const message = error?.response?.data?.message || error?.message || "Failed to reject contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -279,13 +313,17 @@ export async function createClaim(data: {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to create claim:", error);
-    throw error?.response?.data.message || "Failed to create claim";
+    const message = error?.response?.data?.message || error?.message || "Failed to create claim";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -296,13 +334,17 @@ export async function getContractClaims(contractId: string) {
       `${process.env.NEXT_PUBLIC_API_URL}/claims/contract/${contractId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch contract claims:", error);
-    throw error?.response?.data.message || "Failed to fetch contract claims";
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch contract claims";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -313,13 +355,17 @@ export async function getAllClaims() {
       `${process.env.NEXT_PUBLIC_API_URL}/claims/claims`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch claims:", error);
-    throw error?.response?.data.message || "Failed to fetch claims";
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch claims";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -330,13 +376,17 @@ export async function fetchClaimsByContract(contractId: string) {
       `${process.env.NEXT_PUBLIC_API_URL}/claims?contractId=${contractId}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch claims by contract:", error);
-    throw error?.response?.data.message || "Failed to fetch claims by contract";
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch claims by contract";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -356,22 +406,17 @@ export async function getContractTemplates(params?: {
       }`,
       config,
     );
-    return response.data as Array<{
-      _id: string;
-      name: string;
-      version?: string;
-      contentType: string;
-      content: string;
-      variables?: string[];
-    }>;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to fetch contract templates:", error);
-    throw (
-      error?.response?.data?.message || "Failed to fetch contract templates"
-    );
+    const message = error?.response?.data?.message || error?.message || "Failed to fetch contract templates";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -391,15 +436,17 @@ export async function createContractTemplate(data: {
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to create contract template:", error);
-    throw (
-      error?.response?.data?.message || "Failed to create contract template"
-    );
+    const message = error?.response?.data?.message || error?.message || "Failed to create contract template";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -422,15 +469,17 @@ export async function updateContractTemplate(
       data,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to update contract template:", error);
-    throw (
-      error?.response?.data?.message || "Failed to update contract template"
-    );
+    const message = error?.response?.data?.message || error?.message || "Failed to update contract template";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }
 
@@ -441,14 +490,16 @@ export async function deleteContractTemplate(id: string) {
       `${process.env.NEXT_PUBLIC_API_URL}/contract-templates/${id}`,
       config,
     );
-    return response.data;
+    return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Failed to delete contract template:", error);
-    throw (
-      error?.response?.data?.message || "Failed to delete contract template"
-    );
+    const message = error?.response?.data?.message || error?.message || "Failed to delete contract template";
+    return { 
+      success: false as const, 
+      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    };
   }
 }

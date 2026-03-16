@@ -133,7 +133,7 @@ export function MyContractDetailsDrawer({
     try {
       setIsLoadingClaims(true);
       const claims = await fetchClaimsByContract(contract._id);
-      setClaimsHistory(claims);
+      setClaimsHistory(claims.data);
     } catch (error: any) {
       toast({
         title: "Failed to Load Claims",
@@ -214,7 +214,7 @@ export function MyContractDetailsDrawer({
   const calculateTotalClaimAmount = () => {
     return Object.values(selectedMilestones).reduce(
       (total, { amount }) => total + amount,
-      0
+      0,
     );
   };
 
@@ -234,7 +234,7 @@ export function MyContractDetailsDrawer({
       .filter(([_, { amount }]) => amount > 0)
       .map(([milestoneId, { percentage }]) => {
         const milestone = contract.projectId?.milestones?.find(
-          (m) => m._id === milestoneId
+          (m) => m._id === milestoneId,
         );
         return {
           milestoneId,
@@ -246,13 +246,23 @@ export function MyContractDetailsDrawer({
     try {
       setSubmitError(null);
       setIsSubmitting(true);
-      await createClaim({
+      const result = await createClaim({
         projectId: contract?.projectId._id,
         contractId: contract._id,
         amount: totalAmount,
         currency: contract.currency,
         milestones,
       });
+
+      if (!result.success) {
+        setSubmitError(result.error);
+        toast({
+          title: "Failed to Submit Claim",
+          description: result.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Claim Submitted",
@@ -263,7 +273,7 @@ export function MyContractDetailsDrawer({
       onClose?.();
     } catch (error: any) {
       const message =
-        error?.message || "An error occurred while submitting your claim";
+        "An unexpected error occurred while submitting your claim";
       setSubmitError(message);
       toast({
         title: "Failed to Submit Claim",
@@ -473,7 +483,6 @@ export function MyContractDetailsDrawer({
               <DrawerTitle className="text-2xl font-bold flex items-center">
                 <FileText className="mr-3 h-6 w-6 text-primary" />
                 Contract Details - {contract.contractNumber}
-
               </DrawerTitle>
               <Badge
                 variant="outline"
@@ -482,7 +491,6 @@ export function MyContractDetailsDrawer({
                 {contract.status}
               </Badge>
             </div>
-       
           </DrawerHeader>
 
           <div className="flex-1 overflow-hidden">
@@ -578,7 +586,7 @@ export function MyContractDetailsDrawer({
                               <p className="text-lg font-semibold text-primary">
                                 {formatCurrency(
                                   contract.contractValue,
-                                  contract.currency
+                                  contract.currency,
                                 )}
                               </p>
                             </div>
@@ -589,7 +597,7 @@ export function MyContractDetailsDrawer({
                               <p className="text-base">
                                 {format(
                                   new Date(contract.startDate),
-                                  "MMM d, yyyy"
+                                  "MMM d, yyyy",
                                 )}
                               </p>
                             </div>
@@ -600,7 +608,7 @@ export function MyContractDetailsDrawer({
                               <p className="text-base">
                                 {format(
                                   new Date(contract.endDate),
-                                  "MMM d, yyyy"
+                                  "MMM d, yyyy",
                                 )}
                               </p>
                             </div>
@@ -732,7 +740,8 @@ export function MyContractDetailsDrawer({
                                     <div className="text-sm text-muted-foreground mt-2">
                                       Date:{" "}
                                       {formatDate(
-                                        contract.createdAt || contract.startDate
+                                        contract.createdAt ||
+                                          contract.startDate,
                                       )}
                                     </div>
                                   </div>
@@ -803,7 +812,7 @@ export function MyContractDetailsDrawer({
                                 className="absolute left-3/4 -translate-x-1/2 bottom-72 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-400 animate-bounce"
                                 onClick={() => {
                                   const el = document.getElementById(
-                                    "contract-scroll-container"
+                                    "contract-scroll-container",
                                   );
                                   if (el) {
                                     el.scrollBy({
@@ -889,7 +898,7 @@ export function MyContractDetailsDrawer({
                                     "pb-5",
                                     index !==
                                       (contract?.amendments?.length || 2) - 1 &&
-                                      "border-b"
+                                      "border-b",
                                   )}
                                 >
                                   <div className="flex items-center mb-3">
@@ -930,7 +939,7 @@ export function MyContractDetailsDrawer({
                                       )}
                                   </div>
                                 </div>
-                              )
+                              ),
                             )}
                           </div>
                         </CardContent>
@@ -1003,11 +1012,11 @@ export function MyContractDetailsDrawer({
                                               </TableCell>
                                               <TableCell>
                                                 {formatDate(
-                                                  approval.approvedAt
+                                                  approval.approvedAt,
                                                 )}
                                               </TableCell>
                                             </TableRow>
-                                          )
+                                          ),
                                         )}
                                     </TableBody>
                                   </Table>
@@ -1071,11 +1080,11 @@ export function MyContractDetailsDrawer({
                                               </TableCell>
                                               <TableCell>
                                                 {formatDate(
-                                                  approval.approvedAt
+                                                  approval.approvedAt,
                                                 )}
                                               </TableCell>
                                             </TableRow>
-                                          )
+                                          ),
                                         )}
                                     </TableBody>
                                   </Table>
@@ -1136,7 +1145,9 @@ export function MyContractDetailsDrawer({
                                   <div className="flex w-full items-start justify-between gap-2">
                                     <div>
                                       <AlertTitle>Submission Error</AlertTitle>
-                                      <AlertDescription>{submitError}</AlertDescription>
+                                      <AlertDescription>
+                                        {submitError}
+                                      </AlertDescription>
                                     </div>
                                     <Button
                                       type="button"
@@ -1162,7 +1173,7 @@ export function MyContractDetailsDrawer({
                                       <p className="text-2xl font-bold text-primary">
                                         {formatCurrency(
                                           calculateMaxClaimAmount(),
-                                          contract.currency
+                                          contract.currency,
                                         )}
                                       </p>
                                     </CardContent>
@@ -1178,7 +1189,7 @@ export function MyContractDetailsDrawer({
                                       <p className="text-2xl font-bold text-primary">
                                         {formatCurrency(
                                           contract.contractValue,
-                                          contract.currency
+                                          contract.currency,
                                         )}
                                       </p>
                                     </CardContent>
@@ -1214,9 +1225,9 @@ export function MyContractDetailsDrawer({
                                                       Due:{" "}
                                                       {format(
                                                         new Date(
-                                                          milestone.dueDate
+                                                          milestone.dueDate,
                                                         ),
-                                                        "MMM d, yyyy"
+                                                        "MMM d, yyyy",
                                                       )}
                                                     </span>
                                                   </div>
@@ -1227,7 +1238,7 @@ export function MyContractDetailsDrawer({
                                                     className={cn(
                                                       milestone.completed
                                                         ? "border-green-200 bg-green-100 text-green-800"
-                                                        : "border-yellow-200 bg-yellow-100 text-yellow-800"
+                                                        : "border-yellow-200 bg-yellow-100 text-yellow-800",
                                                     )}
                                                   >
                                                     {milestone.completed
@@ -1257,7 +1268,7 @@ export function MyContractDetailsDrawer({
                                                       onChange={(e) =>
                                                         handleMilestoneAmountChange(
                                                           milestone._id,
-                                                          e.target.value
+                                                          e.target.value,
                                                         )
                                                       }
                                                       disabled={
@@ -1274,7 +1285,7 @@ export function MyContractDetailsDrawer({
                                                   <div className="h-10 bg-muted/50 rounded-md flex items-center px-3">
                                                     <span className="text-muted-foreground">
                                                       {milestoneData.percentage.toFixed(
-                                                        1
+                                                        1,
                                                       )}
                                                       %
                                                     </span>
@@ -1286,13 +1297,13 @@ export function MyContractDetailsDrawer({
                                                 className={cn(
                                                   "h-2",
                                                   milestoneData.percentage >
-                                                    0 && "bg-primary/20"
+                                                    0 && "bg-primary/20",
                                                 )}
                                               />
                                             </div>
                                           </div>
                                         );
-                                      }
+                                      },
                                     )
                                   ) : (
                                     <div className="text-sm text-muted-foreground p-4">
@@ -1311,7 +1322,7 @@ export function MyContractDetailsDrawer({
                                         <p className="text-3xl font-bold text-primary">
                                           {formatCurrency(
                                             calculateTotalClaimAmount(),
-                                            contract.currency
+                                            contract.currency,
                                           )}
                                         </p>
                                       </div>
@@ -1381,14 +1392,14 @@ export function MyContractDetailsDrawer({
                                                 className={cn(
                                                   "capitalize flex items-center gap-1.5",
                                                   getStatusBadgeColor(
-                                                    claim.status
-                                                  )
+                                                    claim.status,
+                                                  ),
                                                 )}
                                               >
                                                 {getStatusIcon(claim.status)}
                                                 {claim.status.replace(
                                                   /_/g,
-                                                  " "
+                                                  " ",
                                                 )}
                                               </Badge>
                                               <span className="text-sm text-muted-foreground">
@@ -1398,7 +1409,7 @@ export function MyContractDetailsDrawer({
                                             <p className="text-2xl font-bold">
                                               {formatCurrency(
                                                 claim.amount,
-                                                claim.currency
+                                                claim.currency,
                                               )}
                                             </p>
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -1428,7 +1439,7 @@ export function MyContractDetailsDrawer({
                                                     }
                                                     %)
                                                   </Badge>
-                                                )
+                                                ),
                                               )}
                                             </div>
                                           </div>
@@ -1462,7 +1473,7 @@ export function MyContractDetailsDrawer({
                                                     <span>
                                                       {formatDate(
                                                         claim.rejection
-                                                          .rejectedAt
+                                                          .rejectedAt,
                                                       )}
                                                     </span>
                                                   </div>
@@ -1530,7 +1541,7 @@ export function MyContractDetailsDrawer({
                                                     <span>•</span>
                                                     <span>
                                                       {formatDate(
-                                                        claim.payment.paidAt
+                                                        claim.payment.paidAt,
                                                       )}
                                                     </span>
                                                   </div>

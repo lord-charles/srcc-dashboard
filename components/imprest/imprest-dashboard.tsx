@@ -164,7 +164,11 @@ export default function ImprestDashboard({
 
   const handleCreateImprest = async (data: FormValues) => {
     try {
-      await createImprest(data);
+      const result = await createImprest(data);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
       toast({
         title: "Success",
@@ -172,7 +176,9 @@ export default function ImprestDashboard({
       });
 
       const updatedData = await getMyImprest();
-      setImprestData(updatedData);
+      if (updatedData.success) {
+        setImprestData(updatedData.data);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -400,7 +406,14 @@ export default function ImprestDashboard({
     comments?: string,
   ) => {
     try {
-      await acknowledgeImprestReceipt(id, { received, comments });
+      const result = await acknowledgeImprestReceipt(id, {
+        received,
+        comments,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
 
       toast({
         title: received ? "Receipt Confirmed" : "Non-Receipt Reported",
@@ -411,7 +424,9 @@ export default function ImprestDashboard({
 
       // Refresh the data
       const updatedData = await getMyImprest();
-      setImprestData(updatedData);
+      if (updatedData.success) {
+        setImprestData(updatedData.data);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -445,14 +460,21 @@ export default function ImprestDashboard({
   const handleAcceptResolution = async (imprest: Imprest) => {
     try {
       setIsAcceptingResolution(true);
-      await acceptDisputeResolution(imprest._id);
+      const result = await acceptDisputeResolution(imprest._id);
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
       toast({
         title: "Resolution Accepted",
         description:
           "You have accepted the dispute resolution. You can now submit your accounting.",
       });
       const updatedData = await getMyImprest();
-      setImprestData(updatedData);
+      if (updatedData.success) {
+        setImprestData(updatedData.data);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -860,7 +882,11 @@ export default function ImprestDashboard({
             setEditImprest(null);
             // Refresh data when drawer closes
             getMyImprest()
-              .then(setImprestData)
+              .then((res) => {
+                if (res.success) {
+                  setImprestData(res.data);
+                }
+              })
               .catch(() => {});
           }
         }}
