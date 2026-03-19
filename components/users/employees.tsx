@@ -42,7 +42,6 @@ export default function EmployeeModule({
         "Consultants must register themselves through the registration portal and await admin approval before being added to the system.",
       duration: 5000,
     });
-    router.push("/consultant/register/individual");
   };
 
   const handleAddOrganization = () => {
@@ -52,7 +51,6 @@ export default function EmployeeModule({
         "Organizations must register themselves through the registration portal and await admin approval before being added to the system.",
       duration: 5000,
     });
-    router.push("/consultant/register/company");
   };
 
   return (
