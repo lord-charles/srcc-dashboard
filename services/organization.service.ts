@@ -21,7 +21,7 @@ export async function getAllOrganizations() {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/consultants/organizations`,
-      config
+      config,
     );
     return { success: true as const, data: response.data };
   } catch (error: any) {
@@ -29,10 +29,18 @@ export async function getAllOrganizations() {
       await handleUnauthorized();
     }
     console.error("Failed to fetch organizations:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch organizations";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch organizations";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -41,9 +49,9 @@ export async function approveOrganization(organizationId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
-      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organizations/${organizationId}/approve`,
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${organizationId}/approve`,
       {},
-      config
+      config,
     );
     return { success: true as const, data: true };
   } catch (error: any) {
@@ -51,10 +59,18 @@ export async function approveOrganization(organizationId: string) {
       await handleUnauthorized();
     }
     console.error("Failed to approve organization:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to approve organization";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to approve organization";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -63,9 +79,9 @@ export async function rejectOrganization(organizationId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
-      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organizations/${organizationId}/reject`,
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${organizationId}/reject`,
       {},
-      config
+      config,
     );
     return { success: true as const, data: true };
   } catch (error: any) {
@@ -73,10 +89,18 @@ export async function rejectOrganization(organizationId: string) {
       await handleUnauthorized();
     }
     console.error("Failed to reject organization:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to reject organization";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to reject organization";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }

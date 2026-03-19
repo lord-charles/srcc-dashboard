@@ -6,7 +6,6 @@ export const CONSULTANT_REQUIRED_FIELDS = [
   "nationalId",
   "position",
   "department",
-  "department",
   // "bankDetails.bankName",
   // "bankDetails.accountNumber",
   // "emergencyContact.name",
@@ -36,7 +35,7 @@ export function calculateConsultantCompletion(data: any): {
   });
 
   const percentage = Math.round(
-    (completed / CONSULTANT_REQUIRED_FIELDS.length) * 100
+    (completed / CONSULTANT_REQUIRED_FIELDS.length) * 100,
   );
   return { percentage, missing };
 }

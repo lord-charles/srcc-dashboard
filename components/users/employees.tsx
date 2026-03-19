@@ -14,6 +14,7 @@ import OrgTable from "./org-table/org";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConsultantStats } from "./statcards/consultant-stats";
 import { OrganizationStats } from "./statcards/organization-stats";
+import { useToast } from "@/hooks/use-toast";
 
 interface EmployeeModuleProps {
   initialData: PaginatedResponse<User>;
@@ -27,11 +28,32 @@ export default function EmployeeModule({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { toast } = useToast();
 
   const projectId = searchParams.get("projectId");
   const projectName = searchParams.get("projectName");
 
   const isAddingToProject = !!projectId && !!projectName;
+
+  const handleAddIndividual = () => {
+    toast({
+      title: "Self-Registration Required",
+      description:
+        "Consultants must register themselves through the registration portal and await admin approval before being added to the system.",
+      duration: 5000,
+    });
+    router.push("/consultant/register/individual");
+  };
+
+  const handleAddOrganization = () => {
+    toast({
+      title: "Self-Registration Required",
+      description:
+        "Organizations must register themselves through the registration portal and await admin approval before being added to the system.",
+      duration: 5000,
+    });
+    router.push("/consultant/register/company");
+  };
 
   return (
     <div className="flex-1 space-y-4 p-2">
@@ -62,21 +84,14 @@ export default function EmployeeModule({
             </div>
             {!isAddingToProject && (
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    router.push("/consultant/register/individual");
-                  }}
-                >
+                <Button size="sm" onClick={handleAddIndividual}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add Individual
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => {
-                    router.push("/consultant/register/company");
-                  }}
+                  onClick={handleAddOrganization}
                 >
                   <Building2 className="h-4 w-4 mr-2" />
                   Add Organization

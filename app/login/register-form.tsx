@@ -87,6 +87,15 @@ export function RegisterForm({
         newErrors.businessEmail = "Email is invalid";
       if (!formData.businessPhone)
         newErrors.businessPhone = "Business phone is required";
+      else {
+        // Validate phone format
+        const cleanPhone = formData.businessPhone.replace(/[\s\-\(\)]/g, "");
+        const phoneRegex = /^(\+?254|0)?[17]\d{8}$/;
+        if (!phoneRegex.test(cleanPhone)) {
+          newErrors.businessPhone =
+            "Phone must be in format: 0712345678 or 254712345678";
+        }
+      }
       if (!formData.registrationNumber)
         newErrors.registrationNumber = "Registration number is required";
       if (!formData.kraPin) newErrors.kraPin = "KRA PIN is required";
@@ -141,7 +150,32 @@ export function RegisterForm({
           nationalId,
           ...registerData
         } = formData;
-        await quickCompanyRegister(registerData);
+
+        // Format phone number to match backend validation (254XXXXXXXXX)
+        let formattedPhone = registerData.businessPhone;
+        if (formattedPhone) {
+          // Remove any spaces, dashes, or special characters
+          formattedPhone = formattedPhone.replace(/[\s\-\(\)]/g, "");
+
+          // If it starts with 0, replace with 254
+          if (formattedPhone.startsWith("0")) {
+            formattedPhone = "254" + formattedPhone.substring(1);
+          }
+          // If it starts with +254, remove the +
+          else if (formattedPhone.startsWith("+254")) {
+            formattedPhone = formattedPhone.substring(1);
+          }
+          // If it doesn't start with 254, add it
+          else if (!formattedPhone.startsWith("254")) {
+            formattedPhone = "254" + formattedPhone;
+          }
+        }
+
+        await quickCompanyRegister({
+          ...registerData,
+          businessPhone: formattedPhone,
+        });
+
         onRegistrationSuccess({
           email: formData.businessEmail,
           password: formData.password,

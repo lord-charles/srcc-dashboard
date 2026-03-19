@@ -20,11 +20,11 @@ export const authOptions: NextAuthOptions = {
               email: credentials?.email,
               password: credentials?.password,
               type: credentials?.type,
-            }
+            },
           );
 
           const data = res.data;
-
+          console.log(data);
           // Store token in cookie
           const cookieStore = await cookies();
           cookieStore.set("token", data.token, {
@@ -43,14 +43,18 @@ export const authOptions: NextAuthOptions = {
                 phoneNumber: data.user?.businessPhone,
                 token: data.token,
                 type: data.type,
-                roles: ["consultant"],
+                roles: data.user?.roles || ["organization"], // Use actual roles from backend or default to organization
                 registrationStatus: data.user?.registrationStatus,
                 organizationId: data.user?.organizationId,
                 status: data.user?.status,
                 companyName: data.user?.companyName,
                 businessEmail: data.user?.businessEmail,
                 businessPhone: data.user?.businessPhone,
-                permissions: data.user?.permissions,
+                permissions: data.user?.permissions || {
+                  "/analytics": ["read"],
+                  "/my-projects": ["read", "write"],
+                  "/projects": ["read"],
+                },
               };
             }
 
@@ -114,15 +118,14 @@ export const authOptions: NextAuthOptions = {
         token.registrationStatus = user?.registrationStatus;
         token.phoneNumber = user?.phoneNumber;
         token.type = user?.type;
+        token.permissions = user?.permissions; // Add permissions to token
 
         if (user?.type === "organization") {
           token.organizationId = user?.organizationId;
           token.companyName = user?.companyName;
           token.businessEmail = user?.businessEmail;
           token.businessPhone = user?.businessPhone;
-          token.permissions = user?.permissions;
           token.status = user?.status;
-          token.registrationStatus = user?.registrationStatus;
         } else {
           token.firstName = user?.firstName;
           token.lastName = user?.lastName;
@@ -131,7 +134,6 @@ export const authOptions: NextAuthOptions = {
           token.position = user?.position;
           token.nationalId = user?.nationalId;
           token.status = user?.status;
-          token.registrationStatus = user?.registrationStatus;
           token.hasProject = user?.hasProject;
         }
       }
@@ -148,15 +150,14 @@ export const authOptions: NextAuthOptions = {
         session.user.registrationStatus = token?.registrationStatus;
         session.user.phoneNumber = token?.phoneNumber;
         session.user.type = token?.type;
+        session.user.permissions = token?.permissions; // Add permissions to session
+        session.user.status = token?.status;
 
         if (token?.type === "organization") {
           session.user.organizationId = token?.organizationId;
           session.user.companyName = token?.companyName;
           session.user.businessEmail = token?.businessEmail;
           session.user.businessPhone = token?.businessPhone;
-          session.user.permissions = token?.permissions;
-          session.user.status = token?.status;
-          session.user.registrationStatus = token?.registrationStatus;
         } else {
           session.user.firstName = token?.firstName;
           session.user.lastName = token?.lastName;
@@ -164,9 +165,6 @@ export const authOptions: NextAuthOptions = {
           session.user.department = token?.department;
           session.user.position = token?.position;
           session.user.nationalId = token?.nationalId;
-          session.user.permissions = token?.permissions;
-          session.user.status = token?.status;
-          session.user.registrationStatus = token?.registrationStatus;
           session.user.hasProject = token?.hasProject;
         }
       }

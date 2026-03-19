@@ -12,17 +12,18 @@ export const revalidate = 0;
 export default async function EmployeesPage() {
   const [employeesData, organizationsData] = await Promise.all([
     getAllEmployees(),
-    getAllOrganizations()
+    getAllOrganizations(),
   ]);
-
+  console.log(organizationsData);
   return (
     <DashboardProvider>
       <Header />
 
-
       <Suspense fallback={<div>Loading consultants...</div>}>
         <EmployeeModule
-          initialData={employeesData?.data || { data: [], total: 0, page: 1, limit: 100 }}
+          initialData={
+            employeesData?.data || { data: [], total: 0, page: 1, limit: 100 }
+          }
           organizations={organizationsData?.data || []}
         />
       </Suspense>

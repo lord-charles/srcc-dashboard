@@ -29,6 +29,8 @@ import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { updateEmployee } from "@/services/employees.service";
+import { FileUpload } from "@/components/ui/file-upload";
+import { cloudinaryService } from "@/lib/cloudinary-service";
 
 // Skill Schema
 const skillSchema = z.object({
@@ -104,8 +106,12 @@ const consultantSchema = z.object({
   position: z.string().optional(),
   yearsOfExperience: z.coerce.number().min(0).max(50).optional(),
   hourlyRate: z.coerce.number().min(0).optional(),
-  availability: z.enum(["available", "partially_available", "not_available"]).optional(),
-  preferredWorkTypes: z.array(z.enum(["remote", "onsite", "hybrid"])).optional(),
+  availability: z
+    .enum(["available", "partially_available", "not_available"])
+    .optional(),
+  preferredWorkTypes: z
+    .array(z.enum(["remote", "onsite", "hybrid"]))
+    .optional(),
   cvUrl: z.string().url().optional().or(z.literal("")),
 
   // Skills, Education, Certifications
@@ -124,7 +130,9 @@ const consultantSchema = z.object({
   emergencyContact: emergencyContactSchema.optional(),
 
   // Account Status
-  status: z.enum(["pending", "active", "inactive", "suspended", "terminated"]).optional(),
+  status: z
+    .enum(["pending", "active", "inactive", "suspended", "terminated"])
+    .optional(),
   roles: z.array(z.string()).optional(),
 });
 
@@ -134,6 +142,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
   const { toast } = useToast();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("personal");
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -291,15 +300,23 @@ export function UpdateEmployeeComponent({ employee }: any) {
             type="submit"
             size="sm"
             className="font-bold bg-primary"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploading}
           >
-            {isSubmitting ? "Updating..." : "Save Changes"}
+            {isSubmitting
+              ? "Updating..."
+              : isUploading
+                ? "Uploading..."
+                : "Save Changes"}
           </Button>
         </div>
       </div>
 
       {/* Tabs Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full mt-6"
+      >
         <TabsList className="grid w-full grid-cols-6 h-12 rounded-lg p-1 mb-6">
           <TabsTrigger value="personal" className="rounded-md">
             Personal
@@ -376,7 +393,9 @@ export function UpdateEmployeeComponent({ employee }: any) {
                     className={errors.email ? "border-red-500" : ""}
                   />
                   {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email.message}</p>
+                    <p className="text-sm text-red-500">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
 
@@ -507,7 +526,10 @@ export function UpdateEmployeeComponent({ employee }: any) {
                     name="status"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <SelectTrigger id="status">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
@@ -544,7 +566,10 @@ export function UpdateEmployeeComponent({ employee }: any) {
                     name="department"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <SelectTrigger id="department">
                           <SelectValue placeholder="Select department" />
                         </SelectTrigger>
@@ -601,7 +626,10 @@ export function UpdateEmployeeComponent({ employee }: any) {
                     name="availability"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <SelectTrigger id="availability">
                           <SelectValue placeholder="Select availability" />
                         </SelectTrigger>
@@ -651,11 +679,41 @@ export function UpdateEmployeeComponent({ employee }: any) {
 
               <div className="space-y-2">
                 <Label htmlFor="cvUrl">CV/Resume URL</Label>
-                <Input
-                  id="cvUrl"
-                  {...register("cvUrl")}
-                  placeholder="https://cloudinary.com/cv/john-doe-cv.pdf"
+                <FileUpload
+                  onChange={async (files) => {
+                    if (files.length > 0) {
+                      setIsUploading(true);
+                      try {
+                        const url = await cloudinaryService.uploadFile(
+                          files[0],
+                        );
+                        setValue("cvUrl", url);
+                        toast({
+                          title: "Success",
+                          description: "CV uploaded successfully.",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Upload Failed",
+                          description: "Could not upload CV.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }
+                  }}
                 />
+                {watch("cvUrl") && (
+                  <a
+                    href={watch("cvUrl")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline block mt-2"
+                  >
+                    View Uploaded CV
+                  </a>
+                )}
                 {errors.cvUrl && (
                   <p className="text-sm text-red-500">{errors.cvUrl.message}</p>
                 )}
@@ -694,14 +752,17 @@ export function UpdateEmployeeComponent({ employee }: any) {
             <CardContent className="space-y-4">
               {skillFields.length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
-                  No skills added yet. Click &quot;Add Skill&quot; to get started.
+                  No skills added yet. Click &quot;Add Skill&quot; to get
+                  started.
                 </p>
               ) : (
                 skillFields.map((field, index) => (
                   <Card key={field.id} className="p-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor={`skills.${index}.name`}>Skill Name</Label>
+                        <Label htmlFor={`skills.${index}.name`}>
+                          Skill Name
+                        </Label>
                         <Input
                           id={`skills.${index}.name`}
                           {...register(`skills.${index}.name`)}
@@ -740,7 +801,9 @@ export function UpdateEmployeeComponent({ employee }: any) {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="Beginner">Beginner</SelectItem>
+                                <SelectItem value="Beginner">
+                                  Beginner
+                                </SelectItem>
                                 <SelectItem value="Intermediate">
                                   Intermediate
                                 </SelectItem>
@@ -785,7 +848,9 @@ export function UpdateEmployeeComponent({ employee }: any) {
               {/* Education Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Education Background</h3>
+                  <h3 className="text-lg font-semibold">
+                    Education Background
+                  </h3>
                   <Button
                     type="button"
                     size="sm"
@@ -834,7 +899,9 @@ export function UpdateEmployeeComponent({ employee }: any) {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor={`education.${index}.yearOfCompletion`}>
+                          <Label
+                            htmlFor={`education.${index}.yearOfCompletion`}
+                          >
                             Year of Completion
                           </Label>
                           <Input
@@ -912,7 +979,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
                           <Input
                             id={`certifications.${index}.issuingOrganization`}
                             {...register(
-                              `certifications.${index}.issuingOrganization`
+                              `certifications.${index}.issuingOrganization`,
                             )}
                             placeholder="PMI"
                           />
@@ -959,7 +1026,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
                           <Input
                             id={`certifications.${index}.certificationId`}
                             {...register(
-                              `certifications.${index}.certificationId`
+                              `certifications.${index}.certificationId`,
                             )}
                             placeholder="PMP123456"
                           />
@@ -983,7 +1050,9 @@ export function UpdateEmployeeComponent({ employee }: any) {
               {/* Academic Certificates Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Academic Certificates</h3>
+                  <h3 className="text-lg font-semibold">
+                    Academic Certificates
+                  </h3>
                   <Button
                     type="button"
                     size="sm"
@@ -1030,7 +1099,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
                           <Input
                             id={`academicCertificates.${index}.institution`}
                             {...register(
-                              `academicCertificates.${index}.institution`
+                              `academicCertificates.${index}.institution`,
                             )}
                             placeholder="University of Nairobi"
                           />
@@ -1045,7 +1114,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
                           <Input
                             id={`academicCertificates.${index}.yearOfCompletion`}
                             {...register(
-                              `academicCertificates.${index}.yearOfCompletion`
+                              `academicCertificates.${index}.yearOfCompletion`,
                             )}
                             placeholder="2020"
                           />
@@ -1060,7 +1129,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
                           <Input
                             id={`academicCertificates.${index}.documentUrl`}
                             {...register(
-                              `academicCertificates.${index}.documentUrl`
+                              `academicCertificates.${index}.documentUrl`,
                             )}
                             placeholder="https://cloudinary.com/certificates/bsc.pdf"
                           />
@@ -1089,9 +1158,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
           <Card>
             <CardHeader>
               <CardTitle>Financial Information</CardTitle>
-              <CardDescription>
-                Deductions and payment details
-              </CardDescription>
+              <CardDescription>Deductions and payment details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Deductions */}
@@ -1205,7 +1272,10 @@ export function UpdateEmployeeComponent({ employee }: any) {
                     name="emergencyContact.relationship"
                     control={control}
                     render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <SelectTrigger id="emergencyContact.relationship">
                           <SelectValue placeholder="Select relationship" />
                         </SelectTrigger>

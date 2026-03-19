@@ -35,17 +35,23 @@ export async function registerConsultant(formData: FormData) {
       await handleUnauthorized();
     }
     console.error("Consultant registration error:", error);
-    const message = error.response?.data?.message || error.message || "Consultant registration failed";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Consultant registration failed";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function approveConsultant(
-  consultantId: string,
-) {
+export async function approveConsultant(consultantId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -59,10 +65,18 @@ export async function approveConsultant(
       await handleUnauthorized();
     }
     console.error("Failed to approve consultant:", error);
-    const message = error.response?.data?.message || error.message || "Failed to approve consultant";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to approve consultant";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -81,10 +95,18 @@ export async function rejectConsultant(consultantId: string) {
       await handleUnauthorized();
     }
     console.error("Failed to reject consultant:", error);
-    const message = error.response?.data?.message || error.message || "Failed to reject consultant";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to reject consultant";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -103,10 +125,18 @@ export async function requestPasswordReset(email: string) {
       await handleUnauthorized();
     }
     console.error("Password reset request error:", error);
-    const message = error.response?.data?.message || error.message || "Password reset request failed";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Password reset request failed";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -131,10 +161,18 @@ export async function registerOrganization(formData: FormData) {
       await handleUnauthorized();
     }
     console.error("Organization registration error:", error);
-    const message = error.response?.data?.message || error.message || "Organization registration failed";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Organization registration failed";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -160,10 +198,18 @@ export async function quickRegister(data: {
       await handleUnauthorized();
     }
     console.error("Quick registration error:", error);
-    const message = error.response?.data?.message || error.message || "Quick registration failed";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Quick registration failed";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -188,10 +234,18 @@ export async function quickCompanyRegister(data: {
       await handleUnauthorized();
     }
     console.error("Quick company registration error:", error);
-    const message = error.response?.data?.message || error.message || "Quick company registration failed";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Quick company registration failed";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -214,10 +268,18 @@ export async function verifyOtp(data: {
       await handleUnauthorized();
     }
     console.error("OTP verification error:", error);
-    const message = error.response?.data?.message || error.message || "OTP verification failed";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "OTP verification failed";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -240,10 +302,18 @@ export async function verifyCompanyOtp(data: {
       await handleUnauthorized();
     }
     console.error("Company OTP verification error:", error);
-    const message = error.response?.data?.message || error.message || "Company OTP verification failed";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Company OTP verification failed";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -254,9 +324,7 @@ export const verifyEmailOtp = async (email: string, pin: string) =>
 export const verifyPhoneOtp = async (email: string, pin: string) =>
   verifyOtp({ email, pin, verificationType: "phone" });
 
-export async function getVerificationStatus(
-  email: string,
-) {
+export async function getVerificationStatus(email: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
@@ -266,23 +334,35 @@ export async function getVerificationStatus(
         params: { email },
       },
     );
-    return { success: true as const, data: response.data as { isEmailVerified: boolean; isPhoneVerified: boolean } };
+    return {
+      success: true as const,
+      data: response.data as {
+        isEmailVerified: boolean;
+        isPhoneVerified: boolean;
+      },
+    };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Get verification status error:", error);
-    const message = error.response?.data?.message || error.message || "Failed to get verification status";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to get verification status";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function getCompanyVerificationStatus(
-  businessEmail: string,
-) {
+export async function getCompanyVerificationStatus(businessEmail: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
@@ -292,16 +372,30 @@ export async function getCompanyVerificationStatus(
         params: { businessEmail },
       },
     );
-    return { success: true as const, data: response.data as { isEmailVerified: boolean; isPhoneVerified: boolean } };
+    return {
+      success: true as const,
+      data: response.data as {
+        isEmailVerified: boolean;
+        isPhoneVerified: boolean;
+      },
+    };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
     console.error("Get company verification status error:", error);
-    const message = error.response?.data?.message || error.message || "Failed to get company verification status";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to get company verification status";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -319,10 +413,47 @@ export async function getOrganization(id: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to fetch organization ${id}:`, error);
-    const message = error.response?.data?.message || error.message || "Failed to fetch organization";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to fetch organization";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
+  }
+}
+
+export async function getOrganizationById(id: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultants/organization/${id}`,
+      config,
+    );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(`Failed to fetch organization ${id}:`, error);
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to fetch organization";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -341,10 +472,18 @@ export async function updateOrganization(id: string, data: any) {
       await handleUnauthorized();
     }
     console.error(`Failed to update organization ${id}:`, error);
-    const message = error.response?.data?.message || error.message || "Failed to update organization";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update organization";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -362,10 +501,18 @@ export async function getConsultant(id: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to fetch consultant ${id}:`, error);
-    const message = error.response?.data?.message || error.message || "Failed to fetch consultant";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to fetch consultant";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -384,17 +531,23 @@ export async function updateConsultant(id: string, data: any) {
       await handleUnauthorized();
     }
     console.error(`Failed to update consultant ${id}:`, error);
-    const message = error.response?.data?.message || error.message || "Failed to update consultant";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to update consultant";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function completeConsultantRegistration(
-  consultantId: string,
-) {
+export async function completeConsultantRegistration(consultantId: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -407,18 +560,27 @@ export async function completeConsultantRegistration(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to complete consultant registration ${consultantId}:`, error);
-    const message = error.response?.data?.message || error.message || "Failed to complete registration";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(
+      `Failed to complete consultant registration ${consultantId}:`,
+      error,
+    );
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to complete registration";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function completeOrganizationRegistration(
-  organizationId: string,
-) {
+export async function completeOrganizationRegistration(organizationId: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
@@ -431,18 +593,27 @@ export async function completeOrganizationRegistration(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to complete organization registration ${organizationId}:`, error);
-    const message = error.response?.data?.message || error.message || "Failed to complete registration";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(
+      `Failed to complete organization registration ${organizationId}:`,
+      error,
+    );
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to complete registration";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function manualVerifyConsultant(
-  consultantId: string,
-) {
+export async function manualVerifyConsultant(consultantId: string) {
   try {
     const config = await getAxiosConfig();
     await axios.patch(
@@ -455,11 +626,22 @@ export async function manualVerifyConsultant(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to manually verify consultant ${consultantId}:`, error);
-    const message = error.response?.data?.message || error.message || "Failed to verify consultant";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(
+      `Failed to manually verify consultant ${consultantId}:`,
+      error,
+    );
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Failed to verify consultant";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
