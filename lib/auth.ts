@@ -24,7 +24,6 @@ export const authOptions: NextAuthOptions = {
           );
 
           const data = res.data;
-          console.log(data);
           // Store token in cookie
           const cookieStore = await cookies();
           cookieStore.set("token", data.token, {

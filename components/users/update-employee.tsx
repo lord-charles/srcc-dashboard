@@ -150,6 +150,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
     control,
     formState: { errors, isSubmitting },
     watch,
+    setValue,
   } = useForm<ConsultantFormData>({
     resolver: zodResolver(consultantSchema),
     defaultValues: {
