@@ -73,9 +73,7 @@ import { updateEmployee } from "@/services/employees.service";
 import { getProjectConfig } from "@/services/system-config.service";
 import type { UserRole } from "@/types/user";
 
-const updateUserRoles = async (userId: string, roles: UserRole[]) => {
-  return updateEmployee(userId, { roles });
-};
+
 
 // Available roles in the system
 const availableRoles: any[] = [

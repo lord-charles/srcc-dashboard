@@ -389,7 +389,7 @@ export function ContractDetailsDrawer({
       setIsApproving(false);
       setTimeout(() => {
         window.location.reload();
-      }, 1500);
+      }, 2500);
     }
   };
 

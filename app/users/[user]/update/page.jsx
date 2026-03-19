@@ -40,7 +40,7 @@ async function Page({ params }) {
   return (
     <DashboardProvider>
       <Header />
-      <UpdateEmployeeComponent employee={employee} />
+      <UpdateEmployeeComponent employee={employee.data} />
     </DashboardProvider>
   );
 }

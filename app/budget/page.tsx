@@ -21,6 +21,6 @@ export default async function Budget() {
   return (
     <div>
       <BudgetPage budgets={transformedBudgets} />
-    </div>
+    </div> 
   );
 }
