@@ -20,10 +20,18 @@ export async function createInternalBudget(budgetData: any) {
       await handleUnauthorized();
     }
     console.error("Failed to create internal budget:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to create internal budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to create internal budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -42,18 +50,23 @@ export async function createExternalBudget(budgetData: any) {
       await handleUnauthorized();
     }
     console.error("Failed to create external budget:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to create external budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to create external budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function approveBudget(
-  budgetId: string,
-  comments: string,
-) {
+export async function approveBudget(budgetId: string, comments: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Budget>(
@@ -67,10 +80,18 @@ export async function approveBudget(
       await handleUnauthorized();
     }
     console.error("Failed to approve budget:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to approve budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to approve budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -92,10 +113,18 @@ export async function requestBudgetRevision(
       await handleUnauthorized();
     }
     console.error("Failed to request budget revision:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to request budget revision";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to request budget revision";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -117,10 +146,18 @@ export async function rejectBudget(
       await handleUnauthorized();
     }
     console.error("Failed to reject budget:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to reject budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to reject budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -135,10 +172,18 @@ export async function getAllBudgets() {
       await handleUnauthorized();
     }
     console.error("Failed to fetch budgets:", error);
-    const message = error?.response?.data.message || error?.message || "Failed to fetch budgets";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data.message ||
+      error?.message ||
+      "Failed to fetch budgets";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -156,18 +201,23 @@ export async function getBudgetById(id: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to fetch budget ${id}:`, error);
-    const message = error?.response?.data.message || error?.message || "Failed to fetch budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data.message ||
+      error?.message ||
+      "Failed to fetch budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function updateBudget(
-  id: string,
-  budgetData: Partial<Budget>,
-) {
+export async function updateBudget(id: string, budgetData: Partial<Budget>) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.put<Budget>(
@@ -180,11 +230,19 @@ export async function updateBudget(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to update budget ${id}:`, error);
-    const message = error?.response?.data.message || error?.message || "Failed to update budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(`Failed to update budget ${id}:`, error.response.data);
+    const message =
+      error?.response?.data.message ||
+      error?.message ||
+      "Failed to update budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -199,10 +257,18 @@ export async function deleteBudget(id: string) {
       await handleUnauthorized();
     }
     console.error("Failed to delete budget:", error);
-    const message = error?.response?.data.message || error?.message || "Failed to delete budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data.message ||
+      error?.message ||
+      "Failed to delete budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -224,19 +290,25 @@ export async function updateBudgetStatus(
       await handleUnauthorized();
     }
     console.error("Failed to update budget status:", error);
-    const message = error?.response?.data.message || error?.message || "Failed to update budget status";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data.message ||
+      error?.message ||
+      "Failed to update budget status";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function updateInternalBudget(
-  data: any,
-  budgetId: string,
-) {
+export async function updateInternalBudget(data: any, budgetId: string) {
   try {
+    console.log(JSON.stringify(data, null, 2));
     const config = await getAxiosConfig();
     const response = await axios.patch<Budget>(
       `${API_URL}/budgets/${budgetId}`,
@@ -248,19 +320,24 @@ export async function updateInternalBudget(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error("Failed to update internal budget:", error);
-    const message = error?.response?.data.message || error?.message || "Failed to update internal budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error("Failed to update internal budget:", error.response.data);
+    const message =
+      error?.response?.data.message ||
+      error?.message ||
+      "Failed to update internal budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function updateExternalBudget(
-  data: any,
-  budgetId: string,
-) {
+export async function updateExternalBudget(data: any, budgetId: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch<Budget>(
@@ -274,10 +351,18 @@ export async function updateExternalBudget(
       await handleUnauthorized();
     }
     console.error("Failed to update external budget:", error);
-    const message = error?.response?.data.message || error?.message || "Failed to update external budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data.message ||
+      error?.message ||
+      "Failed to update external budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -296,10 +381,18 @@ export async function submitBudget(budgetId: string) {
       await handleUnauthorized();
     }
     console.error("Failed to submit budget:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to submit budget";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to submit budget";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }

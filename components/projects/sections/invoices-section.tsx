@@ -118,7 +118,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     string | null
   >(null);
 
-  console.log("invoices", invoices);
   const [paymentForm, setPaymentForm] = useState<any>({});
   const [paymentTab, setPaymentTab] = useState<"regular" | "wht" | "wht_vat">(
     "regular",

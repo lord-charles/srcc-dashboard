@@ -35,6 +35,7 @@ interface AddTeamMemberDialogProps {
     lastName: string;
     email: string;
   };
+  isOrganization?: boolean;
   returnUrl?: string;
 }
 
@@ -45,6 +46,7 @@ export function AddTeamMemberDialog({
   projectName,
   milestones = [],
   user,
+  isOrganization = false,
   returnUrl,
 }: AddTeamMemberDialogProps) {
   const router = useRouter();
@@ -69,21 +71,48 @@ export function AddTeamMemberDialog({
       return;
     }
 
-    if (endDate < startDate) {
-      toast({
-        title: "Invalid dates",
-        description: "End date must be after start date",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
+      // Ensure dates are valid Date objects
+      if (!(startDate instanceof Date) || !(endDate instanceof Date)) {
+        toast({
+          title: "Invalid dates",
+          description: "Dates must be valid Date objects",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      const startDateStr = startDate.toISOString();
+      const endDateStr = endDate.toISOString();
+
+      if (!startDateStr || !endDateStr) {
+        toast({
+          title: "Invalid dates",
+          description: "Could not format dates properly",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (endDateStr < startDateStr) {
+        toast({
+          title: "Invalid dates",
+          description: "End date must be after start date",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const memberData = {
-        userId: user?._id,
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
+        ...(isOrganization
+          ? { organizationId: user?._id }
+          : { userId: user?._id }),
+        startDate: startDateStr,
+        endDate: endDateStr,
         responsibilities:
           responsibilities.length > 0 ? responsibilities : ["team_member"],
       };
@@ -206,11 +235,20 @@ export function AddTeamMemberDialog({
                     value={
                       startDate ? startDate.toISOString().split("T")[0] : ""
                     }
-                    onChange={(e) =>
-                      setStartDate(
-                        e.target.value ? new Date(e.target.value) : undefined,
-                      )
-                    }
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const [year, month, day] = e.target.value.split("-");
+                        setStartDate(
+                          new Date(
+                            parseInt(year),
+                            parseInt(month) - 1,
+                            parseInt(day),
+                          ),
+                        );
+                      } else {
+                        setStartDate(undefined);
+                      }
+                    }}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -225,11 +263,20 @@ export function AddTeamMemberDialog({
                     id="end-date"
                     type="date"
                     value={endDate ? endDate.toISOString().split("T")[0] : ""}
-                    onChange={(e) =>
-                      setEndDate(
-                        e.target.value ? new Date(e.target.value) : undefined,
-                      )
-                    }
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const [year, month, day] = e.target.value.split("-");
+                        setEndDate(
+                          new Date(
+                            parseInt(year),
+                            parseInt(month) - 1,
+                            parseInt(day),
+                          ),
+                        );
+                      } else {
+                        setEndDate(undefined);
+                      }
+                    }}
                   />
                 </div>
               </div>

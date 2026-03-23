@@ -75,6 +75,14 @@ export function AddCoachDialog({
       });
       return;
     }
+    if (!startDate || !endDate) {
+      toast({
+        title: "Missing dates",
+        description: "Start date and end date are required",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!rate || Number(rate) <= 0) {
       toast({
         title: "Invalid rate",
@@ -83,7 +91,7 @@ export function AddCoachDialog({
       });
       return;
     }
-    if (endDate && startDate && endDate < startDate) {
+    if (endDate < startDate) {
       toast({
         title: "Invalid dates",
         description: "End date must be after start date",

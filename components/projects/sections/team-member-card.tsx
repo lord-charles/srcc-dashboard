@@ -31,7 +31,7 @@ import {
 } from "@/types/project";
 
 interface TeamMemberCardProps {
-  member: TeamMember;
+  member: TeamMember & { isOrganization?: boolean };
   projectData: Project;
   milestone?: ProjectMilestone;
   onEdit: () => void;
@@ -57,7 +57,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   };
 
   const contract = getMemberContract(member.userId?._id);
-
+  console.log(member);
   return (
     <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
       <div className="flex items-center space-x-4">
@@ -71,9 +71,19 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="text-sm font-medium leading-none">
-            {member.userId?.firstName} {member.userId?.lastName}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium leading-none">
+              {member.userId?.firstName} {member.userId?.lastName}
+            </h3>
+            {member.isOrganization && (
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-blue-50 text-blue-700 border-blue-200"
+              >
+                Organization
+              </Badge>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">
             {member.userId?.email}
           </p>

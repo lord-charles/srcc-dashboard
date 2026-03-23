@@ -14,7 +14,6 @@ export default async function EmployeesPage() {
     getAllEmployees(),
     getAllOrganizations(),
   ]);
-  console.log(organizationsData);
   return (
     <DashboardProvider>
       <Header />

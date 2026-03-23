@@ -85,7 +85,6 @@ export function CreateClaimOnBehalfDialog({
   const [newDocUploading, setNewDocUploading] = useState(false);
   const [newDocUrl, setNewDocUrl] = useState<string>("");
   const [documents, setDocuments] = useState<ClaimDocumentInput[]>([]);
-  console.log(contract, projectMilestones);
   const isCoachContract =
     (contract.type || "").toLowerCase() === "coach" ||
     (contract.description || "").toLowerCase().includes("coach");

@@ -15,11 +15,17 @@ import { User } from "@/types/user";
 import { updateProjectManager, getProject } from "@/services/projects-service";
 import { useToast } from "@/hooks/use-toast";
 
+import { Organization } from "@/types/organization";
+
 interface AddToProjectHeaderProps {
   selectedUser: User | null;
+  selectedOrganization?: Organization | null;
 }
 
-export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
+export function AddToProjectHeader({
+  selectedUser,
+  selectedOrganization,
+}: AddToProjectHeaderProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -61,10 +67,12 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
   }, [isCoach, isProjectManager, isAssistantPM, isCoachManager, projectId]);
 
   const handleAddUser = async () => {
-    if (!selectedUser || !projectId) return;
+    if (!projectId) return;
+    if (!selectedUser && !selectedOrganization) return;
 
     try {
       if (isProjectManager) {
+        if (!selectedUser) return;
         await updateProjectManager(projectId, selectedUser._id);
         toast({
           title: "Success",
@@ -155,16 +163,52 @@ export function AddToProjectHeader({ selectedUser }: AddToProjectHeaderProps) {
               </Button>
             </div>
           )}
+          {selectedOrganization && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="bg-green-100 text-green-700 rounded-full h-8 w-8 flex items-center justify-center font-semibold">
+                  {selectedOrganization.companyName?.[0]?.toUpperCase()}
+                </div>
+                <Badge variant="secondary" className="text-sm">
+                  {selectedOrganization.companyName}
+                </Badge>
+              </div>
+              <Button onClick={handleAddUser}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                {getButtonText()}
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
-      {!isProjectManager && !isAssistantPM && (
+      {!isProjectManager && !isAssistantPM && selectedUser && (
         <AddTeamMemberDialog
           open={showDialog}
           onOpenChange={setShowDialog}
           projectId={projectId}
           projectName={projectName}
           milestones={milestones as any}
-          user={selectedUser!}
+          user={selectedUser}
+          returnUrl={returnUrl || undefined}
+        />
+      )}
+      {!isProjectManager && !isAssistantPM && selectedOrganization && (
+        <AddTeamMemberDialog
+          open={showDialog}
+          onOpenChange={setShowDialog}
+          projectId={projectId}
+          projectName={projectName}
+          milestones={milestones as any}
+          user={{
+            _id: selectedOrganization._id,
+            firstName: selectedOrganization.companyName,
+            lastName: selectedOrganization.contactPerson?.name || "",
+            email:
+              selectedOrganization.businessEmail ||
+              selectedOrganization.contactPerson?.email ||
+              "",
+          }}
+          isOrganization={true}
           returnUrl={returnUrl || undefined}
         />
       )}

@@ -28,10 +28,13 @@ export default function EmployeeModule({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedOrganization, setSelectedOrganization] =
+    useState<Organization | null>(null);
   const { toast } = useToast();
 
   const projectId = searchParams.get("projectId");
   const projectName = searchParams.get("projectName");
+  const returnUrl = searchParams.get("returnUrl");
 
   const isAddingToProject = !!projectId && !!projectName;
 
@@ -55,7 +58,12 @@ export default function EmployeeModule({
 
   return (
     <div className="flex-1 space-y-4 p-2">
-      {isAddingToProject && <AddToProjectHeader selectedUser={selectedUser} />}
+      {isAddingToProject && (
+        <AddToProjectHeader
+          selectedUser={selectedUser}
+          selectedOrganization={selectedOrganization}
+        />
+      )}
 
       {isAddingToProject && (
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -71,12 +79,12 @@ export default function EmployeeModule({
             <div>
               <CardTitle>
                 {isAddingToProject
-                  ? "Available Consultants"
+                  ? "Available Consultants & Organizations"
                   : "Consultant List"}
               </CardTitle>
               <CardDescription>
                 {isAddingToProject
-                  ? "Click on a consultant to add them to the project"
+                  ? "Click on a consultant or organization to add them to the project"
                   : "View and manage your consultants"}
               </CardDescription>
             </div>
@@ -132,7 +140,14 @@ export default function EmployeeModule({
                 {!isAddingToProject && (
                   <OrganizationStats organizations={organizations} />
                 )}
-                <OrgTable organizations={organizations} />
+                <OrgTable
+                  organizations={organizations}
+                  onOrganizationSelect={(org) => {
+                    if (isAddingToProject) {
+                      setSelectedOrganization(org);
+                    }
+                  }}
+                />
               </TabsContent>
             </Tabs>
           </div>

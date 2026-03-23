@@ -81,6 +81,7 @@ interface BudgetItem {
   startDate: string;
   endDate: string;
   milestoneId?: string;
+  tags?: string[];
 }
 
 interface BudgetCategory {
@@ -339,6 +340,88 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
     }
   };
 
+  const validateBudgetDataForUpdate = (
+    formState: BudgetFormState,
+    isInternal: boolean,
+  ) => {
+    try {
+      // Validate required fields
+      for (const category of formState?.categories) {
+        if (!category?.name?.trim()) {
+          throw new Error(`Category name is required`);
+        }
+        if (!category?.description?.trim()) {
+          throw new Error(`Category description is required`);
+        }
+
+        for (const [index, item] of category?.items?.entries() || []) {
+          if (!item?.name?.trim()) {
+            throw new Error(
+              `Item name is required in category "${category?.name}"`,
+            );
+          }
+          if (!item.description?.trim()) {
+            throw new Error(
+              `Item description is required in category "${category.name}"`,
+            );
+          }
+          if (!item.estimatedAmount || item.estimatedAmount <= 0) {
+            throw new Error(
+              `Item amount must be greater than 0 in category "${category.name}"`,
+            );
+          }
+          if (!item.startDate) {
+            throw new Error(
+              `Start date is required for item "${item.name}" in category "${category.name}"`,
+            );
+          }
+          if (!item.endDate) {
+            throw new Error(
+              `End date is required for item "${item.name}" in category "${category.name}"`,
+            );
+          }
+          if (new Date(item.startDate) > new Date(item.endDate)) {
+            throw new Error(
+              `Start date must be before end date for item "${item.name}" in category "${category.name}"`,
+            );
+          }
+        }
+      }
+
+      const categories = formState.categories.map((category) => ({
+        name: category.name,
+        description: category.description,
+        tags: category.tags || [],
+        items: category.items.map((item) => ({
+          name: item.name,
+          description: item.description,
+          estimatedAmount: Number(item.estimatedAmount),
+          frequency: item.frequency,
+          startDate: item.startDate,
+          endDate: item.endDate,
+          tags: item.tags || [],
+          milestoneId: item.milestoneId,
+        })),
+      }));
+
+      const data = {
+        [isInternal ? "internalCategories" : "externalCategories"]: categories,
+        [isInternal ? "totalInternalBudget" : "totalExternalBudget"]:
+          formState.totalBudget,
+        notes: formState.notes?.trim() || "",
+      };
+
+      return data;
+    } catch (error) {
+      console.error("Validation error:", error);
+      if (error instanceof z.ZodError) {
+        console.error("Zod validation errors:", error.errors);
+        throw new Error(error.errors[0].message);
+      }
+      throw error;
+    }
+  };
+
   const handleCreateInternalBudget = async () => {
     try {
       setIsSubmittingInternal(true);
@@ -375,7 +458,10 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
     try {
       setIsSubmittingInternal(true);
 
-      const validatedData = validateBudgetData(internalFormState, true);
+      const validatedData = validateBudgetDataForUpdate(
+        internalFormState,
+        true,
+      );
 
       await updateInternalBudget(validatedData, budget._id);
 
@@ -441,7 +527,10 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
     try {
       setIsSubmittingExternal(true);
 
-      const validatedData = validateBudgetData(externalFormState, false);
+      const validatedData = validateBudgetDataForUpdate(
+        externalFormState,
+        false,
+      );
 
       await updateExternalBudget(validatedData, budget._id);
 

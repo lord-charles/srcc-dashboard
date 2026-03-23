@@ -237,7 +237,8 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
       } else {
         toast({
           title: "Failed to create coach contract",
-          description: result.error || "An error occurred while creating the contract",
+          description:
+            result.error || "An error occurred while creating the contract",
           variant: "destructive",
         });
       }
@@ -331,7 +332,8 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
       } else {
         toast({
           title: "Failed to update coach contract",
-          description: result.error || "An error occurred while updating the contract",
+          description:
+            result.error || "An error occurred while updating the contract",
           variant: "destructive",
         });
       }
@@ -367,9 +369,12 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
         typeof coach.userId === "string"
           ? coach.userId
           : coach.userId?._id || "";
-      if (!userId || !coach.milestoneId)
-        throw new Error("Missing coach identifiers");
-      const result = await deleteCoach(projectId, String(coach.milestoneId), String(userId));
+      const milestoneId =
+        typeof coach.milestoneId === "string"
+          ? coach.milestoneId
+          : coach.milestoneId?._id || "";
+      if (!userId || !milestoneId) throw new Error("Missing coach identifiers");
+      const result = await deleteCoach(projectId, milestoneId, userId);
       if (result.success) {
         toast({
           title: "Coach removed",
