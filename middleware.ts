@@ -73,6 +73,11 @@ export default withAuth(
         return NextResponse.redirect(redirectUrl);
       }
 
+      // Allow /projects for all authenticated users
+      if (pathname === "/projects" || pathname.startsWith("/projects/")) {
+        return NextResponse.next();
+      }
+
       // Allow /users with project context regardless of role
       if (isProjectContext) {
         return NextResponse.next();
