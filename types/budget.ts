@@ -6,7 +6,14 @@ export interface BudgetItem {
   estimatedAmount: number;
   actualAmount: number;
   tags: string[];
-  frequency: 'one-time' | 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  frequency:
+    | "one-time"
+    | "daily"
+    | "weekly"
+    | "monthly"
+    | "quarterly"
+    | "yearly"
+    | "annually";
   startDate?: string;
   endDate?: string;
 }
@@ -14,10 +21,10 @@ export interface BudgetItem {
 export interface BudgetAuditTrailItem {
   _id: string;
   action:
-  | "CREATED"
-  | "SUBMITTED_FOR_APPROVAL"
-  | "REVISION_REQUESTED"
-  | "APPROVED";
+    | "CREATED"
+    | "SUBMITTED_FOR_APPROVAL"
+    | "REVISION_REQUESTED"
+    | "APPROVED";
   performedBy: User;
   performedAt: string;
   details?: {
@@ -61,7 +68,14 @@ export interface Budget {
   totalInternalSpent: number;
   totalExternalSpent: number;
   version: number;
-  status: 'draft' | 'pending_checker_approval' | 'pending_manager_approval' | 'pending_finance_approval' | 'approved' | 'rejected' | 'revision_requested';
+  status:
+    | "draft"
+    | "pending_checker_approval"
+    | "pending_manager_approval"
+    | "pending_finance_approval"
+    | "approved"
+    | "rejected"
+    | "revision_requested";
   createdBy: {
     _id: string;
     firstName: string;
@@ -96,4 +110,4 @@ export interface CreateBudgetDTO {
   notes?: string;
 }
 
-export interface UpdateBudgetDTO extends Partial<CreateBudgetDTO> { }
+export interface UpdateBudgetDTO extends Partial<CreateBudgetDTO> {}

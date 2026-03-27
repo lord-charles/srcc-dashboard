@@ -724,14 +724,14 @@ const ContractsTable = ({
             <div className="space-y-4">
               <div className="border rounded-md p-4">
                 <h4 className="font-medium">
-                  {contractToDelete.contractNumber}
+                  {contractToDelete?.contractNumber}
                 </h4>
-                <p className="text-sm mt-1">{contractToDelete.description}</p>
+                <p className="text-sm mt-1">{contractToDelete?.description}</p>
                 <div className="mt-2 flex items-center">
                   <span className="text-sm font-medium mr-2">
                     Contracted User:
                   </span>
-                  <span className="text-sm">{`${contractToDelete.contractedUserId.firstName} ${contractToDelete.contractedUserId.lastName}`}</span>
+                  <span className="text-sm">{`${contractToDelete?.contractedUserId?.firstName} ${contractToDelete?.contractedUserId?.lastName}`}</span>
                 </div>
               </div>
             </div>

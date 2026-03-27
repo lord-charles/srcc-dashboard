@@ -173,15 +173,24 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
         ? budget.totalInternalBudget
         : budget.totalExternalBudget;
 
+    // Ensure all items have valid frequency values
+    const sanitizedCategories = (categories || []).map((category) => ({
+      ...category,
+      items: (category.items || []).map((item) => ({
+        ...item,
+        frequency: item.frequency || "monthly", // Default to monthly if missing
+      })),
+    }));
+
     if (type === "internal") {
       setInternalFormState({
-        categories: categories || [initialCategoryState("internal")],
+        categories: sanitizedCategories || [initialCategoryState("internal")],
         totalBudget: totalBudget || 0,
         notes: budget.notes || "",
       });
     } else {
       setExternalFormState({
-        categories: categories || [initialCategoryState("external")],
+        categories: sanitizedCategories || [initialCategoryState("external")],
         totalBudget: totalBudget || 0,
         notes: budget.notes || "",
       });
@@ -344,6 +353,16 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
     formState: BudgetFormState,
     isInternal: boolean,
   ) => {
+    const VALID_FREQUENCIES = [
+      "one-time",
+      "daily",
+      "weekly",
+      "monthly",
+      "quarterly",
+      "yearly",
+      "annually",
+    ];
+
     try {
       // Validate required fields
       for (const category of formState?.categories) {
@@ -368,6 +387,11 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
           if (!item.estimatedAmount || item.estimatedAmount <= 0) {
             throw new Error(
               `Item amount must be greater than 0 in category "${category.name}"`,
+            );
+          }
+          if (!item.frequency || !VALID_FREQUENCIES.includes(item.frequency)) {
+            throw new Error(
+              `Invalid frequency "${item.frequency}" for item "${item.name}". Must be one of: ${VALID_FREQUENCIES.join(", ")}`,
             );
           }
           if (!item.startDate) {
@@ -396,7 +420,7 @@ const ModernBudgetDisplay: React.FC<ModernBudgetDisplayProps> = ({
           name: item.name,
           description: item.description,
           estimatedAmount: Number(item.estimatedAmount),
-          frequency: item.frequency,
+          frequency: item.frequency || "monthly", // Ensure frequency has a default
           startDate: item.startDate,
           endDate: item.endDate,
           tags: item.tags || [],

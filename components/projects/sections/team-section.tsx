@@ -78,6 +78,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
   const [selectedMemberMilestone, setSelectedMemberMilestone] = useState<
     string | undefined
   >(undefined);
+  const [isOrganizationContract, setIsOrganizationContract] = useState(false);
   const [showEditContractDialog, setShowEditContractDialog] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null,
@@ -213,6 +214,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         endDate: values.endDate.toString().split("T")[0],
         projectId: projectData._id,
         contractedUserId: contractMemberId,
+        isOrganization: isOrganizationContract,
         status: values.status,
         // Use the milestone from the member's assignment, or allow override from form
         ...(values.milestoneId
@@ -242,7 +244,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       } else {
         toast({
           title: "Failed to create contract",
-          description: result.error || "An error occurred while creating the contract",
+          description:
+            result.error || "An error occurred while creating the contract",
           variant: "destructive",
         });
       }
@@ -260,7 +263,11 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     }
   };
 
-  const handleOpenContractDialog = (memberId: string, milestoneId?: string | any) => {
+  const handleOpenContractDialog = (
+    memberId: string,
+    milestoneId?: string | any,
+    isOrganization?: boolean,
+  ) => {
     setContractMemberId(memberId);
     // Normalize and store the milestone ID (supporting embedded milestone objects)
     const normalizedMilestoneId =
@@ -268,6 +275,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         ? (milestoneId as any)._id
         : (milestoneId as string | undefined);
     setSelectedMemberMilestone(normalizedMilestoneId);
+    setIsOrganizationContract(isOrganization || false);
     setShowContractDialog(true);
   };
 
@@ -339,7 +347,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       } else {
         toast({
           title: "Failed to update contract",
-          description: result.error || "An error occurred while updating the contract",
+          description:
+            result.error || "An error occurred while updating the contract",
           variant: "destructive",
         });
       }
@@ -373,7 +382,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
       } else {
         toast({
           title: "Error",
-          description: result.error || "Failed to remove team member. Please try again.",
+          description:
+            result.error || "Failed to remove team member. Please try again.",
           variant: "destructive",
         });
       }
@@ -495,6 +505,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                 handleOpenContractDialog(
                                   member.userId?._id,
                                   undefined,
+                                  member.isOrganization,
                                 )
                               }
                               onEditContract={(contract) =>
@@ -541,6 +552,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                     handleOpenContractDialog(
                                       member.userId?._id,
                                       milestoneId,
+                                      member.isOrganization,
                                     )
                                   }
                                   onEditContract={(contract) =>
@@ -751,10 +763,11 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                     try {
                                       const { removeAssistantProjectManager } =
                                         await import("@/services/projects-service");
-                                      const result = await removeAssistantProjectManager(
-                                        projectId,
-                                        assistant.userId._id,
-                                      );
+                                      const result =
+                                        await removeAssistantProjectManager(
+                                          projectId,
+                                          assistant.userId._id,
+                                        );
                                       if (result.success) {
                                         toast({
                                           title: "Assistant PM removed",
@@ -769,7 +782,8 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                                         toast({
                                           title: "Error",
                                           description:
-                                            result.error || "Failed to remove assistant project manager",
+                                            result.error ||
+                                            "Failed to remove assistant project manager",
                                           variant: "destructive",
                                         });
                                       }
