@@ -11,6 +11,7 @@ export interface TeamMember {
   startDate: string;
   endDate: string;
   responsibilities: string[];
+  isOrganization: boolean;
   _id: string;
 }
 
