@@ -57,7 +57,6 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   };
 
   const contract = getMemberContract(member.userId?._id);
-  console.log(member);
   return (
     <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
       <div className="flex items-center space-x-4">

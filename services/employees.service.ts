@@ -26,13 +26,13 @@ const getAxiosConfig = async () => {
 
 export async function getAllEmployees(
   page: number = 1,
-  limit: number = 1000000
+  limit: number = 1000000,
 ) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/users?page=${page}&limit=${limit}`,
-      config
+      config,
     );
     return { success: true as const, data: response.data };
   } catch (error: any) {
@@ -40,10 +40,18 @@ export async function getAllEmployees(
       await handleUnauthorized();
     }
     console.error("Failed to fetch employees:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch employees";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch employees";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -53,7 +61,7 @@ export async function getEmployeeById(id: string) {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/user/${id}`,
-      config
+      config,
     );
     return { success: true as const, data: response.data };
   } catch (error: any) {
@@ -61,23 +69,29 @@ export async function getEmployeeById(id: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to fetch employee ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch employee";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch employee";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function registerEmployee(
-  employee: CreateEmployeeDto
-) {
+export async function registerEmployee(employee: CreateEmployeeDto) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
       employee,
-      config
+      config,
     );
     return { success: true as const, data: response.data };
   } catch (error: any) {
@@ -85,35 +99,50 @@ export async function registerEmployee(
       await handleUnauthorized();
     }
     console.error("Failed to register employee:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to register employee";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to register employee";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
 export async function updateEmployee(
   id: string,
-  employee: Partial<CreateEmployeeDto>
+  employee: Partial<CreateEmployeeDto>,
 ) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch(
       `${process.env.NEXT_PUBLIC_API_URL}/user/${id}`,
       employee,
-      config
+      config,
     );
     return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.log(`Failed to update employee ${id}:`, error.response.data);
-    const message = error?.response?.data?.message || error?.message || "Failed to update employee";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update employee";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -128,10 +157,18 @@ export async function deleteEmployee(id: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to delete employee ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to delete employee";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete employee";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -141,7 +178,7 @@ export async function getProfile() {
     const config = await getAxiosConfig();
     const response = await axios.get(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
-      config
+      config,
     );
     return { success: true as const, data: response.data };
   } catch (error: any) {
@@ -149,11 +186,18 @@ export async function getProfile() {
       await handleUnauthorized();
     }
     console.error("Failed to fetch user profile:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch profile";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch profile";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
-

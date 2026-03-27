@@ -123,7 +123,6 @@ export function NewProjectComponent() {
     const fetchDepartments = async () => {
       try {
         const result = await getProjectConfig();
-        console.log(result);
         if (result.success && result.data?.data?.departments) {
           setAvailableDepartments(result.data.data.departments);
           if (result.data.data.departments.length > 0) {

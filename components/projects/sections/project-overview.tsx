@@ -100,8 +100,8 @@ export default function ProjectOverview({ projectData }: ProjectOverviewProps) {
       setLoadingDepartments(true);
       try {
         const config = await getProjectConfig();
-        if (config && config.data.departments) {
-          setDepartments(config.data.departments);
+        if (config && config.data.data.departments) {
+          setDepartments(config.data.data.departments);
         }
       } catch (error) {
         console.error("Failed to fetch departments", error);

@@ -308,7 +308,6 @@ export async function updateBudgetStatus(
 
 export async function updateInternalBudget(data: any, budgetId: string) {
   try {
-    console.log(JSON.stringify(data, null, 2));
     const config = await getAxiosConfig();
     const response = await axios.patch<Budget>(
       `${API_URL}/budgets/${budgetId}`,

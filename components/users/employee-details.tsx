@@ -73,8 +73,6 @@ import { updateEmployee } from "@/services/employees.service";
 import { getProjectConfig } from "@/services/system-config.service";
 import type { UserRole } from "@/types/user";
 
-
-
 // Available roles in the system
 const availableRoles: any[] = [
   "admin",
@@ -146,8 +144,8 @@ export default function EmployeeDetailsPage({ employee }: any) {
     const fetchDepartments = async () => {
       try {
         const config = await getProjectConfig();
-        if (config && config.data.departments) {
-          setAvailableDepartments(config.data.departments);
+        if (config && config.data.data.departments) {
+          setAvailableDepartments(config.data.data.departments);
         }
       } catch (error) {
         console.error("Failed to fetch departments", error);
