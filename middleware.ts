@@ -13,32 +13,7 @@ export default withAuth(
       const url = req.nextUrl;
       const pathname = url.pathname;
       const roles: any[] = (token as any).roles || [];
-      const permissions: Record<string, string[] | undefined> =
-        (token as any).permissions || {};
       const userType = (token as any).type; // Check user type (organization or user)
-
-      // Helper: determine if user has access to a given path based on permissions map
-      const hasAccess = (path: string) => {
-        // Exact or prefix match against keys in permissions (e.g., '/projects')
-        let allowed: string[] | undefined;
-        let longestMatchLen = -1;
-        for (const key of Object.keys(permissions)) {
-          if (
-            path === key ||
-            path.startsWith(key + "/") ||
-            (key !== "/" && path === key)
-          ) {
-            if (key.length > longestMatchLen) {
-              longestMatchLen = key.length;
-              allowed = permissions[key];
-            }
-          }
-        }
-        return Array.isArray(allowed) && allowed.length > 0;
-      };
-
-      // Check if user is an organization (type-based, not role-based)
-      const isOrganization = userType === "organization";
 
       // Check if user has admin privileges (multiple roles beyond just consultant)
       const hasAdminRole = roles.some(
@@ -83,31 +58,6 @@ export default withAuth(
         return NextResponse.next();
       }
 
-      // Handle organization access separately
-      if (isOrganization) {
-        // Organizations always have access to analytics (prevent redirect loop)
-        if (pathname === "/analytics" || pathname.startsWith("/analytics")) {
-          return NextResponse.next();
-        }
-
-        // Organizations can access their own organization pages
-        if (
-          pathname.startsWith("/organizations/") ||
-          pathname.startsWith("/organization/")
-        ) {
-          return NextResponse.next();
-        }
-
-        // Check permissions for other routes
-        if (hasAccess(pathname)) {
-          return NextResponse.next();
-        }
-
-        // Redirect to analytics for any unauthorized route
-        const redirectUrl = new URL("/analytics", req.url);
-        return NextResponse.redirect(redirectUrl);
-      }
-
       // Handle regular users (non-organizations)
       // Users with admin roles have full access
       if (hasAdminRole) {
@@ -122,37 +72,12 @@ export default withAuth(
       // For consultant-only users (no admin role), enforce restrictions
       const blockedRoots = ["/contracts", "/claims", "/imprest", "/budget"];
 
-      let unauthorized = false;
-
-      // Check permissions map
-      if (permissions && Object.keys(permissions).length > 0) {
-        const permitted = hasAccess(pathname);
-        if (!permitted) {
-          // Block regular consultants from blocked roots
-          if (
-            isRegularConsultant &&
-            blockedRoots.some(
-              (root) => pathname === root || pathname.startsWith(root + "/"),
-            )
-          ) {
-            unauthorized = true;
-          } else {
-            // For other users without permission, also block
-            unauthorized = true;
-          }
-        }
-      } else if (isRegularConsultant) {
-        // No permissions map: block regular consultants from blocked roots
-        if (
-          blockedRoots.some(
-            (root) => pathname === root || pathname.startsWith(root + "/"),
-          )
-        ) {
-          unauthorized = true;
-        }
-      }
-
-      if (unauthorized) {
+      if (
+        isRegularConsultant &&
+        blockedRoots.some(
+          (root) => pathname === root || pathname.startsWith(root + "/"),
+        )
+      ) {
         const redirectUrl = new URL("/analytics", req.url);
         return NextResponse.redirect(redirectUrl);
       }

@@ -96,14 +96,17 @@ I accept the offer:
 export default async function ContractTemplatesSettingsPage() {
   // Fetch all templates without any filters to ensure we get existing templates
   const result = await getContractTemplates();
-  const allTemplates = result.success ? (result.data || []) : [];
+  // Handle both direct array and { data: [...] } wrapped responses
+  const templatesArray = result.success
+    ? (Array.isArray(result.data) ? result.data : (result.data?.data || []))
+    : [];
 
   // Separate templates by category
   // For team members/consultants: show all templates EXCEPT those with category "coach"
-  const teamMemberTemplates = allTemplates?.data?.filter(
+  const teamMemberTemplates = templatesArray.filter(
     (t: any) => t.category !== "coach",
   );
-  const coachTemplates = allTemplates?.data?.filter(
+  const coachTemplates = templatesArray.filter(
     (t: any) => t.category === "coach",
   );
 

@@ -59,6 +59,7 @@ export async function getProjectConfig() {
       `${API_URL}/system-config/key/project_config`,
       config,
     );
+    console.log(response.data)
     return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError) {

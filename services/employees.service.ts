@@ -109,7 +109,7 @@ export async function updateEmployee(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to update employee ${id}:`, error);
+    console.log(`Failed to update employee ${id}:`, error.response.data);
     const message = error?.response?.data?.message || error?.message || "Failed to update employee";
     return { 
       success: false as const, 

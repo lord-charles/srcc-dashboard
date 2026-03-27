@@ -121,6 +121,17 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = useSession();
   const [currentPath, setCurrentPath] = React.useState("");
+  const canRenderNav =
+    session?.user?.status === "active" &&
+    (session?.user?.type === "user" ||
+      session?.user?.type === "organization");
+
+  const noticeStatus =
+    session?.user?.status === "pending" ||
+    session?.user?.status === "suspended" ||
+    session?.user?.status === "terminated"
+      ? session.user.status
+      : undefined;
 
   React.useEffect(() => {
     setCurrentPath(window.location.pathname);
@@ -148,7 +159,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {session?.user?.status === "active" ? (
+        {canRenderNav ? (
           <SidebarGroup>
             <SidebarMenu className="gap-2">
               {data.navMain.map((item) => (
@@ -234,9 +245,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         ) : (
           <div className="p-4">
-            <AccountStatusNotice
-              status={session?.user?.status as "pending" | "suspended"}
-            />
+            {noticeStatus ? <AccountStatusNotice status={noticeStatus} /> : null}
           </div>
         )}
       </SidebarContent>

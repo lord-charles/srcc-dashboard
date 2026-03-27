@@ -178,7 +178,7 @@ export function UpdateEmployeeComponent({ employee }: any) {
       availability: employee?.availability || "available",
       preferredWorkTypes: employee?.preferredWorkTypes || [],
       cvUrl: employee?.cvUrl || "",
-
+ 
       // Skills, Education, Certifications
       skills: employee?.skills || [],
       education: employee?.education || [],
@@ -254,9 +254,9 @@ export function UpdateEmployeeComponent({ employee }: any) {
         description: "Consultant/Employee has been updated successfully.",
       });
 
-      setTimeout(() => {
-        router.push("/users");
-      }, 1500);
+      // setTimeout(() => {
+      //   router.push("/users");
+      // }, 1500);
     } catch (error) {
       toast({
         title: "Update Failed",
