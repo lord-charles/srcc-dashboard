@@ -57,7 +57,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
         "risk",
         "milestones",
         "documents",
-        "invoices",
         "budget",
         "contracts",
         "claims",
@@ -164,17 +163,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             Documents
           </TabsTrigger>
           <TabsTrigger
-            value="invoices"
-            className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
-          >
-            <Receipt
-              className="-ms-0.5 me-1.5 opacity-60"
-              size={16}
-              strokeWidth={2}
-            />
-            Invoices
-          </TabsTrigger>
-          <TabsTrigger
             value="budget"
             className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
           >
@@ -256,14 +244,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           executionMemoUrl={projectData.executionMemoUrl}
           signedBudgetUrl={projectData.signedBudgetUrl}
           documents={projectData.documents}
-        />
-      </TabsContent>
-
-      <TabsContent value="invoices">
-        <InvoicesSection
-          invoices={projectData.invoices}
-          currency={projectData.currency}
-          projectId={projectData._id}
         />
       </TabsContent>
 

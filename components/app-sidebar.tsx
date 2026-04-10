@@ -13,6 +13,7 @@ import {
   CalendarCheck,
   List,
   Settings,
+  Truck,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -111,6 +112,21 @@ const data = {
       icon: "Users",
     },
     {
+      title: "Supplier Management",
+      url: "#",
+      icon: "Truck",
+      items: [
+        {
+          title: "All Suppliers",
+          url: "/suppliers",
+        },
+        // {
+        //   title: "My Imprest",
+        //   url: "/my-imprest",
+        // },
+      ],
+    },
+    {
       title: "Settings",
       url: "/settings",
       icon: "Settings",
@@ -123,8 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [currentPath, setCurrentPath] = React.useState("");
   const canRenderNav =
     session?.user?.status === "active" &&
-    (session?.user?.type === "user" ||
-      session?.user?.type === "organization");
+    (session?.user?.type === "user" || session?.user?.type === "organization");
 
   const noticeStatus =
     session?.user?.status === "pending" ||
@@ -207,6 +222,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 return <Briefcase {...iconProps} />;
                               case "BarChart2":
                                 return <BarChart2 {...iconProps} />;
+                              case "Truck":
+                                return <Truck {...iconProps} />;
                               case "Settings":
                                 return <Settings {...iconProps} />;
                               default:
@@ -245,7 +262,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         ) : (
           <div className="p-4">
-            {noticeStatus ? <AccountStatusNotice status={noticeStatus} /> : null}
+            {noticeStatus ? (
+              <AccountStatusNotice status={noticeStatus} />
+            ) : null}
           </div>
         )}
       </SidebarContent>
