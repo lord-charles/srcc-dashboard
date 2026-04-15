@@ -120,10 +120,10 @@ const data = {
           title: "All Suppliers",
           url: "/suppliers",
         },
-        // {
-        //   title: "My Imprest",
-        //   url: "/my-imprest",
-        // },
+        {
+          title: "Local Purchase Orders",
+          url: "/lpos",
+        },
       ],
     },
     {

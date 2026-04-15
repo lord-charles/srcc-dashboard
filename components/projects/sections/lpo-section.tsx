@@ -11,7 +11,8 @@ import {
   XCircle,
   Plus,
 } from "lucide-react";
-import { getLposByProject, updateLpoStatus, Lpo } from "@/services/lpo.service";
+import { getLposByProject, updateLpoStatus } from "@/services/lpo.service";
+import { Lpo } from "@/types/lpo";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";

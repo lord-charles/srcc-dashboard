@@ -2,32 +2,7 @@
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-
-export interface LpoItem {
-  noOfDays: number;
-  description: string;
-  quantity: number;
-  rate: number;
-  total: number;
-}
-
-export interface Lpo {
-  _id: string;
-  projectId: string;
-  supplierId: any;
-  lpoNo: string;
-  lpoDate: string;
-  items: LpoItem[];
-  subTotal: number;
-  vatAmount: number;
-  totalAmount: number;
-  currency: string;
-  status: "draft" | "submitted" | "hod_approved" | "finance_approved" | "rejected";
-  validityDays: number;
-  preparedBy: any;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Lpo } from "@/types/lpo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/srcc/api";
 
@@ -37,6 +12,31 @@ async function getAuthToken() {
     throw new Error("Unauthorized");
   }
   return session.user.token;
+}
+
+export async function getAllLpos(): Promise<{ success: boolean; data?: Lpo[]; error?: string }> {
+  try {
+    const token = await getAuthToken();
+    const res = await fetch(`${API_URL}/lpo`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      return { success: false, error: errorData.message || "Failed to fetch LPOs" };
+    }
+
+    const data = await res.json();
+    return { success: true, data };
+  } catch (error: any) {
+    console.error("Failed to fetch LPOs:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
 }
 
 export async function getLposByProject(projectId: string): Promise<{ success: boolean; data?: Lpo[]; error?: string }> {

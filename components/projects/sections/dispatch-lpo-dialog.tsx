@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { Lpo, sendLpoEmail } from "@/services/lpo.service";
+import { sendLpoEmail } from "@/services/lpo.service";
+import { Lpo } from "@/types/lpo";
 import html2pdf from "html2pdf.js";
 
 interface DispatchLpoDialogProps {
