@@ -231,7 +231,7 @@ export function MilestoneDrawer({
                     <FormItem>
                       <FormLabel className="text-xs">Start</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} value={field.value ?? ""} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -244,7 +244,7 @@ export function MilestoneDrawer({
                     <FormItem>
                       <FormLabel className="text-xs">Due</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" {...field} value={field.value ?? ""} />
                       </FormControl>
                     </FormItem>
                   )}
@@ -273,7 +273,7 @@ export function MilestoneDrawer({
                     <FormItem>
                       <FormLabel className="text-xs">Weight %</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} placeholder="0–100" />
+                        <Input type="number" {...field} value={field.value ?? ""} placeholder="0–100" />
                       </FormControl>
                     </FormItem>
                   )}
@@ -307,7 +307,7 @@ export function MilestoneDrawer({
                       <FormItem>
                         <FormLabel className="text-xs">Completion</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} />
+                          <Input type="date" {...field} value={field.value ?? ""} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -320,7 +320,7 @@ export function MilestoneDrawer({
                       <FormItem>
                         <FormLabel className="text-xs">Actual Cost</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} placeholder="KES" />
+                          <Input type="number" {...field} value={field.value ?? ""} placeholder="KES" />
                         </FormControl>
                       </FormItem>
                     )}
