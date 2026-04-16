@@ -18,26 +18,9 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { format, isValid, parseISO } from "date-fns";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { EditMilestoneDialog } from "../edit-milestone-dialog";
-import { deleteMilestone } from "@/services/projects-service";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
+import { MilestoneDrawer } from "../milestone-drawer";
 import { Project, ProjectMilestone } from "@/types/project";
+import { useToast } from "@/hooks/use-toast";
 
 interface MilestonesSectionProps {
   milestones: ProjectMilestone[];
@@ -55,10 +38,7 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
   const [editMilestone, setEditMilestone] = useState<
     ProjectMilestone | undefined
   >();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [deletingMilestone, setDeletingMilestone] = useState<
-    ProjectMilestone | undefined
-  >();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { toast } = useToast();
 
   const formatCurrency = (amount: number) => {
@@ -87,30 +67,12 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
 
   const handleAddMilestone = () => {
     setEditMilestone(undefined);
-    setIsDialogOpen(true);
+    setIsDrawerOpen(true);
   };
 
   const handleEditMilestone = (milestone: ProjectMilestone) => {
     setEditMilestone(milestone);
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteMilestone = async (milestone: ProjectMilestone) => {
-    try {
-      await deleteMilestone(projectId, milestone._id);
-      toast({
-        title: "Success",
-        description: "Milestone deleted successfully",
-      });
-      // Delay reload to ensure dialog closes first
-      setTimeout(() => window.location.reload(), 100);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete milestone",
-        variant: "destructive",
-      });
-    }
+    setIsDrawerOpen(true);
   };
 
   const totalMilestoneBudget = milestones.reduce(
@@ -203,26 +165,14 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
                     >
                       {milestone.completed ? "Completed" : "In Progress"}
                     </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleEditMilestone(milestone)}
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => setDeletingMilestone(milestone)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleEditMilestone(milestone)}
+                      className="hover:text-primary transition-colors"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 <Separator />
@@ -305,41 +255,12 @@ export const MilestonesSection: React.FC<MilestonesSectionProps> = ({
         </CardContent>
       </Card>
 
-      <EditMilestoneDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+      <MilestoneDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
         projectId={projectId}
         milestone={editMilestone}
       />
-
-      <AlertDialog
-        open={!!deletingMilestone}
-        onOpenChange={() => setDeletingMilestone(undefined)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Milestone</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this milestone? This action cannot
-              be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={() => {
-                if (deletingMilestone) {
-                  handleDeleteMilestone(deletingMilestone);
-                  setDeletingMilestone(undefined);
-                }
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };

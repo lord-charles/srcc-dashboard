@@ -1,25 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Download,
-  FileCheck,
-  FileText,
-  Paperclip,
-  Upload,
-  AlertCircle,
-  Check,
-  Loader2,
-} from "lucide-react";
+import { AlertCircle, Lock, Unlock, Loader2, Files } from "lucide-react";
 import type { ProjectDocument } from "@/types/project";
 import { useToast } from "@/hooks/use-toast";
-import { cloudinaryService } from "@/lib/cloudinary-service";
-import { addProjectDocument, updateProject } from "@/services/projects-service";
-import { FileUpload } from "@/components/ui/file-upload";
+import { getProjectConfig } from "@/services/system-config.service";
+import { MainDocuments } from "./documents/main-documents";
+import { AdditionalDocuments } from "./documents/additional-documents";
 
 interface DocumentsSectionProps {
   projectId: string;
@@ -28,6 +16,9 @@ interface DocumentsSectionProps {
   executionMemoUrl?: string;
   signedBudgetUrl?: string;
   documents: ProjectDocument[];
+  documentFolders?: string[];
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
@@ -37,334 +28,105 @@ export const DocumentsSection: React.FC<DocumentsSectionProps> = ({
   executionMemoUrl,
   signedBudgetUrl,
   documents,
+  documentFolders = [],
+  onRefresh,
+  isRefreshing = false,
 }) => {
   const { toast } = useToast();
-  const router = useRouter();
-  // Track per-main-document uploading state
-  const [mainUploading, setMainUploading] = useState<
-    Partial<
-      Record<
-        | "projectProposalUrl"
-        | "signedContractUrl"
-        | "executionMemoUrl"
-        | "signedBudgetUrl",
-        boolean
-      >
-    >
-  >({});
-  const [newDocName, setNewDocName] = useState("");
-  const [newDocUploading, setNewDocUploading] = useState(false);
-  const [newDocUrl, setNewDocUrl] = useState<string>("");
-  const [pendingMain, setPendingMain] = useState<
-    Partial<
-      Record<
-        | "projectProposalUrl"
-        | "signedContractUrl"
-        | "executionMemoUrl"
-        | "signedBudgetUrl",
-        string
-      >
-    >
-  >({});
-  const [pendingAdditional, setPendingAdditional] = useState<
-    { name: string; url: string }[]
-  >([]);
+  const [isCrudEnabled, setIsCrudEnabled] = useState(false);
+  const [expiryDate, setExpiryDate] = useState<Date | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const mainDocuments: Array<{
-    name: string;
-    url?: string;
-    icon: any;
-    field:
-      | "projectProposalUrl"
-      | "signedContractUrl"
-      | "executionMemoUrl"
-      | "signedBudgetUrl";
-  }> = [
-    {
-      name: "Project Proposal",
-      url: projectProposalUrl,
-      icon: FileText,
-      field: "projectProposalUrl",
-    },
-    {
-      name: "Signed Contract",
-      url: signedContractUrl,
-      icon: FileCheck,
-      field: "signedContractUrl",
-    },
-    {
-      name: "Execution Memo",
-      url: executionMemoUrl,
-      icon: Paperclip,
-      field: "executionMemoUrl",
-    },
-    {
-      name: "Signed Budget",
-      url: signedBudgetUrl,
-      icon: FileCheck,
-      field: "signedBudgetUrl",
-    },
-  ];
-
-  const replaceMainDocument = async (
-    field:
-      | "projectProposalUrl"
-      | "signedContractUrl"
-      | "executionMemoUrl"
-      | "signedBudgetUrl",
-    file: File
-  ) => {
-    setMainUploading((prev) => ({ ...prev, [field]: true }));
-    try {
-      const url = await cloudinaryService.uploadFile(file);
-      setPendingMain((prev) => ({ ...prev, [field]: url }));
-      toast({
-        title: "Staged",
-        description: `Change staged. Click Save Changes to apply.`,
-      });
-    } catch (e: any) {
-      toast({
-        title: "Upload failed",
-        description: e?.message || "Unable to upload",
-        variant: "destructive",
-      });
-    } finally {
-      setMainUploading((prev) => ({ ...prev, [field]: false }));
-    }
-  };
-
-  const addAdditionalDocument = async () => {
-    if (!newDocName || !newDocUrl) {
-      toast({
-        title: "Missing fields",
-        description: "Please provide a name and upload a file.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setPendingAdditional((prev) => [
-      ...prev,
-      { name: newDocName, url: newDocUrl },
-    ]);
-    setNewDocName("");
-    setNewDocUrl("");
-    toast({
-      title: "Staged",
-      description: "Additional document staged. Click Save Changes to apply.",
-    });
-  };
-
-  const hasPending =
-    Object.keys(pendingMain).length > 0 || pendingAdditional.length > 0;
-
-  const saveChanges = async () => {
-    try {
-      if (Object.keys(pendingMain).length > 0) {
-        await updateProject(projectId, pendingMain as any);
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const result = await getProjectConfig();
+        if (result.success && result.data?.data?.documentCrudExpiry) {
+          const expiry = new Date(result.data.data.documentCrudExpiry);
+          if (expiry > new Date()) {
+            setIsCrudEnabled(true);
+            setExpiryDate(expiry);
+          }
+        }
+      } catch (e) {
+        console.error("Config fetch failed", e);
+      } finally {
+        setLoading(false);
       }
-      for (const doc of pendingAdditional) {
-        await addProjectDocument(projectId, doc);
-      }
-      toast({ title: "Saved", description: "Documents updated successfully." });
-      setPendingMain({});
-      setPendingAdditional([]);
-      // Delay reload to ensure any modals close first
-      setTimeout(() => window.location.reload(), 100);
-    } catch (e: any) {
-      toast({
-        title: "Save failed",
-        description: e?.message || "Unable to save changes",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const discardChanges = () => {
-    setPendingMain({});
-    setPendingAdditional([]);
-    setNewDocName("");
-    setNewDocUrl("");
-    toast({ title: "Discarded", description: "Pending changes discarded." });
-  };
+    };
+    fetchConfig();
+  }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Documents</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {hasPending && (
-            <div className="flex items-center gap-2 rounded-md bg-amber-50 p-2 text-amber-700 text-xs border border-amber-200">
-              <AlertCircle className="h-3 w-3" />
-              You have pending document changes. Click &quot;Save Changes&quot;
-              to apply.
+    <Card className="shadow-sm border-muted/40 overflow-hidden">
+      <CardHeader className="bg-muted/10 border-b pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Files className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg font-bold">Document Repository</CardTitle>
+            {isRefreshing && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 border border-blue-100 animate-in fade-in zoom-in-95">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span className="text-[10px] font-bold">Syncing...</span>
+              </div>
+            )}
+          </div>
+          
+          {loading ? (
+             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : isRefreshing ? (
+             null // Already showing "Syncing..."
+          ) : isCrudEnabled ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 text-green-600 border border-green-200">
+              <Unlock className="h-3 w-3" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                Admin Lock Open (Ends {expiryDate?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-muted-foreground border">
+              <Lock className="h-3 w-3" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Storage Locked</span>
             </div>
           )}
-          <div className="space-y-1">
-            <h4 className="text-xs font-medium text-muted-foreground">
-              Main Documents
-            </h4>
-            <div className="grid gap-1">
-              {mainDocuments.map((doc, index) => {
-                const Icon = doc.icon;
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between rounded-md border p-2"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Icon className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs">{doc.name}</span>
-                      {pendingMain[doc.field] && (
-                        <span className="text-[10px] text-amber-600 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" /> Pending change
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 ml-auto">
-                      {doc.url ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          asChild
-                          className="ml-auto h-7 w-7"
-                        >
-                          <a href={doc.url} target="_blank" rel="noopener">
-                            <Download className="h-3 w-3" />
-                            <span className="sr-only">Download {doc.name}</span>
-                          </a>
-                        </Button>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground">
-                          Not uploaded
-                        </span>
-                      )}
-                      <FileUpload
-                        onChange={async (files) => {
-                          if (!files?.length) return;
-                          await replaceMainDocument(doc.field, files[0]);
-                        }}
-                      />
-                      {mainUploading[doc.field] && (
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 px-1">
-                          <Loader2 className="h-3 w-3 animate-spin" />{" "}
-                          Uploading...
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x">
+          {/* Left Column: Fixed Mandatory Docs */}
+          <div className="lg:col-span-5 p-4 bg-muted/5">
+            <MainDocuments
+              projectId={projectId}
+              projectProposalUrl={projectProposalUrl}
+              signedContractUrl={signedContractUrl}
+              executionMemoUrl={executionMemoUrl}
+              signedBudgetUrl={signedBudgetUrl}
+              onRefresh={onRefresh}
+            />
           </div>
 
-          <div className="space-y-1">
-            <h4 className="text-xs font-medium text-muted-foreground">
-              Additional Documents
-            </h4>
-            <div className="grid gap-1">
-              {documents.map((doc, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded-md border p-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs">{doc.name}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    asChild
-                    className="ml-auto h-7 w-7"
-                  >
-                    <a href={doc.url} target="_blank" rel="noopener">
-                      <Download className="h-3 w-3" />
-                      <span className="sr-only">Download {doc.name}</span>
-                    </a>
-                  </Button>
-                </div>
-              ))}
-              {documents.length === 0 && (
-                <p className="text-xs text-muted-foreground">
-                  No additional documents uploaded.
-                </p>
-              )}
-              <div className="flex flex-col gap-2 rounded-md border p-2">
-                <div className="flex gap-2 items-center">
-                  <Input
-                    placeholder="Document name (e.g. MOU, Addendum)"
-                    value={newDocName}
-                    onChange={(e) => setNewDocName(e.target.value)}
-                  />
-                  <FileUpload
-                    onChange={async (files) => {
-                      if (!files?.length) return;
-                      setNewDocUploading(true);
-                      try {
-                        const url = await cloudinaryService.uploadFile(
-                          files[0]
-                        );
-                        setNewDocUrl(url);
-                        toast({
-                          title: "Uploaded",
-                          description: "File uploaded. Click Add to save.",
-                        });
-                      } catch (e: any) {
-                        toast({
-                          title: "Upload failed",
-                          description: e?.message || "Unable to upload",
-                          variant: "destructive",
-                        });
-                      } finally {
-                        setNewDocUploading(false);
-                      }
-                    }}
-                  />
-                  {newDocUploading && (
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1 px-1">
-                      <Loader2 className="h-3 w-3 animate-spin" /> Uploading...
-                    </span>
-                  )}
-                  <Button
-                    size="sm"
-                    onClick={addAdditionalDocument}
-                    disabled={!newDocName || !newDocUrl}
-                  >
-                    Add
-                  </Button>
-                </div>
-                {newDocUrl && (
-                  <div className="text-[10px] text-muted-foreground truncate">
-                    Uploaded: {newDocUrl}
-                  </div>
-                )}
-                {pendingAdditional.length > 0 && (
-                  <div className="text-[10px] text-amber-600 flex items-center gap-1">
-                    <AlertCircle className="h-3 w-3" />{" "}
-                    {pendingAdditional.length} staged document(s)
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 py-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={discardChanges}
-              disabled={!hasPending}
-            >
-              Discard
-            </Button>
-            <Button size="sm" onClick={saveChanges} disabled={!hasPending}>
-              <Check className="h-4 w-4 mr-1" /> Save Changes
-            </Button>
+          {/* Right Column: Custom Pool & Folders */}
+          <div className="lg:col-span-7 p-4 bg-background">
+            <AdditionalDocuments
+              projectId={projectId}
+              documents={documents}
+              documentFolders={documentFolders}
+              isCrudEnabled={isCrudEnabled}
+              onRefresh={onRefresh}
+            />
           </div>
         </div>
       </CardContent>
+      
+      {!isCrudEnabled && (
+        <div className="px-4 py-2 bg-amber-500/5 border-t flex items-center gap-2">
+          <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+          <p className="text-[10px] text-amber-700">
+            <strong>Maintenance Note:</strong> Deleting or renaming files requires an admin window. New uploads are always permitted.
+          </p>
+        </div>
+      )}
     </Card>
   );
 };

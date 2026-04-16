@@ -67,8 +67,10 @@ export interface ProjectMilestone {
 }
 
 export interface ProjectDocument {
+  _id: string;
   name: string;
   url: string;
+  folder?: string;
 }
 
 export interface InvoiceItem {
@@ -396,6 +398,7 @@ export interface Project {
   amountSpent: number;
   milestones: ProjectMilestone[];
   documents: ProjectDocument[];
+  documentFolders?: string[];
   kpis: any[];
   invoices: Invoice[];
   budgetId: Budget;

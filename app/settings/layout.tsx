@@ -22,6 +22,7 @@ export default function SettingsLayout({
               Departments
             </Link>
           <Link className="block hover:underline" href="/settings/charts-of-accounts">Charts of Accounts</Link>
+          <Link className="block hover:underline font-medium text-amber-600 dark:text-amber-400" href="/settings/project-controls">Project Controls</Link>
         </nav>
       </aside>
       <main className="flex-1 p-6">

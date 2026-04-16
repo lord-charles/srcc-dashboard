@@ -336,6 +336,8 @@ export async function deleteCoachAssistant(
 export interface ProjectDocumentPayload {
   name: string;
   url: string;
+  type: string;
+  folder?: string;
 }
 
 export async function addProjectDocument(
@@ -1100,6 +1102,149 @@ export async function createContract(contractData: any) {
       error?.response?.data?.message ||
       error?.message ||
       "Failed to create contract";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
+  }
+}
+
+export async function updateProjectDocument(
+  projectId: string,
+  documentId: string,
+  documentData: any,
+) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/documents/${documentId}`,
+      documentData,
+      config,
+    );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      `Failed to update document ${documentId} in project ${projectId}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update document";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
+  }
+}
+
+export async function deleteProjectDocument(
+  projectId: string,
+  documentId: string,
+) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/documents/${documentId}`,
+      config,
+    );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      `Failed to delete document ${documentId} from project ${projectId}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete document";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
+  }
+}
+
+export async function addDocumentFolder(
+  projectId: string,
+  folderName: string,
+) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/document-folders`,
+      { folderName },
+      config,
+    );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      `Failed to add folder ${folderName} to project ${projectId}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to add document folder";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
+  }
+}
+
+export async function deleteDocumentFolder(
+  projectId: string,
+  folderName: string,
+) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/document-folders/${encodeURIComponent(folderName)}`,
+      config,
+    );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error(
+      `Failed to delete folder ${folderName} from project ${projectId}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete document folder";
     return {
       success: false as const,
       error:

@@ -22,7 +22,6 @@ import { FinancialSection } from "./sections/financial-section";
 import { RiskSection } from "./sections/risk-section";
 import { MilestonesSection } from "./sections/milestones-section";
 import { DocumentsSection } from "./sections/documents-section";
-import { InvoicesSection } from "./sections/invoices-section";
 import { ProjectStatCards } from "./project-stat-cards";
 import ModernBudgetDisplay from "./sections/modern-budget-display";
 import ProjectOverview from "./sections/project-overview";
@@ -36,14 +35,38 @@ interface ProjectDetailsProps {
 }
 
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({
-  project: projectData,
+  project: initialProject,
   isLoading = false,
 }) => {
+  const [projectData, setProjectData] = useState<Project | undefined>(
+    initialProject,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "overview",
   );
   const router = useRouter();
+
+  useEffect(() => {
+    setProjectData(initialProject);
+  }, [initialProject]);
+
+  const refreshData = async () => {
+    if (!projectData?._id) return;
+    setIsRefreshing(true);
+    try {
+      const { getProjectById } = await import("@/services/projects-service");
+      const result = await getProjectById(projectData._id);
+      if (result.success && result.data) {
+        setProjectData(result.data);
+      }
+    } catch (error) {
+      console.error("Refresh failed:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -244,6 +267,9 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           executionMemoUrl={projectData.executionMemoUrl}
           signedBudgetUrl={projectData.signedBudgetUrl}
           documents={projectData.documents}
+          documentFolders={projectData.documentFolders || []}
+          onRefresh={refreshData}
+          isRefreshing={isRefreshing}
         />
       </TabsContent>
 

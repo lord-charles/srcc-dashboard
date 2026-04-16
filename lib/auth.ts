@@ -1,4 +1,3 @@
-import axios from "axios";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { cookies } from "next/headers";
@@ -14,16 +13,30 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          const res = await axios.post(
+          const res = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
-              email: credentials?.email,
-              password: credentials?.password,
-              type: credentials?.type,
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: credentials?.email,
+                password: credentials?.password,
+                type: credentials?.type,
+              }),
             },
           );
 
-          const data = res.data;
+          if (!res.ok) {
+            const errorData = await res.json();
+            if (errorData?.code === "VERIFICATION_REQUIRED") {
+              throw new Error(JSON.stringify(errorData));
+            }
+            throw new Error(errorData?.message || "An unexpected error occurred.");
+          }
+
+          const data = await res.json();
           // Store token in cookie
           const cookieStore = await cookies();
           cookieStore.set("token", data.token, {
@@ -31,7 +44,7 @@ export const authOptions: NextAuthOptions = {
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
             path: "/",
-            expires: new Date(Date.now() + 12 * 60 * 60 * 1000), // 24 hours
+            expires: new Date(Date.now() + 12 * 60 * 60 * 1000), // 12 hours
           });
 
           if (res.status === 200 && data?.user) {
@@ -79,19 +92,11 @@ export const authOptions: NextAuthOptions = {
 
           return null;
         } catch (error: any) {
-          // Check for our custom verification error from the backend
-          if (error.response?.data?.code === "VERIFICATION_REQUIRED") {
-            // Pass the whole error object to the client by stringifying it.
-            // The client will parse this to identify the specific error.
-            throw new Error(JSON.stringify(error.response.data));
-          }
-
-          // Handle all other errors
-          const errorMessage =
-            error.response?.data?.message || "An unexpected error occurred.";
+          // The error thrown above might already be a stringified JSON if it's VERIFICATION_REQUIRED
+          const errorMessage = error.message || "An unexpected error occurred.";
+          
           console.error("Auth error:", {
             message: errorMessage,
-            status: error.response?.status,
             url: `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
           });
           throw new Error(errorMessage);
