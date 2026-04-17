@@ -14,10 +14,18 @@ export async function getMyImprest() {
       await handleUnauthorized();
     }
     console.error("Failed to fetch my imprest:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch my imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch my imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -46,10 +54,18 @@ export async function createImprest(data: CreateImprestData) {
       await handleUnauthorized();
     }
     console.error("Failed to create imprest:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to create imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to create imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -57,12 +73,12 @@ export async function createImprest(data: CreateImprestData) {
 interface ReceiptData {
   description: string;
   amount: number;
+  receiptUrl: string;
 }
 
 interface SubmitAccountingData {
   receipts: ReceiptData[];
   comments?: string;
-  receiptFiles: File[];
 }
 
 export async function submitImprestAccounting(
@@ -72,36 +88,10 @@ export async function submitImprestAccounting(
   try {
     const config = await getAxiosConfig();
 
-    // Create FormData for multipart/form-data request
-    const formData = new FormData();
-
-    // Convert receipts array to JSON string
-    formData.append("receipts", JSON.stringify(data.receipts));
-
-    if (data.comments) {
-      formData.append("comments", data.comments);
-    }
-
-    // Add receipt files
-    if (data.receiptFiles && data.receiptFiles.length > 0) {
-      data.receiptFiles.forEach((file) => {
-        formData.append("receiptFiles", file);
-      });
-    }
-
-    // Update config headers for multipart/form-data
-    const multipartConfig = {
-      ...config,
-      headers: {
-        ...config.headers,
-        "Content-Type": "multipart/form-data",
-      },
-    };
-
     const response = await axios.post<Imprest>(
       `${API_URL}/imprest/${id}/account`,
-      formData,
-      multipartConfig,
+      data,
+      config,
     );
     return { success: true as const, data: response.data };
   } catch (error: any) {
@@ -109,10 +99,18 @@ export async function submitImprestAccounting(
       await handleUnauthorized();
     }
     console.error("Error submitting imprest accounting:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to submit accounting";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to submit accounting";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -128,10 +126,18 @@ export async function getAllImprests() {
       await handleUnauthorized();
     }
     console.error("Error fetching imprests:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch imprests";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch imprests";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -149,10 +155,18 @@ export async function getMyImprests() {
       await handleUnauthorized();
     }
     console.error("Error fetching my imprests:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch my imprests";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch my imprests";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -170,18 +184,23 @@ export async function getImprestById(id: string) {
       await handleUnauthorized();
     }
     console.error(`Error fetching imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function approveImprestHOD(
-  id: string,
-  comments: string,
-) {
+export async function approveImprestHOD(id: string, comments: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(
@@ -195,18 +214,23 @@ export async function approveImprestHOD(
       await handleUnauthorized();
     }
     console.error(`Error approving imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to approve imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to approve imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function approveImprestAccountant(
-  id: string,
-  comments: string,
-) {
+export async function approveImprestAccountant(id: string, comments: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(
@@ -220,18 +244,23 @@ export async function approveImprestAccountant(
       await handleUnauthorized();
     }
     console.error(`Error approving imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to approve imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to approve imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function approveImprestAccounting(
-  id: string,
-  comments: string,
-) {
+export async function approveImprestAccounting(id: string, comments: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
@@ -245,18 +274,23 @@ export async function approveImprestAccounting(
       await handleUnauthorized();
     }
     console.error(`Error approving imprest accounting ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to approve accounting";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to approve accounting";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function rejectImprest(
-  id: string,
-  reason: string,
-) {
+export async function rejectImprest(id: string, reason: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(
@@ -270,10 +304,18 @@ export async function rejectImprest(
       await handleUnauthorized();
     }
     console.error(`Error rejecting imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to reject imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to reject imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -283,10 +325,7 @@ interface DisbursementData {
   comments?: string;
 }
 
-export async function disburseImprest(
-  id: string,
-  data: DisbursementData,
-) {
+export async function disburseImprest(id: string, data: DisbursementData) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(
@@ -300,10 +339,18 @@ export async function disburseImprest(
       await handleUnauthorized();
     }
     console.error(`Error disbursing imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to disburse imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to disburse imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -330,10 +377,18 @@ export async function acknowledgeImprestReceipt(
       await handleUnauthorized();
     }
     console.error(`Error acknowledging imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to acknowledge receipt";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to acknowledge receipt";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -360,18 +415,23 @@ export async function resolveImprestDispute(
       await handleUnauthorized();
     }
     console.error(`Error resolving dispute for imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to resolve dispute";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to resolve dispute";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function requestImprestRevision(
-  id: string,
-  reason: string,
-) {
+export async function requestImprestRevision(id: string, reason: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(
@@ -385,10 +445,18 @@ export async function requestImprestRevision(
       await handleUnauthorized();
     }
     console.error(`Error requesting revision for imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to request revision";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to request revision";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -402,10 +470,7 @@ interface UpdateImprestData {
   attachmentUrls?: string[];
 }
 
-export async function updateImprest(
-  id: string,
-  data: UpdateImprestData,
-) {
+export async function updateImprest(id: string, data: UpdateImprestData) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch<Imprest>(
@@ -419,10 +484,18 @@ export async function updateImprest(
       await handleUnauthorized();
     }
     console.error(`Error updating imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to update imprest";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update imprest";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -440,19 +513,27 @@ export async function acceptDisputeResolution(id: string) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Error accepting dispute resolution for imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to accept dispute resolution";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(
+      `Error accepting dispute resolution for imprest ${id}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to accept dispute resolution";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function requestAccountingRevision(
-  id: string,
-  reason: string,
-) {
+export async function requestAccountingRevision(id: string, reason: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.post<Imprest>(
@@ -465,11 +546,22 @@ export async function requestAccountingRevision(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Error requesting accounting revision for imprest ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to request accounting revision";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(
+      `Error requesting accounting revision for imprest ${id}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to request accounting revision";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }

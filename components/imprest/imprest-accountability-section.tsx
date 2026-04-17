@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   Info,
   MessageSquare,
-  Copy,
   ReceiptIcon,
   PlusCircle,
   Trash2,
@@ -39,13 +38,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { FileUpload } from "../ui/file-upload2";
+import { FileUpload } from "../ui/file-upload";
 import { Imprest } from "./imprest-dashboard";
 import { submitImprestAccounting } from "../../services/imprest.service";
+import { cloudinaryService } from "@/lib/cloudinary-service";
 
 interface Receipt {
   description: string;
   amount: number;
+  receiptUrl: string;
+  isUploading: boolean;
 }
 
 interface ImprestAccountabilityProps {
@@ -57,12 +59,14 @@ export function ImprestAccountabilitySection({
 }: ImprestAccountabilityProps) {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [comments, setComments] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const addReceiptRow = () => {
-    setReceipts([...receipts, { description: "", amount: 0 }]);
+    setReceipts([
+      ...receipts,
+      { description: "", amount: 0, receiptUrl: "", isUploading: false },
+    ]);
   };
 
   const removeReceiptRow = (index: number) => {
@@ -74,15 +78,53 @@ export function ImprestAccountabilitySection({
   const updateReceipt = (
     index: number,
     field: keyof Receipt,
-    value: string | number,
+    value: string | number | boolean,
   ) => {
-    const updatedReceipts = [...receipts];
-    updatedReceipts[index] = {
-      ...updatedReceipts[index],
-      [field]:
-        field === "amount" ? Number.parseFloat(value as string) || 0 : value,
-    };
-    setReceipts(updatedReceipts);
+    setReceipts((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]:
+          field === "amount" ? Number.parseFloat(value as string) || 0 : value,
+      };
+      return updated;
+    });
+  };
+
+  const handleReceiptFileUpload = async (index: number, files: File[]) => {
+    if (files.length === 0) return;
+    setReceipts((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], isUploading: true };
+      return updated;
+    });
+    try {
+      const url = await cloudinaryService.uploadFile(files[0]);
+      setReceipts((prev) => {
+        const updated = [...prev];
+        updated[index] = {
+          ...updated[index],
+          receiptUrl: url,
+          isUploading: false,
+        };
+        return updated;
+      });
+      toast({
+        title: "File uploaded",
+        description: "Receipt file uploaded successfully.",
+      });
+    } catch (error) {
+      setReceipts((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], isUploading: false };
+        return updated;
+      });
+      toast({
+        title: "Upload Failed",
+        description: "Could not upload receipt file.",
+        variant: "destructive",
+      });
+    }
   };
 
   const calculateTotal = () => {
@@ -116,14 +158,38 @@ export function ImprestAccountabilitySection({
       return;
     }
 
+    const missingFiles = receipts.some((r) => !r.receiptUrl);
+    if (missingFiles) {
+      toast({
+        variant: "destructive",
+        title: "Missing receipt files",
+        description: "Please upload a file for every receipt entry.",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
-      await submitImprestAccounting(imprest._id, {
-        receipts,
+      const result = await submitImprestAccounting(imprest._id, {
+        receipts: receipts.map(({ description, amount, receiptUrl }) => ({
+          description,
+          amount,
+          receiptUrl,
+        })),
         comments,
-        receiptFiles: files,
       });
+
+      if (!result.success) {
+        toast({
+          variant: "destructive",
+          title: "Submission failed",
+          description:
+            result.error ||
+            "An error occurred while submitting accountability.",
+        });
+        return;
+      }
 
       toast({
         title: "Accountability submitted",
@@ -136,7 +202,8 @@ export function ImprestAccountabilitySection({
         variant: "destructive",
         title: "Submission failed",
         description:
-          error || "An error occurred while submitting accountability.",
+          error?.message ||
+          "An error occurred while submitting accountability.",
       });
     } finally {
       setIsSubmitting(false);
@@ -316,8 +383,9 @@ export function ImprestAccountabilitySection({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[60%]">Description</TableHead>
-                    <TableHead className="w-[30%]">Amount (KES)</TableHead>
+                    <TableHead className="w-[35%]">Description</TableHead>
+                    <TableHead className="w-[20%]">Amount (KES)</TableHead>
+                    <TableHead className="w-[35%]">Receipt File</TableHead>
                     <TableHead className="w-[10%] text-right">
                       Actions
                     </TableHead>
@@ -327,7 +395,7 @@ export function ImprestAccountabilitySection({
                   {receipts.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={3}
+                        colSpan={4}
                         className="text-center py-6 text-muted-foreground"
                       >
                         No receipts added. Click &quot;Add Receipt&quot; to
@@ -364,6 +432,46 @@ export function ImprestAccountabilitySection({
                             min="0"
                           />
                         </TableCell>
+                        <TableCell>
+                          {receipt.isUploading ? (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <span className="animate-spin h-3 w-3 border-2 border-t-transparent border-emerald-500 rounded-full inline-block" />
+                              Uploading...
+                            </p>
+                          ) : receipt.receiptUrl ? (
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={receipt.receiptUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-emerald-600 hover:underline font-medium"
+                              >
+                                ✓ Uploaded
+                              </a>
+                              <label className="text-xs text-muted-foreground hover:text-foreground cursor-pointer underline">
+                                Replace
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const files = Array.from(
+                                      e.target.files || [],
+                                    );
+                                    if (files.length > 0)
+                                      handleReceiptFileUpload(index, files);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <FileUpload
+                              onChange={(files) =>
+                                handleReceiptFileUpload(index, files)
+                              }
+                            />
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <TooltipProvider>
                             <Tooltip>
@@ -389,7 +497,7 @@ export function ImprestAccountabilitySection({
                   {receipts.length > 0 && (
                     <TableRow className="bg-muted/20">
                       <TableCell className="font-medium">Total</TableCell>
-                      <TableCell colSpan={2} className="font-medium">
+                      <TableCell colSpan={3} className="font-medium">
                         {new Intl.NumberFormat("en-US", {
                           style: "currency",
                           currency: "KES",
@@ -402,48 +510,22 @@ export function ImprestAccountabilitySection({
             </div>
           </div>
 
-          {/* File Upload Section */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <Label
-                htmlFor="receipt-files"
-                className="text-base font-medium flex items-center gap-2 mb-4"
-              >
-                <ReceiptIcon className="h-4 w-4 text-emerald-500" />
-                Receipt Attachments
-              </Label>
-              <FileUpload
-                value={files}
-                onChange={setFiles}
-                maxFiles={10}
-                maxSize={10 * 1024 * 1024} // 10MB
-                acceptedTypes={[
-                  "application/pdf",
-                  "image/jpeg",
-                  "image/png",
-                  "image/heic",
-                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                  "application/vnd.ms-excel",
-                ]}
-              />
-            </div>
-
-            <div>
-              <Label
-                htmlFor="comments"
-                className="text-base font-medium flex items-center gap-2 mb-4"
-              >
-                <MessageSquare className="h-4 w-4 text-emerald-500" />
-                Additional Comments
-              </Label>
-              <Textarea
-                id="comments"
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                placeholder="Add any additional information or explanation about your receipts..."
-                className="min-h-[225px]"
-              />
-            </div>
+          {/* Comments Section */}
+          <div className="mt-6">
+            <Label
+              htmlFor="comments"
+              className="text-base font-medium flex items-center gap-2 mb-4"
+            >
+              <MessageSquare className="h-4 w-4 text-emerald-500" />
+              Additional Comments
+            </Label>
+            <Textarea
+              id="comments"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              placeholder="Add any additional information or explanation about your receipts..."
+              className="min-h-[120px]"
+            />
           </div>
 
           {/* Action Buttons */}
@@ -453,7 +535,11 @@ export function ImprestAccountabilitySection({
               size="sm"
               className="text-xs h-8 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-700 dark:hover:bg-emerald-600"
               onClick={handleSubmit}
-              disabled={isSubmitting || receipts.length === 0}
+              disabled={
+                isSubmitting ||
+                receipts.length === 0 ||
+                receipts.some((r) => r.isUploading)
+              }
             >
               {isSubmitting ? (
                 <>
