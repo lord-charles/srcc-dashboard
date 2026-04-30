@@ -41,7 +41,7 @@ export function DispatchLpoDialog({
     if (!pdfContainerRef.current) throw new Error("Template mapping failed.");
 
     const opt = {
-      margin: 0.5,
+      margin: 0.3,
       filename: `${lpo?.lpoNo.replace(/\//g, "_")}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
@@ -61,7 +61,7 @@ export function DispatchLpoDialog({
       setIsProcessing(true);
       if (!pdfContainerRef.current) return;
       const opt = {
-        margin: 0.5,
+        margin: 0.3,
         filename: `${lpo?.lpoNo.replace(/\//g, "_")}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
@@ -176,11 +176,11 @@ export function DispatchLpoDialog({
         </DialogContent>
       </Dialog>
 
-      {/* Hidden LPO Template for html2pdf ingestion */}
-      <div className="hidden">
+      {/* LPO Template for html2pdf ingestion - positioned off-screen instead of display:none to ensure layout is computed */}
+      <div className="absolute left-[-9999px] top-0 pointer-events-none">
         <div
           ref={pdfContainerRef}
-          className="p-8 text-black bg-white w-[800px] border"
+          className="p-8 text-black bg-white w-[720px] border"
           style={{ fontFamily: "Arial, sans-serif" }}
         >
           <div className="flex justify-between items-center mb-6">
@@ -360,7 +360,7 @@ export function DispatchLpoDialog({
               <img
                 src="/srcc/charles_signature.jpg"
                 alt="Charles Signature"
-                className="absolute -top-12 left-10 w-48 h-auto object-contain mix-blend-multiply"
+                className="absolute -top-8 left-36 w-24 h-auto object-contain mix-blend-multiply"
                 style={{ mixBlendMode: "multiply" }}
               />
               <span>
