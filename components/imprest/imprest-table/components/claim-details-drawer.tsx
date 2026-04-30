@@ -32,6 +32,8 @@ import {
   BarChart3,
   Mail,
   Shield,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -147,6 +149,47 @@ const getInitials = (firstName: string, lastName: string): string => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 };
 
+const CopyButton = ({ value }: { value: string }) => {
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      toast({
+        title: "Copied!",
+        description: "Value copied to clipboard.",
+      });
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to copy text.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 ml-2 opacity-0 group-hover:opacity-100 transition-opacity"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleCopy();
+      }}
+    >
+      {copied ? (
+        <Check className="h-3 w-3 text-green-500" />
+      ) : (
+        <Copy className="h-3 w-3" />
+      )}
+    </Button>
+  );
+};
+
 export function ClaimDetailsDrawer({
   claim,
   trigger,
@@ -159,7 +202,7 @@ export function ClaimDetailsDrawer({
   const [activeTab, setActiveTab] = useState("overview");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(
-    null
+    null,
   );
   const { toast } = useToast();
 
@@ -273,7 +316,7 @@ export function ClaimDetailsDrawer({
                     variant="outline"
                     className={cn(
                       "border px-3 py-1.5 flex items-center",
-                      getStatusColor(claim.status)
+                      getStatusColor(claim.status),
                     )}
                   >
                     {getStatusIcon(claim.status)}
@@ -357,21 +400,36 @@ export function ClaimDetailsDrawer({
                                     <Building className="h-3.5 w-3.5 mr-1.5" />
                                     Project
                                   </div>
-                                  <p className="font-semibold text-lg">
-                                    {claim.projectId.name}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {claim.projectId.description}
-                                  </p>
+                                  <div className="flex items-center group">
+                                    <p className="font-semibold text-lg">
+                                      {claim.projectId.name}
+                                    </p>
+                                    <CopyButton value={claim.projectId.name} />
+                                  </div>
+                                  <div className="flex items-start group">
+                                    <p className="text-sm text-muted-foreground">
+                                      {claim.projectId.description}
+                                    </p>
+                                    <CopyButton
+                                      value={claim.projectId.description}
+                                    />
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center text-sm font-medium text-muted-foreground">
                                     <Tag className="h-3.5 w-3.5 mr-1.5" />
                                     Contract Number
                                   </div>
-                                  <p className="font-semibold text-lg">
-                                    {claim.contractId?.contractNumber}
-                                  </p>
+                                  <div className="flex items-center group">
+                                    <p className="font-semibold text-lg">
+                                      {claim.contractId?.contractNumber}
+                                    </p>
+                                    <CopyButton
+                                      value={
+                                        claim.contractId?.contractNumber || ""
+                                      }
+                                    />
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center text-sm font-medium text-muted-foreground">
@@ -381,7 +439,7 @@ export function ClaimDetailsDrawer({
                                   <p className="font-semibold text-lg">
                                     {formatCurrency(
                                       claim.contractId?.contractValue || 0,
-                                      claim?.currency
+                                      claim?.currency,
                                     )}
                                   </p>
                                 </div>
@@ -393,7 +451,7 @@ export function ClaimDetailsDrawer({
                                   <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
                                     {formatCurrency(
                                       claim?.amount || 0,
-                                      claim?.currency
+                                      claim?.currency,
                                     )}
                                   </p>
                                 </div>
@@ -435,7 +493,7 @@ export function ClaimDetailsDrawer({
                                   <div
                                     className={cn(
                                       "px-3 py-2 rounded-md flex items-center font-medium",
-                                      getStatusColor(claim.status)
+                                      getStatusColor(claim.status),
                                     )}
                                   >
                                     {getStatusIcon(claim.status)}
@@ -454,7 +512,7 @@ export function ClaimDetailsDrawer({
                                         "font-medium",
                                         isDeadlinePassed
                                           ? "text-red-600 dark:text-red-400"
-                                          : ""
+                                          : "",
                                       )}
                                     >
                                       {formatDate(claim.currentLevelDeadline)}
@@ -535,7 +593,7 @@ export function ClaimDetailsDrawer({
                                         <span className="text-xs font-semibold inline-block text-emerald-600">
                                           {formatCurrency(
                                             milestone.currentClaim,
-                                            claim.currency
+                                            claim.currency,
                                           )}
                                         </span>
                                       </div>
@@ -559,7 +617,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-medium text-lg">
                                         {formatCurrency(
                                           milestone.maxClaimableAmount,
-                                          claim.currency
+                                          claim.currency,
                                         )}
                                       </p>
                                     </div>
@@ -571,7 +629,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-medium text-lg text-emerald-600 dark:text-emerald-400">
                                         {formatCurrency(
                                           milestone.currentClaim,
-                                          claim.currency
+                                          claim.currency,
                                         )}
                                       </p>
                                     </div>
@@ -583,7 +641,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-medium text-lg">
                                         {formatCurrency(
                                           milestone.remainingClaimable,
-                                          claim.currency
+                                          claim.currency,
                                         )}
                                       </p>
                                     </div>
@@ -619,7 +677,7 @@ export function ClaimDetailsDrawer({
                                   <AvatarFallback className="text-2xl">
                                     {getInitials(
                                       claim.claimantId.firstName,
-                                      claim.claimantId.lastName
+                                      claim.claimantId.lastName,
                                     )}
                                   </AvatarFallback>
                                 </Avatar>
@@ -642,9 +700,14 @@ export function ClaimDetailsDrawer({
                                       <Mail className="h-3.5 w-3.5 mr-1.5" />
                                       Email Address
                                     </div>
-                                    <p className="font-medium">
-                                      {claim.claimantId.email}
-                                    </p>
+                                    <div className="flex items-center group">
+                                      <p className="font-medium">
+                                        {claim.claimantId.email}
+                                      </p>
+                                      <CopyButton
+                                        value={claim.claimantId.email}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
 
@@ -661,7 +724,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-semibold text-lg text-blue-700 dark:text-blue-400">
                                         {formatCurrency(
                                           claim.amount,
-                                          claim.currency
+                                          claim.currency,
                                         )}
                                       </p>
                                     </div>
@@ -728,15 +791,15 @@ export function ClaimDetailsDrawer({
                                     {currentLevel === "finance"
                                       ? "Finance Approval Required"
                                       : currentLevel === "checker"
-                                      ? "Checker Approval Required"
-                                      : "Manager Approval Required"}
+                                        ? "Checker Approval Required"
+                                        : "Manager Approval Required"}
                                   </h3>
                                   <p className="text-sm text-muted-foreground mb-4">
                                     {currentLevel === "finance"
                                       ? "As a finance approver, please review the claim details and financial information before making your decision."
                                       : currentLevel === "checker"
-                                      ? "As a checker, please verify all claim details and milestone information before approving or rejecting."
-                                      : "As a manager, please review this claim and provide your approval or rejection with appropriate comments."}
+                                        ? "As a checker, please verify all claim details and milestone information before approving or rejecting."
+                                        : "As a manager, please review this claim and provide your approval or rejection with appropriate comments."}
                                   </p>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -747,7 +810,7 @@ export function ClaimDetailsDrawer({
                                       <p className="font-semibold text-lg text-purple-600 dark:text-purple-400">
                                         {formatCurrency(
                                           claim?.amount || 0,
-                                          claim?.currency
+                                          claim?.currency,
                                         )}
                                       </p>
                                     </div>
@@ -760,7 +823,7 @@ export function ClaimDetailsDrawer({
                                           "font-medium",
                                           isDeadlinePassed
                                             ? "text-red-600 dark:text-red-400"
-                                            : ""
+                                            : "",
                                         )}
                                       >
                                         {formatDate(claim.currentLevelDeadline)}
@@ -775,8 +838,8 @@ export function ClaimDetailsDrawer({
                                     {currentLevel === "finance"
                                       ? "Finance Approval Comments"
                                       : currentLevel === "checker"
-                                      ? "Checker Approval Comments"
-                                      : "Manager Approval Comments"}
+                                        ? "Checker Approval Comments"
+                                        : "Manager Approval Comments"}
                                   </label>
                                   <Textarea
                                     placeholder="Enter your comments regarding this claim approval or rejection..."
@@ -940,7 +1003,7 @@ export function ClaimDetailsDrawer({
                                                         entry.performedBy
                                                           .firstName,
                                                         entry.performedBy
-                                                          .lastName
+                                                          .lastName,
                                                       )
                                                     : "UN"}
                                                 </AvatarFallback>
@@ -1005,7 +1068,7 @@ export function ClaimDetailsDrawer({
                                         <div className="text-sm text-muted-foreground">
                                           {formatDate(
                                             claim.approval.checkerApproval
-                                              .approvedAt
+                                              .approvedAt,
                                           )}
                                         </div>
                                       </div>
@@ -1040,7 +1103,7 @@ export function ClaimDetailsDrawer({
                                         <div className="text-sm text-muted-foreground">
                                           {formatDate(
                                             claim.approval.managerApproval
-                                              .approvedAt
+                                              .approvedAt,
                                           )}
                                         </div>
                                       </div>
@@ -1075,7 +1138,7 @@ export function ClaimDetailsDrawer({
                                         <div className="text-sm text-muted-foreground">
                                           {formatDate(
                                             claim.approval.financeApproval
-                                              .approvedAt
+                                              .approvedAt,
                                           )}
                                         </div>
                                       </div>

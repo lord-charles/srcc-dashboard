@@ -52,6 +52,8 @@ import {
   BarChart3,
   Mail,
   Shield,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -92,6 +94,47 @@ const formatCurrency = (amount: number, currency: string = "KES") => {
     minimumFractionDigits: 0,
   }).format(amount);
 };
+
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "Copied!",
+        description: "Value copied to clipboard",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-6 w-6 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+      onClick={handleCopy}
+    >
+      {copied ? (
+        <Check className="h-3 w-3 text-green-500" />
+      ) : (
+        <Copy className="h-3 w-3" />
+      )}
+    </Button>
+  );
+}
+
 
 const getStatusColor = (status: ClaimStatus) => {
   switch (status) {
@@ -510,21 +553,30 @@ export function ClaimDetailsDrawer({
                                     <Building className="h-3.5 w-3.5 mr-1.5" />
                                     Project
                                   </div>
-                                  <p className="font-semibold text-lg">
-                                    {claim.projectId.name}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {claim.projectId.description}
-                                  </p>
+                                  <div className="flex items-center group">
+                                    <p className="font-semibold text-lg">
+                                      {claim.projectId.name}
+                                    </p>
+                                    <CopyButton value={claim.projectId.name} />
+                                  </div>
+                                  <div className="flex items-start group">
+                                    <p className="text-sm text-muted-foreground">
+                                      {claim.projectId.description}
+                                    </p>
+                                    <CopyButton value={claim.projectId.description} />
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center text-sm font-medium text-muted-foreground">
                                     <Tag className="h-3.5 w-3.5 mr-1.5" />
                                     Contract Number
                                   </div>
-                                  <p className="font-semibold text-lg">
-                                    {claim.contractId?.contractNumber}
-                                  </p>
+                                  <div className="flex items-center group">
+                                    <p className="font-semibold text-lg">
+                                      {claim.contractId?.contractNumber}
+                                    </p>
+                                    <CopyButton value={claim.contractId?.contractNumber || ""} />
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center text-sm font-medium text-muted-foreground">
@@ -922,9 +974,12 @@ export function ClaimDetailsDrawer({
                                       <Mail className="h-3.5 w-3.5 mr-1.5" />
                                       Email Address
                                     </div>
-                                    <p className="font-medium">
-                                      {claim.claimantId?.email || ""}
-                                    </p>
+                                    <div className="flex items-center group">
+                                      <p className="font-medium">
+                                        {claim.claimantId?.email || ""}
+                                      </p>
+                                      <CopyButton value={claim.claimantId?.email || ""} />
+                                    </div>
                                   </div>
                                 </div>
 
@@ -993,9 +1048,12 @@ export function ClaimDetailsDrawer({
                                     <Tag className="h-3.5 w-3.5 mr-1.5" />
                                     Contract Number
                                   </div>
-                                  <p className="font-semibold text-lg">
-                                    {claim.contractId?.contractNumber || "N/A"}
-                                  </p>
+                                  <div className="flex items-center group">
+                                    <p className="font-semibold text-lg">
+                                      {claim.contractId?.contractNumber || "N/A"}
+                                    </p>
+                                    <CopyButton value={claim.contractId?.contractNumber || ""} />
+                                  </div>
                                 </div>
                                 <div className="space-y-1">
                                   <div className="flex items-center text-sm font-medium text-muted-foreground">
