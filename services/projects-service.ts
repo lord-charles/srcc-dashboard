@@ -141,7 +141,7 @@ export async function addCoachManager(
   try {
     const config = await getAxiosConfig();
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/ coach-managers`,
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/coach-managers`,
       { userId, responsibilities },
       config,
     );
