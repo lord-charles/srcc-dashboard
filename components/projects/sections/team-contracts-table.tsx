@@ -158,21 +158,22 @@ const ContractsTable = ({
   };
 
   const filteredContracts = useMemo(() => {
-    return contracts.filter(
-      (contract) =>
-        contract.contractNumber
-          .toLowerCase()
-          .includes(searchTerm?.toLowerCase()) ||
-        contract?.description
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase()) ||
-        contract?.contractedUserId?.firstName
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase()) ||
-        contract?.contractedUserId?.lastName
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase()),
-    );
+    return contracts.filter((contract) => {
+      const numberMatch = contract.contractNumber
+        ?.toLowerCase()
+        ?.includes(searchTerm?.toLowerCase() || "");
+      const descMatch = contract.description
+        ?.toLowerCase()
+        ?.includes(searchTerm?.toLowerCase() || "");
+      const firstNameMatch = contract.contractedUserId?.firstName
+        ?.toLowerCase()
+        ?.includes(searchTerm?.toLowerCase() || "");
+      const lastNameMatch = contract.contractedUserId?.lastName
+        ?.toLowerCase()
+        ?.includes(searchTerm?.toLowerCase() || "");
+
+      return numberMatch || descMatch || firstNameMatch || lastNameMatch;
+    });
   }, [contracts, searchTerm]);
 
   // Group contracts by milestone
@@ -234,7 +235,7 @@ const ContractsTable = ({
         startDate: formatDateToISO(values.startDate),
         endDate: formatDateToISO(values.endDate),
         projectId: selectedContract.projectId,
-        contractedUserId: selectedContract.contractedUserId._id,
+        contractedUserId: selectedContract.contractedUserId?._id,
         status: values.status,
       };
 
@@ -321,7 +322,7 @@ const ContractsTable = ({
     setContractToDelete(contract);
     setDeleteDialogOpen(true);
   };
-
+console.log(groupedContracts)
   return (
     <Card className="w-full p-2">
       <div className="flex justify-between items-center pb-4">
@@ -411,10 +412,12 @@ const ContractsTable = ({
                           </TableCell>
                           <TableCell>
                             <div className="font-medium">
-                              {`${contract.contractedUserId?.firstName} ${contract.contractedUserId?.lastName}`}
+                              {contract.contractedUserId
+                                ? `${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName || ""}`.trim()
+                                : "Unknown Consultant"}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {contract.contractedUserId?.email}
+                              {contract.contractedUserId?.email || "No email"}
                             </div>
                           </TableCell>
                           <TableCell>{`${contract.contractValue.toLocaleString()} ${
@@ -596,21 +599,19 @@ const ContractsTable = ({
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-blue-600">
-                            {selectedContract.contractedUserId.firstName.charAt(
-                              0,
-                            )}
-                            {selectedContract.contractedUserId.lastName.charAt(
-                              0,
-                            )}
+                            {selectedContract.contractedUserId
+                              ? `${selectedContract.contractedUserId.firstName?.charAt(0) || ""}${selectedContract.contractedUserId.lastName?.charAt(0) || ""}`
+                              : "U"}
                           </span>
                         </div>
                         <div>
                           <p className="font-medium">
-                            {selectedContract.contractedUserId.firstName}{" "}
-                            {selectedContract.contractedUserId.lastName}
+                            {selectedContract.contractedUserId
+                              ? `${selectedContract.contractedUserId.firstName} ${selectedContract.contractedUserId.lastName || ""}`.trim()
+                              : "Unknown Consultant"}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            {selectedContract.contractedUserId.email}
+                            {selectedContract.contractedUserId?.email || "No email"}
                           </p>
                         </div>
                       </div>
@@ -731,7 +732,11 @@ const ContractsTable = ({
                   <span className="text-sm font-medium mr-2">
                     Contracted User:
                   </span>
-                  <span className="text-sm">{`${contractToDelete?.contractedUserId?.firstName} ${contractToDelete?.contractedUserId?.lastName}`}</span>
+                  <span className="text-sm">
+                    {contractToDelete?.contractedUserId
+                      ? `${contractToDelete.contractedUserId.firstName} ${contractToDelete.contractedUserId.lastName || ""}`.trim()
+                      : "Unknown Consultant"}
+                  </span>
                 </div>
               </div>
             </div>

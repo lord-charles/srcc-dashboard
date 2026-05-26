@@ -2,12 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { DollarSign, TrendingUp, Receipt, Store } from "lucide-react";
+import { DollarSign, TrendingUp, Receipt, Store, ClipboardList, ClipboardCheck } from "lucide-react";
 import { Project } from "@/types/project";
 import { formatCurrency } from "../project-stat-cards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InvoicesSection } from "./invoices-section";
 import { LpoSection } from "./lpo-section";
+import { ProjectPaymentRequestsSection } from "./project-payment-requests-section";
+import { ProjectPaymentVouchersSection } from "./project-payment-vouchers-section";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -43,7 +45,7 @@ export const FinancialSection: React.FC<FinancialSectionProps> = ({
 
   useEffect(() => {
     const tab = searchParams.get("financialtab");
-    if (tab && ["overview", "invoices", "lpos"].includes(tab)) {
+    if (tab && ["overview", "invoices", "lpos", "payment-requests", "payment-vouchers"].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -60,7 +62,7 @@ export const FinancialSection: React.FC<FinancialSectionProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 mb-4">
+      <TabsList className="grid w-full grid-cols-5 mb-4">
         <TabsTrigger value="overview">
           <TrendingUp className="w-4 h-4 mr-2" />
           Overview
@@ -72,6 +74,14 @@ export const FinancialSection: React.FC<FinancialSectionProps> = ({
         <TabsTrigger value="lpos">
           <Store className="w-4 h-4 mr-2" />
           Suppliers & LPOs
+        </TabsTrigger>
+        <TabsTrigger value="payment-requests">
+          <ClipboardList className="w-4 h-4 mr-2" />
+          Payment Requests
+        </TabsTrigger>
+        <TabsTrigger value="payment-vouchers">
+          <ClipboardCheck className="w-4 h-4 mr-2" />
+          Payment Vouchers
         </TabsTrigger>
       </TabsList>
 
@@ -157,6 +167,21 @@ export const FinancialSection: React.FC<FinancialSectionProps> = ({
         <LpoSection
           projectId={projectData._id}
           projectCurrency={projectData.currency}
+          projectName={projectData.name}
+        />
+      </TabsContent>
+
+      <TabsContent value="payment-requests">
+        <ProjectPaymentRequestsSection
+          projectId={projectData._id}
+          projectName={projectData.name}
+        />
+      </TabsContent>
+
+      <TabsContent value="payment-vouchers">
+        <ProjectPaymentVouchersSection
+          projectId={projectData._id}
+          projectName={projectData.name}
         />
       </TabsContent>
     </Tabs>

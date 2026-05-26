@@ -852,12 +852,15 @@ export function MyContractDetailsDrawer({
                         <CardContent>
                           <div className="flex items-center space-x-4 mb-6">
                             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-semibold text-primary">
-                              {contract.contractedUserId.firstName[0]}
-                              {contract.contractedUserId.lastName[0]}
+                              {contract.contractedUserId
+                                ? `${contract.contractedUserId.firstName?.charAt(0) || ""}${contract.contractedUserId.lastName?.charAt(0) || ""}`
+                                : "C"}
                             </div>
                             <div>
                               <h3 className="text-xl font-semibold">
-                                {`${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`}
+                                {contract.contractedUserId
+                                  ? `${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName || ""}`.trim()
+                                  : "Unknown Contractor"}
                               </h3>
                               <p className="text-sm text-muted-foreground">
                                 Contractor
@@ -868,12 +871,12 @@ export function MyContractDetailsDrawer({
                           <div className="space-y-4">
                             <div className="flex items-center">
                               <Mail className="w-5 h-5 mr-2 text-muted-foreground" />
-                              <span>{contract.contractedUserId.email}</span>
+                              <span>{contract.contractedUserId?.email || "No email"}</span>
                             </div>
                             <div className="flex items-center">
                               <Phone className="w-5 h-5 mr-2 text-muted-foreground" />
                               <span>
-                                {contract.contractedUserId.phoneNumber}
+                                {contract.contractedUserId?.phoneNumber || "No phone number"}
                               </span>
                             </div>
                           </div>

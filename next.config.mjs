@@ -1,5 +1,3 @@
-import withPWA from "@ducanh2912/next-pwa";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   redirects: async () => {
@@ -29,23 +27,4 @@ const nextConfig = {
   },
 };
 
-const withPWAConfig = withPWA({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  buildExcludes: ["app-build-manifest.json"],
-  runtimeCaching: [
-    {
-      urlPattern: /^https?.*/,
-      handler: "NetworkFirst",
-      options: {
-        cacheName: "offlineCache",
-        expiration: {
-          maxEntries: 200,
-        },
-      },
-    },
-  ],
-});
-
-export default withPWAConfig(nextConfig);
+export default nextConfig;

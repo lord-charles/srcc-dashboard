@@ -796,7 +796,9 @@ const MyContracts = ({
                           </div>
                           <div className="flex items-center text-gray-700 dark:text-gray-300">
                             <User className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                            <span>{`${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`}</span>
+                            <span>{contract.contractedUserId
+                              ? `${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName || ""}`.trim()
+                              : "Unknown Contractor"}</span>
                           </div>
                           <div className="flex items-center text-gray-700 dark:text-gray-300">
                             <Calendar className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0" />

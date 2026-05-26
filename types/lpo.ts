@@ -43,6 +43,17 @@ export interface Lpo {
     firstName: string;
     lastName: string;
   };
+  isDispatched?: boolean;
+  dispatchHistory?: Array<{
+    dispatchedAt: string;
+    ccEmails: string[];
+    sentBy: {
+      _id: string;
+      firstName: string;
+      lastName: string;
+      email?: string;
+    };
+  }>;
   createdAt: string;
   updatedAt: string;
 }

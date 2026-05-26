@@ -142,6 +142,26 @@ export const columns: ColumnDef<Lpo>[] = [
     },
   },
   {
+    accessorKey: "isDispatched",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Dispatch Status" />
+    ),
+    cell: ({ row }) => {
+      const isDispatched = row.original.isDispatched;
+      return (
+        <Badge
+          className={
+            isDispatched
+              ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-800"
+              : "bg-slate-100 text-slate-800 dark:bg-slate-900/40 dark:text-slate-300 border-slate-200 dark:border-slate-800"
+          }
+        >
+          {isDispatched ? "Dispatched" : "Not Dispatched"}
+        </Badge>
+      );
+    },
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />

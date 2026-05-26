@@ -14,6 +14,7 @@ import {
   List,
   Settings,
   Truck,
+  Receipt,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -127,6 +128,21 @@ const data = {
       ],
     },
     {
+      title: "Payment Management",
+      url: "#",
+      icon: "Receipt",
+      items: [
+        {
+          title: "Payment Requests",
+          url: "/payment-requests",
+        },
+        {
+          title: "Payment Vouchers",
+          url: "/payment-vouchers",
+        },
+      ],
+    },
+    {
       title: "Settings",
       url: "/settings",
       icon: "Settings",
@@ -224,6 +240,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 return <BarChart2 {...iconProps} />;
                               case "Truck":
                                 return <Truck {...iconProps} />;
+                              case "Receipt":
+                                return <Receipt {...iconProps} />;
                               case "Settings":
                                 return <Settings {...iconProps} />;
                               default:

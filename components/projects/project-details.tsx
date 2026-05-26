@@ -218,6 +218,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             />
             Claims
           </TabsTrigger>
+
         </TabsList>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
@@ -334,6 +335,8 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
           projectName={projectData.name}
         />
       </TabsContent>
+
+
     </Tabs>
   );
 };

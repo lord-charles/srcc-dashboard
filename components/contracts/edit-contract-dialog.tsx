@@ -166,8 +166,10 @@ export function EditContractDialog({
 
   const contractDataForTemplate = {
     projectName: (contract as any)?.projectId?.name || "Project",
-    teamMemberName: `${contract.contractedUserId.firstName} ${contract.contractedUserId.lastName}`,
-    teamMemberEmail: contract.contractedUserId.email,
+    teamMemberName: contract.contractedUserId
+      ? `${contract.contractedUserId.firstName || ""} ${contract.contractedUserId.lastName || ""}`.trim()
+      : "Unknown Consultant",
+    teamMemberEmail: contract.contractedUserId?.email || "",
     contractValue: form.watch("contractValue") || 0,
     currency: form.watch("currency") || "KES",
     startDate: form.watch("startDate") || "",
@@ -178,8 +180,8 @@ export function EditContractDialog({
     coachRate: undefined,
     coachRateUnit: undefined,
     coachTitle: "Mr/Ms",
-    coachFirstName: contract.contractedUserId.firstName,
-    coachLastName: contract.contractedUserId.lastName,
+    coachFirstName: contract.contractedUserId?.firstName || "",
+    coachLastName: contract.contractedUserId?.lastName || "",
   };
 
   return (

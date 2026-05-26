@@ -51,7 +51,7 @@ export function DataTableRowActions({
             View Details
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <Link href={`/projects/${lpo.projectId?._id}?tab=lpo`}>
+          <Link href={`/projects/${lpo.projectId?._id}?financialtab=lpos&tab=financial`}>
             <DropdownMenuItem>
               <ExternalLink className="mr-2 h-4 w-4" />
               Go to Project LPOs

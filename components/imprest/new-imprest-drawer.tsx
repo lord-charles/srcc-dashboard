@@ -493,11 +493,10 @@ export function NewImprestDrawer({
                                 Detailed explanation of the imprest request
                               </span>
                               <span
-                                className={`text-xs ${
-                                  field.value.length > 450
+                                className={`text-xs ${field.value.length > 450
                                     ? "text-amber-600"
                                     : "text-muted-foreground"
-                                }`}
+                                  }`}
                               >
                                 {field.value.length}/500
                               </span>

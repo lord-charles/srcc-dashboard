@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   XCircle,
   Plus,
+  CreditCard,
 } from "lucide-react";
 import { getLposByProject, updateLpoStatus } from "@/services/lpo.service";
 import { Lpo } from "@/types/lpo";
@@ -26,15 +27,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "next-auth/react";
 import { DispatchLpoDialog } from "./dispatch-lpo-dialog";
+import { RaisePaymentRequestDrawer } from "@/components/payment-requests/raise-payment-request-drawer";
 
 interface LpoSectionProps {
   projectId: string;
   projectCurrency: string;
+  projectName?: string;
 }
 
 export const LpoSection: React.FC<LpoSectionProps> = ({
   projectId,
   projectCurrency,
+  projectName = "",
 }) => {
   const { toast } = useToast();
   const { data: session } = useSession();
@@ -46,6 +50,8 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
   const [lpos, setLpos] = useState<Lpo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dispatchLpoData, setDispatchLpoData] = useState<Lpo | null>(null);
+  const [raiseRequestLpo, setRaiseRequestLpo] = useState<Lpo | null>(null);
+  const [refreshRequestsKey, setRefreshRequestsKey] = useState(0);
 
   useEffect(() => {
     loadLpos();
@@ -259,6 +265,12 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
                             <FileDown className="mr-2 h-4 w-4" /> Download /
                             Dispatch
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setRaiseRequestLpo(lpo)}
+                            className="text-primary focus:text-primary"
+                          >
+                            <CreditCard className="mr-2 h-4 w-4 text-primary" /> Raise Payment Request
+                          </DropdownMenuItem>
                         </>
                       )}
                     </DropdownMenuContent>
@@ -278,6 +290,21 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
           }}
           lpo={dispatchLpoData}
           projectCurrency={projectCurrency}
+        />
+      )}
+
+      {raiseRequestLpo && (
+        <RaisePaymentRequestDrawer
+          open={!!raiseRequestLpo}
+          onOpenChange={(open) => {
+            if (!open) setRaiseRequestLpo(null);
+          }}
+          lpo={raiseRequestLpo}
+          projectId={projectId}
+          onSuccess={() => {
+            loadLpos();
+            setRefreshRequestsKey((prev) => prev + 1);
+          }}
         />
       )}
     </div>

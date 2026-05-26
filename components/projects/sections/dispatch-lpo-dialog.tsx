@@ -125,7 +125,7 @@ export function DispatchLpoDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>Dispatch LPO {lpo.lpoNo}</DialogTitle>
             <DialogDescription>
@@ -133,6 +133,29 @@ export function DispatchLpoDialog({
               ({lpo.supplierId?.email}).
             </DialogDescription>
           </DialogHeader>
+          {lpo.isDispatched && (
+            <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 p-3 rounded-lg flex flex-col gap-1.5 text-xs">
+              <span className="font-bold flex items-center gap-1 text-amber-900 dark:text-amber-200">
+                ⚠️ Warning: Already Dispatched
+              </span>
+              <span>
+                This LPO has already been emailed to the supplier. You can resend it below, but please check the dispatch log to avoid duplicates.
+              </span>
+              {lpo.dispatchHistory && lpo.dispatchHistory.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-amber-200/50 dark:border-amber-900/30 space-y-1.5 max-h-[100px] overflow-y-auto">
+                  <p className="font-semibold text-[10px] uppercase tracking-wider text-amber-900/70 dark:text-amber-400">Dispatch Log:</p>
+                  {lpo.dispatchHistory.map((h, i) => (
+                    <div key={i} className="text-[11px] leading-tight">
+                      <strong>{new Date(h.dispatchedAt).toLocaleString()}</strong> by {h.sentBy?.firstName} {h.sentBy?.lastName}
+                      {h.ccEmails && h.ccEmails.length > 0 && (
+                        <div className="text-[10px] text-amber-700/80 dark:text-amber-400/80">CC: {h.ccEmails.join(", ")}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="cc">CC Emails (comma separated)</Label>
@@ -170,7 +193,7 @@ export function DispatchLpoDialog({
               {isProcessing && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               )}
-              Send Email
+              {lpo.isDispatched ? "Resend Email" : "Send Email"}
             </Button>
           </div>
         </DialogContent>
