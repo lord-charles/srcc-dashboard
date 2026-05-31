@@ -37,7 +37,7 @@ export default async function NewLpoPage({
     return (
       <DashboardProvider>
         <Header />
-        <div className="py-4">
+        <div className="p-4">
           <LpoForm projectId={project._id} projectCurrency={project.currency} />
         </div>
       </DashboardProvider>

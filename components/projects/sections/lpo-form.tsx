@@ -59,6 +59,11 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
     { description: "", noOfDays: 1, quantity: 1, rate: 0, total: 0 },
   ]);
 
+  // VAT configurations
+  const [includeVat, setIncludeVat] = useState(true);
+  const [vatRateType, setVatRateType] = useState<"16" | "8" | "0" | "custom">("16");
+  const [customVatRate, setCustomVatRate] = useState("16");
+
   // Handle supplier search with debounce
   useEffect(() => {
     if (searchTerm.length < 2) {
@@ -111,8 +116,9 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
     }
   };
 
+  const resolvedVatRate = vatRateType === "custom" ? (Number(customVatRate) || 0) : Number(vatRateType);
   const subTotal = items.reduce((acc, curr) => acc + curr.total, 0);
-  const vatAmount = subTotal * 0.16;
+  const vatAmount = includeVat ? subTotal * (resolvedVatRate / 100) : 0;
   const totalAmount = subTotal + vatAmount;
 
   const handleCancel = () => {
@@ -175,7 +181,7 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-card rounded-xl border shadow-sm space-y-8">
+    <div className=" p-4 bg-card rounded-xl border shadow-sm space-y-8">
       <div className="flex items-center justify-between border-b pb-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={handleCancel}>
@@ -185,15 +191,13 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
             <h1 className="text-2xl font-bold tracking-tight">
               Generate Local Purchase Order
             </h1>
-            <p className="text-muted-foreground">
-              Create a new purchase order for this project
-            </p>
+         
           </div>
         </div>
       </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div className="space-y-2">
             <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground/70">
               Supplier Information
@@ -290,7 +294,6 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div className="space-y-2">
               <Label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground/70">
                 Currency
@@ -332,7 +335,6 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
                 />
               </div>
             </div>
-          </div>
         </div>
 
         <div className="space-y-3">
@@ -439,30 +441,90 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
             </div>
           </div>
 
-          <div className="bg-muted/40 p-6 rounded-2xl w-full md:w-80 space-y-4 border shadow-inner">
+          <div className="bg-muted/40 p-6 rounded-2xl w-full md:w-[73%] space-y-4 border shadow-inner">
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground font-medium uppercase tracking-tight">
                 Sub-Total
               </span>
               <span className="font-bold text-base">
-                {subTotal.toLocaleString()}
+                {subTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground font-medium uppercase tracking-tight">
-                VAT (16%)
-              </span>
-              <span className="font-bold text-base text-amber-600">
-                {vatAmount.toLocaleString()}
-              </span>
+
+            <div className="space-y-3 pt-3 border-t border-muted-foreground/15">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="includeVat"
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    checked={includeVat}
+                    onChange={(e) => setIncludeVat(e.target.checked)}
+                  />
+                  <Label htmlFor="includeVat" className="text-sm font-semibold uppercase tracking-tight text-muted-foreground cursor-pointer">
+                    Apply VAT
+                  </Label>
+                </div>
+                {includeVat && (
+                  <div className="flex items-center gap-1.5">
+                    <Select
+                      value={vatRateType}
+                      onValueChange={(val: any) => setVatRateType(val)}
+                    >
+                      <SelectTrigger className="h-8 text-xs border bg-background w-28">
+                        <SelectValue placeholder="VAT Rate" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="16">16% (Std)</SelectItem>
+                        <SelectItem value="8">8% (Reduced)</SelectItem>
+                        <SelectItem value="0">0% (Zero)</SelectItem>
+                        <SelectItem value="custom">Custom</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+
+              {includeVat && vatRateType === "custom" && (
+                <div className="flex items-center justify-end gap-1.5 pt-1">
+                  <span className="text-xs text-muted-foreground">Custom VAT %:</span>
+                  <div className="relative w-20">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="any"
+                      placeholder="0.0"
+                      className="h-8 text-xs text-right pr-6"
+                      value={customVatRate}
+                      onChange={(e) => setCustomVatRate(e.target.value)}
+                    />
+                    <span className="absolute right-2 top-2 text-[10px] font-bold text-muted-foreground pointer-events-none">
+                      %
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {includeVat && (
+                <div className="flex justify-between items-center text-sm pt-1">
+                  <span className="text-muted-foreground font-medium uppercase tracking-tight pl-6">
+                    VAT Amount ({resolvedVatRate}%)
+                  </span>
+                  <span className="font-bold text-base text-amber-600">
+                    {vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              )}
             </div>
+
             <div className="pt-4 border-t-2 border-dashed border-muted-foreground/20">
               <div className="flex justify-between items-end">
                 <span className="font-black text-xs uppercase tracking-[0.2em] text-muted-foreground mb-1">
                   Total Amount
                 </span>
                 <span className="font-black text-3xl text-primary tracking-tighter">
-                  {currency} {totalAmount.toLocaleString()}
+                  {currency} {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>

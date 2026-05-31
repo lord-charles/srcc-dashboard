@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   CheckCircle,
   XCircle,
@@ -43,6 +44,7 @@ import {
   rejectPaymentVoucher,
   requestVoucherRevision,
   payVoucher,
+  updatePaymentVoucher,
 } from "@/services/payment-request.service";
 import { cloudinaryService } from "@/lib/cloudinary-service";
 import type { PaymentVoucher } from "@/types/payment-request";
@@ -123,7 +125,7 @@ interface Props {
   onSuccess?: () => void;
 }
 
-type ActionMode = null | "approve" | "reject" | "revision" | "pay";
+type ActionMode = null | "approve" | "reject" | "revision" | "pay" | "make_revision";
 
 export function PaymentVoucherDetailsSheet({
   voucher,
@@ -132,6 +134,7 @@ export function PaymentVoucherDetailsSheet({
   userRoles = [],
   onSuccess,
 }: Props) {
+  const { data: session } = useSession();
   const { toast } = useToast();
   const [actionMode, setActionMode] = useState<ActionMode>(null);
   const [comment, setComment] = useState("");
@@ -145,6 +148,10 @@ export function PaymentVoucherDetailsSheet({
   const [paymentMethod, setPaymentMethod] = useState("Bank Transfer");
   const [reference, setReference] = useState("");
 
+  // Revision / Edit fields
+  const [revisedAmount, setRevisedAmount] = useState("");
+  const [revisedComments, setRevisedComments] = useState("");
+
   if (!voucher) return null;
 
   const status = voucher.status;
@@ -155,6 +162,14 @@ export function PaymentVoucherDetailsSheet({
 
   const canApproveReject = isSrccFinance && status === PaymentVoucherStatus.PENDING_FINANCE_APPROVAL;
   const canMarkPaid = (isSrccFinance || isSrccChecker) && status === PaymentVoucherStatus.APPROVED;
+
+  const currentUserId = session?.user?.id;
+  const voucherCreatorId = voucher.preparedBy?._id || (typeof voucher.preparedBy === "string" ? voucher.preparedBy : (voucher.preparedBy as any)?._id || (voucher.preparedBy as any));
+  const isCreator = !!currentUserId && !!voucherCreatorId && currentUserId === voucherCreatorId;
+  const canMakeRevision = (
+    status === PaymentVoucherStatus.PENDING_FINANCE_APPROVAL ||
+    status === PaymentVoucherStatus.REVISION_REQUESTED
+  ) && isCreator;
 
   const paymentRequest = voucher.paymentRequestId as any;
 
@@ -180,6 +195,19 @@ export function PaymentVoucherDetailsSheet({
         paymentMethod: paymentMethod || undefined,
         reference: reference || undefined,
       });
+    } else if (actionMode === "make_revision") {
+      const amt = Number(revisedAmount);
+      if (!amt || amt <= 0) { setError("Valid amount is required"); setIsSubmitting(false); return; }
+      if (amt > paymentRequest?.amount) {
+        setError(`Amount cannot exceed the payment request amount of ${paymentRequest?.currency || "KES"} ${paymentRequest?.amount?.toLocaleString()}`);
+        setIsSubmitting(false);
+        return;
+      }
+      res = await updatePaymentVoucher(voucher._id, {
+        paymentRequestId: paymentRequest?._id || paymentRequest,
+        amount: amt,
+        comments: revisedComments || "Voucher revised by checker",
+      });
     }
 
     setIsSubmitting(false);
@@ -194,6 +222,7 @@ export function PaymentVoucherDetailsSheet({
       reject: "Voucher rejected. Finance Checker has been notified.",
       revision: "Revision requested. Finance Checker has been notified.",
       pay: "Payment marked. Payment advice uploaded and PM notified.",
+      make_revision: "Voucher revised and resubmitted successfully.",
     };
 
     toast({ title: "Success", description: messages[actionMode!] });
@@ -222,6 +251,8 @@ export function PaymentVoucherDetailsSheet({
     setTransactionId("");
     setReference("");
     setPaymentMethod("Bank Transfer");
+    setRevisedAmount("");
+    setRevisedComments("");
     setError(null);
   };
 
@@ -242,16 +273,35 @@ export function PaymentVoucherDetailsSheet({
                 </SheetDescription>
               </div>
             </div>
-            <Badge className={`flex items-center gap-1 ${config.className}`}>
-              {config.icon} {config.label}
-            </Badge>
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              <Badge className={`flex items-center gap-1 ${config.className}`}>
+                {config.icon} {config.label}
+              </Badge>
+              {canMakeRevision && !actionMode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 text-xs h-8 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                  onClick={() => {
+                    setActionMode("make_revision");
+                    setRevisedAmount(voucher.amount.toString());
+                    setRevisedComments("");
+                  }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  {status === PaymentVoucherStatus.PENDING_FINANCE_APPROVAL ? "Edit Voucher" : "Revise Voucher"}
+                </Button>
+              )}
+            </div>
           </div>
         </SheetHeader>
 
         <ScrollArea className="flex-1">
           <div className="px-6 py-5 space-y-6">
 
-            {/* Status Banners */}
+            {actionMode !== "make_revision" && (
+              <>
+                {/* Status Banners */}
             {status === "rejected" && voucher.rejection && (
               <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />
@@ -379,13 +429,19 @@ export function PaymentVoucherDetailsSheet({
                 )}
               </CardContent>
             </Card>
+              </>
+            )}
 
             {/* Action Panel */}
-            {(canApproveReject || canMarkPaid) && (
+            {(canApproveReject || canMarkPaid || actionMode === "make_revision") && (
               <Card className="border-2 border-primary/20">
                 <CardHeader className="pb-3 pt-4 px-5">
                   <CardTitle className="text-sm font-semibold uppercase tracking-wide">
-                    {canApproveReject ? "Finance Approver Actions" : "Payment Actions"}
+                    {canApproveReject
+                      ? "Finance Approver Actions"
+                      : canMarkPaid
+                      ? "Payment Actions"
+                      : "Edit Voucher"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-5 pb-5 space-y-4">
@@ -523,6 +579,68 @@ export function PaymentVoucherDetailsSheet({
                         <Button onClick={handleAction} disabled={isSubmitting || isUploading || !paymentAdviceUrl} className="gap-2 bg-blue-600 hover:bg-blue-700">
                           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <DollarSign className="h-4 w-4" />}
                           Confirm Payment
+                        </Button>
+                        <Button variant="ghost" onClick={resetAction}>Cancel</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {actionMode === "make_revision" && (
+                    <div className="space-y-4">
+                      {status === PaymentVoucherStatus.PENDING_FINANCE_APPROVAL ? (
+                        <Alert className="border-primary/20 bg-primary/5 dark:bg-primary/10">
+                          <RotateCcw className="h-4 w-4 text-primary" />
+                          <AlertDescription className="text-foreground/90 text-sm">
+                            You are editing this payment voucher while it is still pending finance approval. Your changes will be saved and the voucher will remain pending finance approval.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Alert className="border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10">
+                          <RotateCcw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                          <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
+                            <span className="font-semibold block mb-1">Feedback from Finance Approver:</span>
+                            <span className="italic block bg-muted/60 p-2 rounded text-foreground/90 my-2">
+                              {`"${voucher.revision?.comment || "No feedback comments provided."}"`}
+                            </span>
+                            Please address this feedback by updating the details below.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Currency</Label>
+                        <Input value={paymentRequest?.currency || "KES"} disabled className="bg-muted" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Revised Amount <span className="text-destructive">*</span></Label>
+                        <div className="relative flex items-center">
+                          <span className="absolute left-3 text-muted-foreground text-sm font-medium">{paymentRequest?.currency || "KES"}</span>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            className="pl-16"
+                            value={revisedAmount}
+                            onChange={(e) => setRevisedAmount(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Revision Comments / Notes <span className="text-destructive">*</span></Label>
+                        <Textarea
+                          placeholder="Provide details or explain how you addressed the feedback..."
+                          value={revisedComments}
+                          onChange={(e) => setRevisedComments(e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button onClick={handleAction} disabled={isSubmitting} className="gap-2 bg-amber-600 hover:bg-amber-700">
+                          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                          Submit Revision
                         </Button>
                         <Button variant="ghost" onClick={resetAction}>Cancel</Button>
                       </div>

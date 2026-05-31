@@ -155,6 +155,7 @@ export interface RevisionPayload {
 export interface CreateVoucherPayload {
   paymentRequestId: string;
   amount: number;
+  comments?: string;
 }
 
 export interface PayVoucherPayload {

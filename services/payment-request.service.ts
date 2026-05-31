@@ -103,10 +103,11 @@ export async function requestPaymentRequestRevision(id: string, payload: Revisio
 
 // ─── Payment Vouchers ─────────────────────────────────────────────────────────
 
-export async function getPaymentVouchers(filters?: { status?: string }) {
+export async function getPaymentVouchers(filters?: { status?: string; paymentRequestId?: string }) {
   return withAuth<PaymentVoucher[]>(async (config) => {
     const params: Record<string, string> = {};
     if (filters?.status) params.status = filters.status;
+    if (filters?.paymentRequestId) params.paymentRequestId = filters.paymentRequestId;
     const { data } = await axios.get(`${API_URL}/payment-requests/vouchers/all`, { ...config, params });
     return data;
   });
