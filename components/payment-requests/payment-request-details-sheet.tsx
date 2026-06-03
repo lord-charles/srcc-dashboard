@@ -235,7 +235,6 @@ export function PaymentRequestDetailsSheet({
         currency: revisedCurrency,
         description: revisedDescription,
         grnUrl: revisedGrnUrl || undefined,
-        comments: revisedDescription,
       });
     }
 

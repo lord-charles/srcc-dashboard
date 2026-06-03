@@ -22,10 +22,10 @@ import {
 } from "@/components/ui/dialog";
 
 import Link from "next/link";
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { deleteProject } from "@/services/projects-service";
+import { useSession } from "next-auth/react";
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
@@ -34,10 +34,39 @@ interface DataTableRowActionsProps<TData> {
 export function DataTableRowActions<TData>({
   row,
 }: DataTableRowActionsProps<TData>) {
+  const { data: session } = useSession();
   const project = row.original as any;
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const userId = session?.user?.id;
+  const roles = session?.user?.roles || [];
+
+  const hasAdminRole = roles.some(
+    (r) => r === "admin" || r === "super_admin"
+  );
+
+  const pmId = project.projectManagerId?._id || project.projectManagerId;
+  const isPm = pmId === userId;
+
+  const isAssistantPm = project.assistantProjectManagers?.some(
+    (apm: any) => (apm?.userId?._id || apm?.userId || apm) === userId
+  );
+
+  const isCoachManager = project.coachManagers?.some(
+    (cm: any) => (cm?.userId?._id || cm?.userId || cm) === userId
+  );
+
+  const isCoachAssistant = project.coachAssistants?.some(
+    (ca: any) => (ca?.userId?._id || ca?.userId || ca) === userId
+  );
+
+  const hasAccess = hasAdminRole || isPm || isAssistantPm || isCoachManager || isCoachAssistant;
+
+  if (!hasAccess) {
+    return null;
+  }
 
   const handleDelete = async () => {
     if (isDeleting) return;

@@ -70,15 +70,24 @@ export default withAuth(
       }
 
       // For consultant-only users (no admin role), enforce restrictions
-      const blockedRoots = ["/contracts", "/claims", "/imprest", "/budget"];
+      const blockedRoots = [
+        "/contracts",
+        "/claims",
+        "/imprest",
+        "/budget",
+        "/suppliers",
+        "/lpos",
+        "/payment-requests",
+        "/payment-vouchers",
+      ];
 
       if (
-        isRegularConsultant &&
+        !hasAdminRole &&
         blockedRoots.some(
           (root) => pathname === root || pathname.startsWith(root + "/"),
         )
       ) {
-        const redirectUrl = new URL("/analytics", req.url);
+        const redirectUrl = new URL("/analytics?unauthorized=1", req.url);
         return NextResponse.redirect(redirectUrl);
       }
     } catch {
