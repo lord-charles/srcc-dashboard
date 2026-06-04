@@ -193,7 +193,7 @@ const MyContracts = ({
     setOtpGenerating(true);
     try {
       const result = await generateContractOtp(contractId);
-      if (result) {
+      if (result.success) {
         setOtpDialogOpen(true);
         toast({
           title: "Success",
@@ -202,7 +202,8 @@ const MyContracts = ({
       } else {
         toast({
           title: "Failed to generate OTP",
-          description: "Please try again",
+          description: result.error || "Please try again",
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -210,6 +211,7 @@ const MyContracts = ({
       toast({
         title: "Failed to generate OTP",
         description: "Please try again",
+        variant: "destructive",
       });
     } finally {
       setOtpGenerating(false);
@@ -222,7 +224,7 @@ const MyContracts = ({
     setOtpVerifying(true);
     try {
       const result = await verifyContractOtp(contractId, otpValue);
-      if (result) {
+      if (result.success) {
         toast({
           title: "Contract accepted successfully",
           description: "Contract has been accepted successfully",
@@ -233,7 +235,8 @@ const MyContracts = ({
       } else {
         toast({
           title: "Invalid OTP",
-          description: "Please try again",
+          description: result.error || "Please try again",
+          variant: "destructive",
         });
       }
     } catch (error) {
