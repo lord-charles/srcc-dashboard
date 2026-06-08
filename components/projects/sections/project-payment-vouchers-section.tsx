@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PaymentVouchersTable } from "@/components/payment-requests/payment-vouchers-table";
-import { PaymentVoucherDetailsSheet } from "@/components/payment-requests/payment-voucher-details-sheet";
 import { getPaymentVouchers } from "@/services/payment-request.service";
 import type { PaymentVoucher } from "@/types/payment-request";
 
@@ -20,11 +19,9 @@ interface Props {
 }
 
 export function ProjectPaymentVouchersSection({ projectId, projectName }: Props) {
-  const { data: session } = useSession();
+  const router = useRouter();
   const [vouchers, setVouchers] = useState<PaymentVoucher[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedVoucher, setSelectedVoucher] = useState<PaymentVoucher | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const fetchVouchers = useCallback(async () => {
     try {
@@ -38,50 +35,28 @@ export function ProjectPaymentVouchersSection({ projectId, projectName }: Props)
           return prProjId === projectId;
         });
         setVouchers(projectVouchers);
-        
-        if (selectedVoucher) {
-          const updated = projectVouchers.find((v) => v._id === selectedVoucher._id);
-          if (updated) setSelectedVoucher(updated);
-        }
       }
     } catch (error) {
       console.error("Failed to fetch project payment vouchers:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, selectedVoucher]);
+  }, [projectId]);
 
   useEffect(() => {
     fetchVouchers();
   }, [projectId]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Payment Vouchers</CardTitle>
-        <CardDescription>
-          All payment vouchers generated for approved requests on {projectName}.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div>
         <PaymentVouchersTable
           vouchers={vouchers}
           isLoading={isLoading}
           onRefresh={fetchVouchers}
           onView={(voucher) => {
-            setSelectedVoucher(voucher);
-            setSheetOpen(true);
+            router.push(`/payment-vouchers/${voucher._id}`);
           }}
         />
-
-        <PaymentVoucherDetailsSheet
-          voucher={selectedVoucher}
-          open={sheetOpen}
-          onOpenChange={setSheetOpen}
-          userRoles={session?.user?.roles || []}
-          onSuccess={fetchVouchers}
-        />
-      </CardContent>
-    </Card>
+    </div>
   );
 }

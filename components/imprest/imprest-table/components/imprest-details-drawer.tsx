@@ -763,6 +763,21 @@ export function ImprestDetailsDrawer({
                               Bank Transfer
                             </span>
                           </div>
+                          {imprest?.projectId && (
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center">
+                                <Briefcase className="h-4 w-4 text-muted-foreground mr-2" />
+                                <span className="text-sm text-muted-foreground">
+                                  Linked Project
+                                </span>
+                              </div>
+                              <span className="text-sm font-medium">
+                                {typeof imprest.projectId === "object"
+                                  ? imprest.projectId.name
+                                  : "Project Linked"}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
 

@@ -14,6 +14,7 @@ import {
   Receipt,
   DollarSign,
   FileText,
+  CreditCard,
 } from "lucide-react";
 import type { Project } from "@/types/project";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -27,6 +28,7 @@ import ModernBudgetDisplay from "./sections/modern-budget-display";
 import ProjectOverview from "./sections/project-overview";
 import ContractsTable from "./sections/team-contracts-table";
 import { ProjectClaimsSection } from "./sections/project-claims-section";
+import { ProjectImprestsSection } from "./sections/project-imprests-section";
 
 interface ProjectDetailsProps {
   project?: Project;
@@ -83,6 +85,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
         "budget",
         "contracts",
         "claims",
+        "imprests",
       ].includes(tab)
     ) {
       setActiveTab(tab);
@@ -218,6 +221,17 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             />
             Claims
           </TabsTrigger>
+          <TabsTrigger
+            value="imprests"
+            className="relative overflow-hidden rounded-none border border-border py-2 after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 first:rounded-s last:rounded-e data-[state=active]:bg-muted data-[state=active]:after:bg-primary"
+          >
+            <CreditCard
+              className="-ms-0.5 me-1.5 opacity-60"
+              size={16}
+              strokeWidth={2}
+            />
+            Imprests
+          </TabsTrigger>
 
         </TabsList>
         <ScrollBar orientation="horizontal" />
@@ -331,6 +345,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
       <TabsContent value="claims">
         <ProjectClaimsSection
+          projectId={projectData._id}
+          projectName={projectData.name}
+        />
+      </TabsContent>
+
+      <TabsContent value="imprests">
+        <ProjectImprestsSection
           projectId={projectData._id}
           projectName={projectData.name}
         />

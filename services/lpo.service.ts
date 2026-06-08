@@ -64,6 +64,31 @@ export async function getLposByProject(projectId: string): Promise<{ success: bo
   }
 }
 
+export async function getLpoById(id: string): Promise<{ success: boolean; data?: Lpo; error?: string }> {
+  try {
+    const token = await getAuthToken();
+    const res = await fetch(`${API_URL}/lpo/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      return { success: false, error: errorData.message || "Failed to fetch LPO details" };
+    }
+
+    const data = await res.json();
+    return { success: true, data };
+  } catch (error: any) {
+    console.error("Failed to fetch LPO:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
 export async function createLpo(data: any): Promise<{ success: boolean; data?: Lpo; error?: string }> {
   try {
     const token = await getAuthToken();

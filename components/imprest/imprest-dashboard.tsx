@@ -21,14 +21,12 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { NewImprestDrawer } from "./new-imprest-drawer";
+import { useRouter } from "next/navigation";
 import {
-  createImprest,
   getMyImprest,
   acknowledgeImprestReceipt,
   acceptDisputeResolution,
 } from "@/services/imprest.service";
-import { FormValues } from "./new-imprest-drawer";
 import type { Imprest as ImprestType } from "@/types/imprest";
 import { MyImprestStats } from "./my-imprest-stats";
 import { ImprestFilters } from "./imprest-filters";
@@ -159,35 +157,7 @@ export default function ImprestDashboard({
     useState(false);
 
   const { toast } = useToast();
-  const [isNewImprestModalOpen, setIsNewImprestModalOpen] = useState(false);
-  const [editImprest, setEditImprest] = useState<ImprestType | null>(null);
-
-  const handleCreateImprest = async (data: FormValues) => {
-    try {
-      const result = await createImprest(data);
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      toast({
-        title: "Success",
-        description: "Imprest request created successfully",
-      });
-
-      const updatedData = await getMyImprest();
-      if (updatedData.success) {
-        setImprestData(updatedData.data);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create imprest request",
-        variant: "destructive",
-      });
-      throw error;
-    }
-  };
+  const router = useRouter();
 
   // Get unique payment types for filtering
   const uniquePaymentTypes = Array.from(
@@ -532,8 +502,7 @@ export default function ImprestDashboard({
                         <Button
                           size="sm"
                           onClick={() => {
-                            setEditImprest(item as unknown as ImprestType);
-                            setIsNewImprestModalOpen(true);
+                            router.push(`/my-imprest/new?edit=${item._id}`);
                           }}
                           className="text-xs bg-slate-600 hover:bg-slate-700 text-white whitespace-nowrap min-w-[88px]"
                         >
@@ -670,7 +639,7 @@ export default function ImprestDashboard({
             </div>
             <Button
               className="md:self-start bg-primary hover:bg-primary/90 shadow-md"
-              onClick={() => setIsNewImprestModalOpen(true)}
+              onClick={() => router.push("/my-imprest/new")}
             >
               <Plus className="mr-2 h-4 w-4" />
               New Application
@@ -804,7 +773,7 @@ export default function ImprestDashboard({
                 onSort={handleSort}
                 onViewDetails={handleViewDetails}
                 onSetPendingPage={setPendingPage}
-                onNewImprestModalOpen={() => setIsNewImprestModalOpen(true)}
+                onNewImprestModalOpen={() => router.push("/my-imprest/new")}
               />
             </TabsContent>
 
@@ -825,7 +794,7 @@ export default function ImprestDashboard({
                 onSort={handleSort}
                 onViewDetails={handleViewDetails}
                 onSetApprovedPage={setApprovedPage}
-                onNewImprestModalOpen={() => setIsNewImprestModalOpen(true)}
+                onNewImprestModalOpen={() => router.push("/my-imprest/new")}
               />
             </TabsContent>
 
@@ -867,32 +836,14 @@ export default function ImprestDashboard({
                 onSort={handleSort}
                 onViewDetails={handleViewDetails}
                 onSetRejectedPage={setRejectedPage}
-                onNewImprestModalOpen={() => setIsNewImprestModalOpen(true)}
+                onNewImprestModalOpen={() => router.push("/my-imprest/new")}
               />
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
-      <NewImprestDrawer
-        open={isNewImprestModalOpen}
-        onOpenChange={(open) => {
-          setIsNewImprestModalOpen(open);
-          if (!open) {
-            setEditImprest(null);
-            // Refresh data when drawer closes
-            getMyImprest()
-              .then((res) => {
-                if (res.success) {
-                  setImprestData(res.data);
-                }
-              })
-              .catch(() => {});
-          }
-        }}
-        onSubmit={handleCreateImprest}
-        editImprest={editImprest}
-      />
+
 
       {/* Detail View Dialog */}
       <ImprestDetailView

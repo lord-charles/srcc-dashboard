@@ -13,6 +13,7 @@ import {
   Plus,
   RefreshCw,
   DollarSign,
+  Paperclip,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PaymentRequest } from "@/types/payment-request";
 import { PaymentRequestStatus } from "@/types/payment-request";
@@ -166,7 +175,7 @@ export function PaymentRequestsTable({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-2">
           <div className="rounded-md border-t overflow-auto">
             <Table>
               <TableHeader>
@@ -177,20 +186,21 @@ export function PaymentRequestsTable({
                   <TableHead>Requested By</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-center">Docs</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={showProjectColumn ? 7 : 6} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={showProjectColumn ? 8 : 7} className="text-center py-12 text-muted-foreground">
                       <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />
                       Loading payment requests...
                     </TableCell>
                   </TableRow>
                 ) : filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={showProjectColumn ? 7 : 6} className="text-center py-12 text-muted-foreground">
+                    <TableCell colSpan={showProjectColumn ? 8 : 7} className="text-center py-12 text-muted-foreground">
                       <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       <p className="font-medium">No payment requests found</p>
                       <p className="text-sm mt-1">
@@ -234,6 +244,68 @@ export function PaymentRequestsTable({
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           {format(new Date(request.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                          {request.attachments && request.attachments.length > 0 ? (
+                            request.attachments.length === 1 ? (
+                              <a
+                                href={request.attachments[0]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary/80 transition-colors inline-block"
+                                title={request.attachments[0].split("/").pop() || "View document"}
+                              >
+                                <Paperclip className="h-4 w-4 mx-auto" />
+                              </a>
+                            ) : (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 px-1.5 flex items-center gap-1 text-xs text-primary hover:bg-primary/5 mx-auto font-medium"
+                                  >
+                                    <Paperclip className="h-3.5 w-3.5" />
+                                    <span className="text-[10px]">{request.attachments.length}</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold px-2 py-1.5">
+                                    Attachments ({request.attachments.length})
+                                  </DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  {request.attachments.map((url, idx) => {
+                                    const fileName = url.split("/").pop() || `Document ${idx + 1}`;
+                                    return (
+                                      <DropdownMenuItem key={idx} asChild>
+                                        <a
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-2 cursor-pointer text-xs truncate w-full"
+                                        >
+                                          <span className="shrink-0 text-muted-foreground">📎</span>
+                                          <span className="truncate flex-1">{fileName}</span>
+                                        </a>
+                                      </DropdownMenuItem>
+                                    );
+                                  })}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )
+                          ) : request.grnUrl ? (
+                            <a
+                              href={request.grnUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-primary/80 transition-colors inline-block"
+                              title="View GRN Document"
+                            >
+                              <Paperclip className="h-4 w-4 mx-auto" />
+                            </a>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

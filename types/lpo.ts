@@ -12,10 +12,12 @@ export interface LpoItem {
   quantity: number;
   rate: number;
   total: number;
+  excludeVat?: boolean;
 }
 
 export interface Lpo {
   _id: string;
+  attachments?: string[];
   projectId: {
     _id: string;
     name: string;

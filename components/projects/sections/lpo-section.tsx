@@ -11,6 +11,7 @@ import {
   XCircle,
   Plus,
   CreditCard,
+  Paperclip,
 } from "lucide-react";
 import { getLposByProject, updateLpoStatus } from "@/services/lpo.service";
 import { Lpo } from "@/types/lpo";
@@ -26,8 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "next-auth/react";
-import { DispatchLpoDialog } from "./dispatch-lpo-dialog";
-import { RaisePaymentRequestDrawer } from "@/components/payment-requests/raise-payment-request-drawer";
+
 
 interface LpoSectionProps {
   projectId: string;
@@ -49,9 +49,6 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
 
   const [lpos, setLpos] = useState<Lpo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [dispatchLpoData, setDispatchLpoData] = useState<Lpo | null>(null);
-  const [raiseRequestLpo, setRaiseRequestLpo] = useState<Lpo | null>(null);
-  const [refreshRequestsKey, setRefreshRequestsKey] = useState(0);
 
   useEffect(() => {
     loadLpos();
@@ -141,7 +138,7 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
             Local Purchase Orders (LPOs)
           </h2>
           <p className="text-sm text-muted-foreground">
-            Manage suppliers and issue LPOs for this project.
+        Issue LPOs for this project.
           </p>
         </div>
         <Link href={`/projects/${projectId}/lpo/new`}>
@@ -167,9 +164,10 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
           <div className="grid grid-cols-12 gap-2 p-4 border-b font-semibold text-sm text-muted-foreground bg-muted/50">
             <div className="col-span-2">LPO No</div>
             <div className="col-span-2">Date</div>
-            <div className="col-span-3">Supplier</div>
+            <div className="col-span-2">Supplier</div>
             <div className="col-span-2 text-right">Total</div>
             <div className="col-span-2">Status</div>
+            <div className="col-span-1 text-center">Docs</div>
             <div className="col-span-1 text-center">Actions</div>
           </div>
 
@@ -184,7 +182,7 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
                   {new Date(lpo.lpoDate).toLocaleDateString()}
                 </div>
                 <div
-                  className="col-span-3 truncate"
+                  className="col-span-2 truncate"
                   title={lpo.supplierId?.name}
                 >
                   {lpo.supplierId?.name || "Unknown Supplier"}
@@ -196,6 +194,58 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
                   }).format(lpo.totalAmount)}
                 </div>
                 <div className="col-span-2">{getStatusBadge(lpo.status)}</div>
+                <div className="col-span-1 flex items-center justify-center">
+                  {lpo.attachments && lpo.attachments.length > 0 ? (
+                    lpo.attachments.length === 1 ? (
+                      <a
+                        href={lpo.attachments[0]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 transition-colors"
+                        title={lpo.attachments[0].split("/").pop() || "View attachment"}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-1.5 flex items-center gap-1 text-xs text-primary hover:bg-primary/5 font-medium"
+                          >
+                            <Paperclip className="h-3.5 w-3.5" />
+                            <span className="text-[10px]">{lpo.attachments.length}</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel className="text-xs text-muted-foreground font-semibold px-2 py-1.5">
+                            Attachments ({lpo.attachments.length})
+                          </DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {lpo.attachments.map((url, idx) => {
+                            const fileName = url.split("/").pop() || `Document ${idx + 1}`;
+                            return (
+                              <DropdownMenuItem key={idx} asChild>
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 cursor-pointer text-xs truncate w-full"
+                                >
+                                  <span className="shrink-0 text-muted-foreground">📎</span>
+                                  <span className="truncate flex-1">{fileName}</span>
+                                </a>
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )
+                  ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                  )}
+                </div>
                 <div className="col-span-1 text-center">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -259,17 +309,22 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
 
                       {lpo.status === "finance_approved" && (
                         <>
-                          <DropdownMenuItem
-                            onClick={() => setDispatchLpoData(lpo)}
-                          >
-                            <FileDown className="mr-2 h-4 w-4" /> Download /
-                            Dispatch
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/projects/${projectId}/lpo/${lpo._id}/dispatch`}
+                              className="flex items-center cursor-pointer"
+                            >
+                              <FileDown className="mr-2 h-4 w-4" /> Download /
+                              Dispatch
+                            </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setRaiseRequestLpo(lpo)}
-                            className="text-primary focus:text-primary"
-                          >
-                            <CreditCard className="mr-2 h-4 w-4 text-primary" /> Raise Payment Request
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/projects/${projectId}/payment-request/new?lpoId=${lpo._id}`}
+                              className="text-primary focus:text-primary flex items-center cursor-pointer"
+                            >
+                              <CreditCard className="mr-2 h-4 w-4 text-primary" /> Raise Payment Request
+                            </Link>
                           </DropdownMenuItem>
                         </>
                       )}
@@ -282,31 +337,9 @@ export const LpoSection: React.FC<LpoSectionProps> = ({
         </div>
       )}
 
-      {dispatchLpoData && (
-        <DispatchLpoDialog
-          open={!!dispatchLpoData}
-          onOpenChange={(open) => {
-            if (!open) setDispatchLpoData(null);
-          }}
-          lpo={dispatchLpoData}
-          projectCurrency={projectCurrency}
-        />
-      )}
 
-      {raiseRequestLpo && (
-        <RaisePaymentRequestDrawer
-          open={!!raiseRequestLpo}
-          onOpenChange={(open) => {
-            if (!open) setRaiseRequestLpo(null);
-          }}
-          lpo={raiseRequestLpo}
-          projectId={projectId}
-          onSuccess={() => {
-            loadLpos();
-            setRefreshRequestsKey((prev) => prev + 1);
-          }}
-        />
-      )}
+
+
     </div>
   );
 };

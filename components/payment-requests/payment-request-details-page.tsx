@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle,
   XCircle,
@@ -19,22 +20,16 @@ import {
   Check,
   Building2,
   DollarSign,
+  ArrowLeft,
+  Paperclip,
 } from "lucide-react";
 import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -49,13 +44,13 @@ import {
   updatePaymentRequest,
   getLpoRemainingBalance,
   getPaymentVouchers,
+  getPaymentRequestById,
 } from "@/services/payment-request.service";
 import type { PaymentRequest, PaymentVoucher } from "@/types/payment-request";
 import { PaymentRequestStatus } from "@/types/payment-request";
 import { cn } from "@/lib/utils";
 
 // ─── Status Config ────────────────────────────────────────────────────────────
-
 const statusConfig: Record<
   string,
   { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className: string; icon: React.ReactNode }
@@ -87,7 +82,6 @@ const statusConfig: Record<
 };
 
 // ─── Timeline Component ───────────────────────────────────────────────────────
-
 function AuditTimeline({ entries }: { entries: PaymentRequest["auditTrail"] }) {
   return (
     <div className="space-y-3">
@@ -122,26 +116,17 @@ function AuditTimeline({ entries }: { entries: PaymentRequest["auditTrail"] }) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-
 interface Props {
-  request: PaymentRequest | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  userRoles?: string[];
-  onSuccess?: () => void;
+  initialRequest: PaymentRequest;
 }
 
 type ActionMode = null | "approve" | "reject" | "revision" | "create_voucher" | "make_revision";
 
-export function PaymentRequestDetailsSheet({
-  request,
-  open,
-  onOpenChange,
-  userRoles = [],
-  onSuccess,
-}: Props) {
+export function PaymentRequestDetailsPage({ initialRequest }: Props) {
   const { data: session } = useSession();
+  const router = useRouter();
   const { toast } = useToast();
+  const [request, setRequest] = useState<PaymentRequest>(initialRequest);
   const [actionMode, setActionMode] = useState<ActionMode>(null);
   const [comment, setComment] = useState("");
   const [voucherAmount, setVoucherAmount] = useState<number | "">("");
@@ -195,14 +180,19 @@ export function PaymentRequestDetailsSheet({
   const [existingVouchers, setExistingVouchers] = useState<PaymentVoucher[]>([]);
   const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
 
-  useEffect(() => {
-    if (open && request?._id) {
-      fetchExistingVouchers();
+  const refreshRequestData = async () => {
+    const res = await getPaymentRequestById(request._id);
+    if (res.success) {
+      setRequest(res.data);
     }
-  }, [open, request?._id]);
+    fetchExistingVouchers();
+  };
+
+  useEffect(() => {
+    fetchExistingVouchers();
+  }, [request._id]);
 
   const fetchExistingVouchers = async () => {
-    if (!request?._id) return;
     setIsLoadingVouchers(true);
     const res = await getPaymentVouchers({ paymentRequestId: request._id });
     if (res.success) {
@@ -211,11 +201,10 @@ export function PaymentRequestDetailsSheet({
     setIsLoadingVouchers(false);
   };
 
-  if (!request) return null;
-
   const status = request.status;
   const config = statusConfig[status] || statusConfig.pending_hod_approval;
 
+  const userRoles = session?.user?.roles || [];
   const isHod = userRoles.includes("hod") || userRoles.includes("admin");
   const isSrccChecker = userRoles.includes("srcc_checker") || userRoles.includes("admin");
 
@@ -231,7 +220,6 @@ export function PaymentRequestDetailsSheet({
   ) && isRequester;
 
   const handleAction = async () => {
-    if (!request) return;
     setIsSubmitting(true);
     setError(null);
 
@@ -300,8 +288,7 @@ export function PaymentRequestDetailsSheet({
     setRevisedAmount("");
     setRevisedDescription("");
     setRevisedGrnUrl("");
-    onSuccess?.();
-    onOpenChange(false);
+    refreshRequestData();
   };
 
   const resetAction = () => {
@@ -315,228 +302,188 @@ export function PaymentRequestDetailsSheet({
     setError(null);
   };
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      const projId = (request.projectId as any)?._id || request.projectId;
+      router.push(`/projects/${projId}?tab=financial&financialtab=paymentrequests`);
+    }
+  };
+
   return (
-    <Sheet open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) resetAction(); }}>
-      <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col h-full">
-        {/* Header */}
-        <SheetHeader className="px-6 py-5 border-b">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-primary/10 text-primary">
-                <DollarSign className="h-5 w-5" />
-              </div>
-              <div>
-                <SheetTitle className="text-xl">Payment Request Details</SheetTitle>
-                <SheetDescription className="mt-1">
-                  {(request.projectId as any)?.name || "Project"} — {(request.lpoId as any)?.lpoNo || "LPO"}
-                </SheetDescription>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2 flex-shrink-0">
-              <Badge className={`flex items-center gap-1 ${config.className}`}>
-                {config.icon} {config.label}
-              </Badge>
-              {canMakeRevision && !actionMode && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 text-xs h-8 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-                  onClick={() => {
-                    setActionMode("make_revision");
-                    setRevisedAmount(request.amount.toString());
-                    setRevisedCurrency(request.currency);
-                    setRevisedDescription(request.description || "");
-                    setRevisedGrnUrl(request.grnUrl || "");
-                    const initialAtts = (request.attachments || (request.grnUrl ? [request.grnUrl] : [])).map((url) => ({
-                      url,
-                      name: url.split("/").pop() || "Attached Document",
-                      status: "done" as const,
-                    }));
-                    setRevisedAttachments(initialAtts);
-                  }}
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  {status === PaymentRequestStatus.PENDING_HOD_APPROVAL ? "Edit Request" : "Revise Request"}
-                </Button>
-              )}
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl p-2 space-y-4">
+        {/* ── Header ── */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleBack}
+              className="flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-background hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Payment Request</h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {(request.projectId as any)?.name || "Project"} &middot; {(request.lpoId as any)?.lpoNo || "LPO"}
+              </p>
             </div>
           </div>
-        </SheetHeader>
+          <div className="flex items-center gap-3">
+            <Badge className={`flex items-center gap-1.5 px-3 py-1 text-sm font-medium ${config.className}`}>
+              {config.icon} {config.label}
+            </Badge>
+            {canMakeRevision && !actionMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs h-9 border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                onClick={() => {
+                  setActionMode("make_revision");
+                  setRevisedAmount(request.amount.toString());
+                  setRevisedCurrency(request.currency);
+                  setRevisedDescription(request.description || "");
+                  setRevisedGrnUrl(request.grnUrl || "");
+                  const initialAtts = (request.attachments || (request.grnUrl ? [request.grnUrl] : [])).map((url) => ({
+                    url,
+                    name: url.split("/").pop() || "Attached Document",
+                    status: "done" as const,
+                  }));
+                  setRevisedAttachments(initialAtts);
+                }}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                {status === PaymentRequestStatus.PENDING_HOD_APPROVAL ? "Edit Request" : "Revise Request"}
+              </Button>
+            )}
+          </div>
+        </div>
 
-        <ScrollArea className="flex-1">
-          <div className="px-6 py-5 space-y-6">
-
+        {/* ── Main Layout ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+          {/* Left Columns (3 span) */}
+          <div className="lg:col-span-3 space-y-6">
             {actionMode !== "make_revision" && (
               <>
                 {/* Rejection / Revision banners */}
-            {status === "rejected" && request.rejection && (
-              <Alert variant="destructive">
-                <XCircle className="h-4 w-4" />
-                <AlertTitle>Rejected</AlertTitle>
-                <AlertDescription>
-                  <span className="font-medium">{request.rejection.rejectedBy?.firstName} {request.rejection.rejectedBy?.lastName}</span>{" "}
-                  rejected on {format(new Date(request.rejection.rejectedAt), "MMM d, yyyy")}.<br />
-                  <span className="mt-1 block">Reason: {request.rejection.reason}</span>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {status === "revision_requested" && request.revision && (
-              <Alert className="border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10">
-                <RotateCcw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                <AlertTitle className="text-amber-700 dark:text-amber-300">Revision Requested</AlertTitle>
-                <AlertDescription className="text-amber-600 dark:text-amber-400">
-                  <span className="font-medium">{request.revision.requestedBy?.firstName} {request.revision.requestedBy?.lastName}</span>{" "}
-                  requested revision on {format(new Date(request.revision.requestedAt), "MMM d, yyyy")}.<br />
-                  <span className="mt-1 block">{request.revision.comment}</span>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {status === "hod_approved" && request.approval && (
-              <Alert className="border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10">
-                <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                <AlertTitle className="text-emerald-700 dark:text-emerald-300">HOD Approved</AlertTitle>
-                <AlertDescription className="text-emerald-600 dark:text-emerald-400">
-                  Approved by <span className="font-medium">{request.approval.approvedBy?.firstName} {request.approval.approvedBy?.lastName}</span>{" "}
-                  on {format(new Date(request.approval.approvedAt), "MMM d, yyyy")}.
-                  {request.approval.comments && <span className="block mt-1">{request.approval.comments}</span>}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Financial Summary */}
-            <Card>
-              <CardHeader className="pb-3 pt-4 px-5">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Financial Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-5 pb-5">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Requested Amount</p>
-                    <p className="text-2xl font-bold text-primary mt-1">
-                      {request.currency} {request.amount.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">LPO Total</p>
-                    <p className="text-lg font-semibold mt-1">
-                      {request.currency} {(request.lpoId as any)?.totalAmount?.toLocaleString() || "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Currency</p>
-                    <p className="font-medium">{request.currency}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">LPO Number</p>
-                    <p className="font-medium">{(request.lpoId as any)?.lpoNo || "—"}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Request Info */}
-            <Card>
-              <CardHeader className="pb-3 pt-4 px-5">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Request Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-5 pb-5 space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Requested by:</span>
-                  <span className="font-medium">
-                    {request.requestedBy?.firstName} {request.requestedBy?.lastName}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Project:</span>
-                  <span className="font-medium">{(request.projectId as any)?.name || "—"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-muted-foreground">Submitted:</span>
-                  <span className="font-medium">{format(new Date(request.createdAt), "MMM d, yyyy HH:mm")}</span>
-                </div>
-                {request.description && (
-                  <div className="flex gap-2 text-sm">
-                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                {status === "rejected" && request.rejection && (
+                  <Alert variant="destructive" className="border-red-500/30 bg-red-500/5">
+                    <XCircle className="h-5 w-5 mt-0.5" />
                     <div>
-                      <span className="text-muted-foreground">Description:</span>
-                      <p className="mt-0.5 text-foreground/80">{request.description}</p>
+                      <AlertTitle className="font-semibold">Rejected</AlertTitle>
+                      <AlertDescription className="mt-1 text-sm">
+                        Rejected by <span className="font-medium text-foreground">{request.rejection.rejectedBy?.firstName} {request.rejection.rejectedBy?.lastName}</span> on {format(new Date(request.rejection.rejectedAt), "MMM d, yyyy")}.
+                        <span className="mt-2 block bg-destructive/10 p-3 rounded font-mono text-xs border border-destructive/20">{request.rejection.reason}</span>
+                      </AlertDescription>
                     </div>
-                  </div>
+                  </Alert>
                 )}
-                {((request.attachments && request.attachments.length > 0) || request.grnUrl) && (
-                  <div className="flex gap-2 text-sm items-start">
-                    <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+
+                {status === "revision_requested" && request.revision && (
+                  <Alert className="border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10">
+                    <RotateCcw className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
                     <div>
-                      <span className="text-muted-foreground">Attached Documents:</span>
-                      <div className="mt-1.5 flex flex-wrap gap-2">
-                        {request.attachments && request.attachments.length > 0 ? (
-                          request.attachments.map((url, i) => {
-                            const name = url.split("/").pop() || `Document ${i + 1}`;
-                            return (
-                              <a
-                                key={i}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline bg-muted px-2 py-1 rounded text-xs font-medium flex items-center gap-1"
-                              >
-                                📎 {name}
-                              </a>
-                            );
-                          })
-                        ) : (
-                          <a
-                            href={request.grnUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline bg-muted px-2 py-1 rounded text-xs font-medium flex items-center gap-1"
-                          >
-                            📎 View GRN Document
-                          </a>
+                      <AlertTitle className="text-amber-700 dark:text-amber-300 font-semibold">Revision Requested</AlertTitle>
+                      <AlertDescription className="text-amber-600 dark:text-amber-400 mt-1 text-sm">
+                        Requested by <span className="font-medium text-foreground">{request.revision.requestedBy?.firstName} {request.revision.requestedBy?.lastName}</span> on {format(new Date(request.revision.requestedAt), "MMM d, yyyy")}.
+                        <span className="mt-2 block bg-amber-500/10 p-3 rounded italic text-foreground border border-amber-500/20">{request.revision.comment}</span>
+                      </AlertDescription>
+                    </div>
+                  </Alert>
+                )}
+
+                {status === "hod_approved" && request.approval && (
+                  <Alert className="border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-500/10">
+                    <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                    <div>
+                      <AlertTitle className="text-emerald-700 dark:text-emerald-300 font-semibold">HOD Approved</AlertTitle>
+                      <AlertDescription className="text-emerald-600 dark:text-emerald-400 mt-1 text-sm">
+                        Approved by <span className="font-medium text-foreground">{request.approval.approvedBy?.firstName} {request.approval.approvedBy?.lastName}</span> on {format(new Date(request.approval.approvedAt), "MMM d, yyyy")}.
+                        {request.approval.comments && (
+                          <span className="mt-2 block bg-emerald-500/10 p-3 rounded text-foreground border border-emerald-500/20">{request.approval.comments}</span>
                         )}
+                      </AlertDescription>
+                    </div>
+                  </Alert>
+                )}
+
+                {/* Financial Summary */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4 border-b border-border/60">
+                    <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Financial Summary
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="bg-primary/5 rounded-xl p-5 border border-primary/10">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Requested Amount</p>
+                        <p className="text-3xl font-extrabold text-primary mt-2">
+                          {request.currency} {request.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div className="bg-muted/40 rounded-xl p-5 border border-border/40">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">LPO Total Amount</p>
+                        <p className="text-2xl font-bold text-foreground/90 mt-2">
+                          {request.currency} {(request.lpoId as any)?.totalAmount?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "—"}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
 
-            {/* Audit Trail */}
-            <Card>
-              <CardHeader className="pb-3 pt-4 px-5">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Audit Trail
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="px-5 pb-5">
-                {request.auditTrail?.length > 0 ? (
-                  <AuditTimeline entries={request.auditTrail} />
-                ) : (
-                  <p className="text-sm text-muted-foreground">No audit history yet.</p>
-                )}
-              </CardContent>
-            </Card>
-            </>
+                {/* Details info */}
+                <Card className="shadow-sm">
+                  <CardHeader className="pb-4 border-b border-border/60">
+                    <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Request details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-xs text-muted-foreground">Requested by</span>
+                        <span className="font-semibold text-foreground">
+                          {request.requestedBy?.firstName} {request.requestedBy?.lastName}
+                        </span>
+                      </div>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-xs text-muted-foreground">Project Name</span>
+                        <span className="font-semibold text-foreground">{(request.projectId as any)?.name || "—"}</span>
+                      </div>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-xs text-muted-foreground">LPO Number</span>
+                        <span className="font-mono text-sm font-semibold text-primary">{(request.lpoId as any)?.lpoNo || "—"}</span>
+                      </div>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-xs text-muted-foreground">Submitted Date</span>
+                        <span className="font-semibold text-foreground">{format(new Date(request.createdAt), "MMMM d, yyyy HH:mm")}</span>
+                      </div>
+                    </div>
+
+                    {request.description && (
+                      <div className="pt-4 border-t border-border/65">
+                        <span className="text-xs text-muted-foreground block mb-1">Description</span>
+                        <p className="text-sm text-foreground/80 leading-relaxed bg-muted/30 p-3.5 rounded-lg border border-border/40">
+                          {request.description}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
             )}
 
             {/* Action Panel */}
             {(canApproveReject || canCreateVoucher || !!actionMode) && (
-              <Card className="border-2 border-primary/20">
-                <CardHeader className="pb-3 pt-4 px-5">
-                  <CardTitle className="text-sm font-semibold uppercase tracking-wide">
+              <Card className="border-2 border-primary/20 shadow-md">
+                <CardHeader className="pb-4 border-b border-border/60 bg-primary/5">
+                  <CardTitle className="text-sm font-bold uppercase tracking-wider text-primary">
                     {canApproveReject ? "HOD Actions" : canCreateVoucher ? "Finance Checker Actions" : "Edit Request"}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-5 pb-5 space-y-4">
+                <CardContent className="pt-6 space-y-4">
                   {error && (
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
@@ -545,36 +492,36 @@ export function PaymentRequestDetailsSheet({
                   )}
 
                   {!actionMode && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                       {canApproveReject && (
                         <>
                           <Button
                             variant="default"
-                            className="gap-2 bg-green-600 hover:bg-green-700"
+                            className="gap-2 bg-green-600 hover:bg-green-700 h-11 px-5 text-sm font-semibold"
                             onClick={() => setActionMode("approve")}
                           >
-                            <Check className="h-4 w-4" /> Approve
+                            <Check className="h-4 w-4" /> Approve Request
                           </Button>
                           <Button
                             variant="outline"
-                            className="gap-2 border-amber-500 text-amber-700 hover:bg-amber-50"
+                            className="gap-2 border-amber-500 text-amber-700 hover:bg-amber-50 h-11 px-5 text-sm font-semibold"
                             onClick={() => setActionMode("revision")}
                           >
                             <RotateCcw className="h-4 w-4" /> Request Revision
                           </Button>
                           <Button
                             variant="outline"
-                            className="gap-2 border-red-500 text-red-700 hover:bg-red-50"
+                            className="gap-2 border-red-500 text-red-700 hover:bg-red-50 h-11 px-5 text-sm font-semibold"
                             onClick={() => setActionMode("reject")}
                           >
-                            <X className="h-4 w-4" /> Reject
+                            <X className="h-4 w-4" /> Reject Request
                           </Button>
                         </>
                       )}
                       {canCreateVoucher && (
                         <Button
                           variant="default"
-                          className="gap-2"
+                          className="gap-2 h-11 px-5 text-sm font-semibold bg-primary hover:bg-primary/90"
                           onClick={() => { setActionMode("create_voucher"); setVoucherAmount(request.amount); }}
                         >
                           <FileText className="h-4 w-4" /> Create Payment Voucher
@@ -584,86 +531,100 @@ export function PaymentRequestDetailsSheet({
                   )}
 
                   {actionMode === "approve" && (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Approval Comments (optional)</Label>
-                      <Textarea
-                        placeholder="Add any comments for the approval..."
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        rows={3}
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Approval Comments (optional)</Label>
+                        <Textarea
+                          placeholder="Add any comments or notes for this approval..."
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          rows={4}
+                          className="resize-none text-sm"
+                        />
+                      </div>
                       <div className="flex gap-2">
-                        <Button onClick={handleAction} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700 gap-2">
+                        <Button onClick={handleAction} disabled={isSubmitting} className="bg-green-600 hover:bg-green-700 gap-2 h-10 px-4">
                           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                           Confirm Approval
                         </Button>
-                        <Button variant="ghost" onClick={resetAction}>Cancel</Button>
+                        <Button variant="ghost" onClick={resetAction} className="h-10">Cancel</Button>
                       </div>
                     </div>
                   )}
 
                   {actionMode === "reject" && (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Rejection Reason <span className="text-destructive">*</span></Label>
-                      <Textarea
-                        placeholder="Explain why this request is being rejected..."
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        rows={3}
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-destructive">Rejection Reason <span className="text-destructive">*</span></Label>
+                        <Textarea
+                          placeholder="Explain why this request is being rejected..."
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          rows={4}
+                          className="resize-none text-sm"
+                        />
+                      </div>
                       <div className="flex gap-2">
-                        <Button onClick={handleAction} disabled={isSubmitting} variant="destructive" className="gap-2">
+                        <Button onClick={handleAction} disabled={isSubmitting} variant="destructive" className="gap-2 h-10 px-4">
                           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
                           Confirm Rejection
                         </Button>
-                        <Button variant="ghost" onClick={resetAction}>Cancel</Button>
+                        <Button variant="ghost" onClick={resetAction} className="h-10">Cancel</Button>
                       </div>
                     </div>
                   )}
 
                   {actionMode === "revision" && (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Revision Comments <span className="text-destructive">*</span></Label>
-                      <Textarea
-                        placeholder="Describe what needs to be corrected..."
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        rows={3}
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-amber-700">Revision Comments <span className="text-destructive">*</span></Label>
+                        <Textarea
+                          placeholder="Describe what needs to be corrected by the requester..."
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          rows={4}
+                          className="resize-none text-sm"
+                        />
+                      </div>
                       <div className="flex gap-2">
                         <Button
                           onClick={handleAction}
                           disabled={isSubmitting}
-                          className="gap-2 bg-amber-600 hover:bg-amber-700"
+                          className="gap-2 bg-amber-600 hover:bg-amber-700 h-10 px-4"
                         >
                           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                           Send for Revision
                         </Button>
-                        <Button variant="ghost" onClick={resetAction}>Cancel</Button>
+                        <Button variant="ghost" onClick={resetAction} className="h-10">Cancel</Button>
                       </div>
                     </div>
                   )}
 
                   {actionMode === "create_voucher" && (
-                    <div className="space-y-3">
-                      <Alert className="bg-blue-50 border-blue-200">
-                        <MessageSquare className="h-4 w-4 text-blue-600" />
-                        <AlertDescription className="text-blue-700 text-sm">
-                          Creating a voucher for this approved payment request. The Finance Approver will be notified.
+                    <div className="space-y-4">
+                      <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900/50">
+                        <MessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <AlertDescription className="text-blue-700 dark:text-blue-400 text-sm">
+                          Creating a payment voucher for this approved request. The Finance Approver will review and sign off.
                         </AlertDescription>
                       </Alert>
 
                       {existingVouchers.length > 0 && (
-                        <div className="border border-amber-200 bg-amber-500/5 dark:bg-amber-500/10 rounded-lg p-3 space-y-2">
-                          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300 font-semibold text-xs uppercase tracking-wider">
+                        <div className="border border-amber-200 dark:border-amber-800/40 bg-amber-500/5 dark:bg-amber-500/10 rounded-lg p-4 space-y-2.5">
+                          <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-bold text-xs uppercase tracking-wider">
                             <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" /> Vouchers Already Created for this Request
                           </div>
-                          <div className="divide-y divide-amber-200/30 text-xs">
+                          <div className="divide-y divide-amber-200/30 dark:divide-amber-800/20 text-xs">
                             {existingVouchers.map((v) => (
-                              <div key={v._id} className="py-2 flex items-center justify-between gap-4">
-                                <span className="font-semibold text-foreground">{v.voucherNo}</span>
-                                <span className="text-muted-foreground font-medium">{request.currency} {v.amount.toLocaleString()}</span>
-                                <Badge variant="outline" className="text-[10px] capitalize px-1.5 py-0.5 bg-background">
+                              <div key={v._id} className="py-2.5 flex items-center justify-between gap-4">
+                                <a
+                                  href={`/payment-vouchers/${v._id}`}
+                                  className="font-semibold text-primary hover:underline"
+                                >
+                                  {v.voucherNo}
+                                </a>
+                                <span className="text-muted-foreground font-medium">{request.currency} {v.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <Badge variant="outline" className="text-[10px] capitalize px-2 py-0.5 bg-background">
                                   {v.status.replace(/_/g, " ")}
                                 </Badge>
                               </div>
@@ -672,40 +633,40 @@ export function PaymentRequestDetailsSheet({
                         </div>
                       )}
 
-                      <div>
-                        <Label className="text-sm font-medium">Voucher Amount <span className="text-destructive">*</span></Label>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Must not exceed request amount of {request.currency} {request.amount.toLocaleString()}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold">Voucher Amount <span className="text-destructive">*</span></Label>
+                        <p className="text-xs text-muted-foreground">
+                          Must not exceed request amount of {request.currency} {request.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
-                        <div className="relative flex items-center">
+                        <div className="relative flex items-center mt-1">
                           <span className="absolute left-3 text-muted-foreground text-sm font-medium">{request.currency}</span>
                           <Input
                             type="number"
                             step="0.01"
                             min="0"
-                            className="pl-16"
+                            className="pl-16 h-10 text-sm"
                             value={voucherAmount}
                             onChange={(e) => setVoucherAmount(e.target.value === "" ? "" : parseFloat(e.target.value))}
                           />
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button onClick={handleAction} disabled={isSubmitting} className="gap-2">
+                        <Button onClick={handleAction} disabled={isSubmitting} className="gap-2 h-10 px-4">
                           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                           Create Voucher
                         </Button>
-                        <Button variant="ghost" onClick={resetAction}>Cancel</Button>
+                        <Button variant="ghost" onClick={resetAction} className="h-10">Cancel</Button>
                       </div>
                     </div>
                   )}
 
                   {actionMode === "make_revision" && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
                       {status === PaymentRequestStatus.PENDING_HOD_APPROVAL ? (
                         <Alert className="border-primary/20 bg-primary/5 dark:bg-primary/10">
                           <RotateCcw className="h-4 w-4 text-primary" />
                           <AlertDescription className="text-foreground/90 text-sm">
-                            You are editing this payment request while it is still pending HOD approval. Your changes will be saved and the request will remain pending HOD approval.
+                            Editing payment request while it is still pending HOD approval. The request will remain pending.
                           </AlertDescription>
                         </Alert>
                       ) : (
@@ -713,10 +674,10 @@ export function PaymentRequestDetailsSheet({
                           <RotateCcw className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                           <AlertDescription className="text-amber-700 dark:text-amber-300 text-sm">
                             <span className="font-semibold block mb-1">Feedback from HOD:</span>
-                            <span className="italic block bg-muted/60 p-2 rounded text-foreground/90 my-2">
-                              {`"${request.revision?.comment || "No feedback comments provided."}"`}
+                            <span className="italic block bg-muted/60 p-3 rounded-lg text-foreground/90 my-2">
+                              {`"${request.revision?.comment || "No comments provided."}"`}
                             </span>
-                            Please address this feedback by updating the details below.
+                            Please address this feedback below.
                           </AlertDescription>
                         </Alert>
                       )}
@@ -727,14 +688,14 @@ export function PaymentRequestDetailsSheet({
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Revised Amount <span className="text-destructive">*</span></Label>
+                        <Label className="text-sm font-semibold">Revised Amount <span className="text-destructive">*</span></Label>
                         <div className="relative flex items-center">
                           <span className="absolute left-3 text-muted-foreground text-sm font-medium">{revisedCurrency}</span>
                           <Input
                             type="number"
                             step="0.01"
                             min="0"
-                            className="pl-16"
+                            className="pl-16 h-10"
                             value={revisedAmount}
                             onChange={(e) => setRevisedAmount(e.target.value)}
                           />
@@ -742,17 +703,18 @@ export function PaymentRequestDetailsSheet({
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Description / Reason for Revision <span className="text-destructive">*</span></Label>
+                        <Label className="text-sm font-semibold">Description / Reason for Revision <span className="text-destructive">*</span></Label>
                         <Textarea
-                          placeholder="Provide additional details or address the HOD's feedback..."
+                          placeholder="Provide details or address the HOD's feedback..."
                           value={revisedDescription}
                           onChange={(e) => setRevisedDescription(e.target.value)}
                           rows={3}
+                          className="text-sm resize-none"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Supporting Documents / GRN (Optional)</Label>
+                        <Label className="text-sm font-semibold">Supporting Documents / GRN (Optional)</Label>
                         <div className="space-y-3">
                           <FileUpload
                             onChange={handleRevisedFileUpload}
@@ -771,7 +733,6 @@ export function PaymentRequestDetailsSheet({
                                     file.status === "error" && "bg-destructive/5 border-destructive/20"
                                   )}
                                 >
-                                  {/* Icon */}
                                   <div className={cn(
                                     "w-7 h-7 rounded-md flex items-center justify-center shrink-0",
                                     file.status === "uploading" && "bg-muted",
@@ -787,7 +748,6 @@ export function PaymentRequestDetailsSheet({
                                     )}
                                   </div>
 
-                                  {/* Name + Status */}
                                   <div className="flex-1 min-w-0">
                                     {file.status === "done" ? (
                                       <a
@@ -815,7 +775,6 @@ export function PaymentRequestDetailsSheet({
                                     </span>
                                   </div>
 
-                                  {/* Remove */}
                                   {file.status !== "uploading" && (
                                     <button
                                       type="button"
@@ -833,11 +792,11 @@ export function PaymentRequestDetailsSheet({
                       </div>
 
                       <div className="flex gap-2 pt-2">
-                        <Button onClick={handleAction} disabled={isSubmitting || isUploading} className="gap-2 bg-amber-600 hover:bg-amber-700">
+                        <Button onClick={handleAction} disabled={isSubmitting || isUploading} className="gap-2 bg-amber-600 hover:bg-amber-700 h-10 px-4">
                           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                           Submit Revision
                         </Button>
-                        <Button variant="ghost" onClick={resetAction}>Cancel</Button>
+                        <Button variant="ghost" onClick={resetAction} className="h-10">Cancel</Button>
                       </div>
                     </div>
                   )}
@@ -845,8 +804,75 @@ export function PaymentRequestDetailsSheet({
               </Card>
             )}
           </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+
+          {/* Right Columns (2 span) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Supporting documents */}
+            {((request.attachments && request.attachments.length > 0) || request.grnUrl) && (
+              <Card className="shadow-sm">
+                <CardHeader className="pb-4 border-b border-border/60">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Supporting Documents
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-5">
+                  <div className="space-y-2.5">
+                    {request.attachments && request.attachments.length > 0 ? (
+                      request.attachments.map((url, i) => {
+                        const name = decodeURIComponent(url.split("/").pop() || `Attachment ${i + 1}`);
+                        return (
+                          <a
+                            key={i}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/40 transition-colors text-sm"
+                          >
+                            <span className="flex items-center gap-2 truncate text-primary font-medium">
+                              <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <span className="truncate">{name}</span>
+                            </span>
+                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          </a>
+                        );
+                      })
+                    ) : (
+                      <a
+                        href={request.grnUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20 hover:bg-muted/40 transition-colors text-sm"
+                      >
+                        <span className="flex items-center gap-2 truncate text-primary font-medium">
+                          <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <span className="truncate">GRN Document</span>
+                        </span>
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      </a>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Audit Trail */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4 border-b border-border/60">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Audit History
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                {request.auditTrail?.length > 0 ? (
+                  <AuditTimeline entries={request.auditTrail} />
+                ) : (
+                  <p className="text-sm text-muted-foreground">No audit logs found.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

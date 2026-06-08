@@ -30,6 +30,8 @@ interface ComboBoxProps {
   onChange: (value: string) => void;
   className?: string;
   inputPlaceholder?: string;
+  onSearchChange?: (val: string) => void;
+  shouldFilter?: boolean;
 }
 
 export function ComboBox({
@@ -39,6 +41,8 @@ export function ComboBox({
   onChange,
   className = "w-full",
   inputPlaceholder = "Search...",
+  onSearchChange,
+  shouldFilter = true,
 }: ComboBoxProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -58,8 +62,12 @@ export function ComboBox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className={cn(className, "p-0")}> 
-        <Command>
-          <CommandInput placeholder={inputPlaceholder} className="h-9" />
+        <Command shouldFilter={shouldFilter}>
+          <CommandInput 
+            placeholder={inputPlaceholder} 
+            className="h-9" 
+            onValueChange={onSearchChange}
+          />
           <CommandList>
             <CommandEmpty>No option found.</CommandEmpty>
             <CommandGroup>

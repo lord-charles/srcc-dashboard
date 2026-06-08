@@ -111,6 +111,7 @@ const departmentRequiredRoles = [
   "coach_finance",
   "srcc_invoice_request",
   "invoice_approver",
+  "hod",
 ];
 
 export default function EmployeeDetailsPage({ employee }: any) {

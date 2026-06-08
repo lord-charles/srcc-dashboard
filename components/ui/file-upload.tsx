@@ -6,17 +6,23 @@ import { useDropzone } from "react-dropzone";
 
 export const FileUpload = ({
   onChange,
+  multiple = false,
 }: {
   onChange?: (files: File[]) => void;
+  multiple?: boolean;
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (newFiles: File[]) => {
     if (newFiles.length > 0) {
-      const selectedFile = newFiles[0]; // Only take the first file
-      setFile(selectedFile);
-      onChange && onChange([selectedFile]);
+      if (multiple) {
+        onChange && onChange(newFiles);
+      } else {
+        const selectedFile = newFiles[0];
+        setFile(selectedFile);
+        onChange && onChange([selectedFile]);
+      }
     }
   };
 
@@ -34,7 +40,7 @@ export const FileUpload = ({
   };
 
   const { getRootProps, isDragActive } = useDropzone({
-    multiple: false, // Only allow single file
+    multiple: multiple,
     noClick: true,
     onDrop: handleFileChange,
     onDropRejected: (error) => {},
@@ -51,11 +57,12 @@ export const FileUpload = ({
           ref={fileInputRef}
           id="file-upload-handle"
           type="file"
+          multiple={multiple}
           onChange={(e) => handleFileChange(Array.from(e.target.files || []))}
           className="hidden"
         />
 
-        {file ? (
+        {!multiple && file ? (
           <div className="flex items-center justify-between p-2 bg-white dark:bg-neutral-900 rounded-md">
             <p className="text-sm text-neutral-700 dark:text-neutral-300 truncate max-w-[200px]">
               {file.name}
@@ -72,10 +79,10 @@ export const FileUpload = ({
           <div className="flex flex-col items-center justify-center py-4">
             <IconUpload className="w-8 h-8 text-gray-400 mb-2" />
             <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-              Upload file
+              {multiple ? "Upload documents" : "Upload file"}
             </p>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-              Click to upload or drag and drop
+              Click to upload or drag and drop {multiple && "multiple files"}
             </p>
           </div>
         )}

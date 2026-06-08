@@ -13,7 +13,10 @@ import {
   Info,
   Upload,
   Pencil,
+  FileText,
 } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -85,6 +88,9 @@ export function RaisePaymentRequestDrawer({
   const [error, setError] = useState<string | null>(null);
   const [remainingBalance, setRemainingBalance] = useState<number | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [attachments, setAttachments] = useState<
+    Array<{ url: string; name: string; status: "uploading" | "done" | "error" }>
+  >([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -105,6 +111,12 @@ export function RaisePaymentRequestDrawer({
         description: editRequest.description || "",
         grnUrl: editRequest.grnUrl || "",
       });
+      const initialAtts = (editRequest.attachments || (editRequest.grnUrl ? [editRequest.grnUrl] : [])).map((url) => ({
+        url,
+        name: url.split("/").pop() || "Attached Document",
+        status: "done" as const,
+      }));
+      setAttachments(initialAtts);
     }
   }, [isEdit, editRequest]);
 
@@ -118,16 +130,36 @@ export function RaisePaymentRequestDrawer({
     });
   }, [open, lpo._id, editRequest?._id]);
 
-  const handleGrnUpload = async (file: File) => {
-    setIsUploading(true);
-    try {
-      const url = await cloudinaryService.uploadFile(file);
-      form.setValue("grnUrl", url);
-      toast({ title: "GRN uploaded", description: "Goods Received Note uploaded successfully." });
-    } catch {
-      toast({ variant: "destructive", title: "Upload failed", description: "Could not upload GRN document." });
-    } finally {
-      setIsUploading(false);
+  const handleFileUpload = async (files: File[]) => {
+    if (!files.length) return;
+
+    for (const file of files) {
+      setAttachments((prev) => [
+        ...prev,
+        { url: "", name: file.name, status: "uploading" },
+      ]);
+
+      cloudinaryService.uploadFile(file)
+        .then((url) => {
+          setAttachments((prev) =>
+            prev.map((a) =>
+              a.name === file.name && a.status === "uploading"
+                ? { url, name: file.name, status: "done" }
+                : a
+            )
+          );
+          toast({ title: "Uploaded", description: `${file.name} uploaded successfully.` });
+        })
+        .catch(() => {
+          setAttachments((prev) =>
+            prev.map((a) =>
+              a.name === file.name && a.status === "uploading"
+                ? { ...a, status: "error" }
+                : a
+            )
+          );
+          toast({ title: "Upload failed", description: `Could not upload ${file.name}.`, variant: "destructive" });
+        });
     }
   };
 
@@ -136,6 +168,8 @@ export function RaisePaymentRequestDrawer({
       setError(`Amount exceeds the LPO remaining balance of ${lpo.currency} ${remainingBalance.toLocaleString()}`);
       return;
     }
+
+    const uploadedAttachments = attachments.filter((a) => a.status === "done").map((a) => a.url);
 
     setIsSubmitting(true);
     setError(null);
@@ -146,7 +180,8 @@ export function RaisePaymentRequestDrawer({
       amount: values.amount,
       currency: values.currency,
       description: values.description || undefined,
-      grnUrl: values.grnUrl || undefined,
+      grnUrl: uploadedAttachments.length > 0 ? uploadedAttachments[0] : (values.grnUrl || undefined),
+      attachments: uploadedAttachments,
     };
 
     const res = isEdit && editRequest
@@ -334,62 +369,93 @@ export function RaisePaymentRequestDrawer({
                     )}
                   />
 
-                  {/* GRN Upload */}
+                  {/* Supporting Documents Upload */}
                   <Card className="border shadow-sm">
-                    <CardContent className="p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h3 className="font-medium">Goods Received Note (GRN)</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Optional — Upload confirmation of goods/services received
-                          </p>
-                        </div>
-                        {form.watch("grnUrl") && (
-                          <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">
-                            <Check className="h-3 w-3 mr-1" /> Uploaded
-                          </Badge>
-                        )}
+                    <CardContent className="p-5 space-y-4">
+                      <div>
+                        <h3 className="font-medium text-sm">Supporting Documents / GRN</h3>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Optional — Upload confirmation notes, bills, or goods received notes
+                        </p>
                       </div>
 
-                      <FormField
-                        control={form.control}
-                        name="grnUrl"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex gap-3 items-start">
-                              <FormControl>
-                                <Input
-                                  placeholder="https://... (paste URL or upload below)"
-                                  {...field}
-                                  className="flex-1"
-                                />
-                              </FormControl>
-                              <label className="cursor-pointer">
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) handleGrnUpload(file);
-                                  }}
-                                />
-                                <Button type="button" variant="outline" size="sm" disabled={isUploading} asChild>
-                                  <span className="flex items-center gap-1">
-                                    {isUploading ? (
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                      <Upload className="h-3.5 w-3.5" />
-                                    )}
-                                    Upload
+                      <div className="space-y-3">
+                        <FileUpload
+                          onChange={handleFileUpload}
+                          multiple={true}
+                        />
+
+                        {attachments.length > 0 && (
+                          <div className="space-y-2 mt-1">
+                            {attachments.map((file, index) => (
+                              <div
+                                key={index}
+                                className={cn(
+                                  "flex items-center gap-3 px-3.5 py-2.5 rounded-lg border text-sm transition-colors",
+                                  file.status === "uploading" && "bg-muted/30 border-border/60",
+                                  file.status === "done" && "bg-background border-border",
+                                  file.status === "error" && "bg-destructive/5 border-destructive/20"
+                                )}
+                              >
+                                {/* Icon */}
+                                <div className={cn(
+                                  "w-7 h-7 rounded-md flex items-center justify-center shrink-0",
+                                  file.status === "uploading" && "bg-muted",
+                                  file.status === "done" && "bg-primary/10",
+                                  file.status === "error" && "bg-destructive/10"
+                                )}>
+                                  {file.status === "uploading" ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                                  ) : file.status === "done" ? (
+                                    <FileText className="w-3.5 h-3.5 text-primary" />
+                                  ) : (
+                                    <X className="w-3.5 h-3.5 text-destructive" />
+                                  )}
+                                </div>
+
+                                {/* Name + Status */}
+                                <div className="flex-1 min-w-0">
+                                  {file.status === "done" ? (
+                                    <a
+                                      href={file.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="font-medium text-foreground hover:text-primary transition-colors truncate block"
+                                    >
+                                      {file.name}
+                                    </a>
+                                  ) : (
+                                    <span className={cn("font-medium truncate block", file.status === "error" && "text-destructive")}>
+                                      {file.name}
+                                    </span>
+                                  )}
+                                  <span className={cn(
+                                    "text-xs mt-0.5 block",
+                                    file.status === "uploading" && "text-muted-foreground",
+                                    file.status === "done" && "text-muted-foreground",
+                                    file.status === "error" && "text-destructive/70"
+                                  )}>
+                                    {file.status === "uploading" && "Uploading..."}
+                                    {file.status === "done" && "Uploaded"}
+                                    {file.status === "error" && "Upload failed — please try again"}
                                   </span>
-                                </Button>
-                              </label>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
+                                </div>
+
+                                {/* Remove */}
+                                {file.status !== "uploading" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== index))}
+                                    className="shrink-0 text-muted-foreground/50 hover:text-destructive transition-colors p-1 rounded"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         )}
-                      />
+                      </div>
                     </CardContent>
                   </Card>
 

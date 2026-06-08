@@ -478,6 +478,39 @@ export async function getProjects() {
   }
 }
 
+export async function searchProjects(q: string) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/search/autocomplete`,
+      {
+        ...config,
+        params: { q },
+      },
+    );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    console.error("Failed to search projects:", error);
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to search projects";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
+  }
+}
+
+
 export async function getProjectById(id: string) {
   try {
     const config = await getAxiosConfig();

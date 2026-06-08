@@ -115,11 +115,14 @@ export async function submitImprestAccounting(
   }
 }
 
-export async function getAllImprests() {
+export async function getAllImprests(params?: { projectId?: string }) {
   try {
     const config = await getAxiosConfig();
 
-    const response = await axios.get<Imprest[]>(`${API_URL}/imprest`, config);
+    const response = await axios.get<Imprest[]>(`${API_URL}/imprest`, {
+      ...config,
+      params,
+    });
     return { success: true as const, data: response.data };
   } catch (error: any) {
     if (error instanceof AxiosError && error.response?.status === 401) {

@@ -90,6 +90,7 @@ export interface PaymentRequest {
   currency: string;
   description?: string;
   grnUrl?: string;
+  attachments?: string[];
   requestedBy: {
     _id: string;
     firstName: string;
@@ -138,6 +139,7 @@ export interface CreatePaymentRequestPayload {
   currency: string;
   description?: string;
   grnUrl?: string;
+  attachments?: string[];
 }
 
 export interface ApprovePayload {

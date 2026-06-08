@@ -111,6 +111,7 @@ export interface Imprest {
   accountingRevision?: ImprestAccountingRevision;
   accounting?: ImprestAccounting;
   attachments?: ImprestAttachment[];
+  projectId?: string | { _id: string; name: string };
   createdAt: string;
   updatedAt: string;
 }

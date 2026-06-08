@@ -168,7 +168,7 @@ export function PaymentVouchersTable({ vouchers, isLoading, onRefresh, onView, t
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-2">
           <div className="rounded-md border-t overflow-auto">
             <Table>
               <TableHeader>
