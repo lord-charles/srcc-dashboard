@@ -8,13 +8,14 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface Props {
-  params: {
+  params: Promise<{
     voucherId: string;
-  };
+  }>;
 }
 
 export default async function PaymentVoucherDetailsRoute({ params }: Props) {
-  const res = await getPaymentVoucherById(params.voucherId);
+  const { voucherId } = await params;
+  const res = await getPaymentVoucherById(voucherId);
   if (!res.success || !res.data) {
     redirect("/payment-vouchers");
   }

@@ -432,7 +432,7 @@ export function NewImprestPage() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Link this imprest request to a project's financial tracker
+                          Link this imprest request to a project&apos;s financial tracker
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

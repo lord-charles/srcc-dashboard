@@ -8,13 +8,14 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 interface Props {
-  params: {
+  params: Promise<{
     requestId: string;
-  };
+  }>;
 }
 
 export default async function PaymentRequestDetailsRoute({ params }: Props) {
-  const res = await getPaymentRequestById(params.requestId);
+  const { requestId } = await params;
+  const res = await getPaymentRequestById(requestId);
   if (!res.success || !res.data) {
     redirect("/payment-requests");
   }
