@@ -175,7 +175,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               size={16}
               strokeWidth={2}
             />
-            Milestones
+            Milestone
           </TabsTrigger>
           <TabsTrigger
             value="documents"
@@ -186,7 +186,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               size={16}
               strokeWidth={2}
             />
-            Documents
+            Docs
           </TabsTrigger>
           <TabsTrigger
             value="budget"
@@ -208,7 +208,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               size={16}
               strokeWidth={2}
             />
-            Contracts
+            Contract
           </TabsTrigger>
           <TabsTrigger
             value="claims"
@@ -219,7 +219,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               size={16}
               strokeWidth={2}
             />
-            Claims
+            Claim
           </TabsTrigger>
           <TabsTrigger
             value="imprests"
@@ -230,7 +230,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               size={16}
               strokeWidth={2}
             />
-            Imprests
+            Imprest
           </TabsTrigger>
 
         </TabsList>
