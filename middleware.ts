@@ -81,14 +81,20 @@ export default withAuth(
         "/payment-vouchers",
       ];
 
-      if (
-        !hasAdminRole &&
-        blockedRoots.some(
-          (root) => pathname === root || pathname.startsWith(root + "/"),
-        )
-      ) {
-        const redirectUrl = new URL("/analytics?unauthorized=1", req.url);
-        return NextResponse.redirect(redirectUrl);
+      const matchedBlockedRoot = blockedRoots.find(
+        (root) => pathname === root || pathname.startsWith(root + "/"),
+      );
+
+      if (matchedBlockedRoot && !hasAdminRole) {
+        const userPermissions = (token as any).permissions || {};
+        const rootPermissions = userPermissions[matchedBlockedRoot];
+        const hasAccess =
+          Array.isArray(rootPermissions) && rootPermissions.length > 0;
+
+        if (!hasAccess) {
+          const redirectUrl = new URL("/analytics?unauthorized=1", req.url);
+          return NextResponse.redirect(redirectUrl);
+        }
       }
     } catch {
       // On any error, fail-closed for consultant-only users on blocked roots

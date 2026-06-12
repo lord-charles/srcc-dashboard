@@ -173,6 +173,52 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return currentPath === url || currentPath.startsWith(url);
   };
 
+  const roles = session?.user?.roles || [];
+  const hasAdminRole = roles.some((r) => r === "admin" || r === "super_admin");
+  const permissions = session?.user?.permissions || {};
+
+  const isVisible = (url: string) => {
+    if (url === "#" || url === "/analytics") return true;
+    if (hasAdminRole) return true;
+
+    const blockedRoots = [
+      "/contracts",
+      "/claims",
+      "/imprest",
+      "/budget",
+      "/suppliers",
+      "/lpos",
+      "/payment-requests",
+      "/payment-vouchers",
+    ];
+
+    const matchedBlockedRoot = blockedRoots.find(
+      (root) => url === root || url.startsWith(root + "/"),
+    );
+
+    if (matchedBlockedRoot) {
+      const rootPermissions = permissions[matchedBlockedRoot];
+      return Array.isArray(rootPermissions) && rootPermissions.length > 0;
+    }
+
+    if (url === "/users" || url === "/settings") {
+      return false;
+    }
+
+    return true;
+  };
+
+  const filteredNavMain = data.navMain
+    .filter((item) => isVisible(item.url))
+    .map((item) => {
+      if (!item.items) return item;
+      return {
+        ...item,
+        items: item.items.filter((subItem) => isVisible(subItem.url)),
+      };
+    })
+    .filter((item) => !item.items || item.items.length > 0);
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -193,7 +239,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {canRenderNav ? (
           <SidebarGroup>
             <SidebarMenu className="gap-2">
-              {data.navMain.map((item) => (
+              {filteredNavMain.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild

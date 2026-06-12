@@ -104,7 +104,7 @@ export function LpoForm({ projectId, projectCurrency = "KES" }: LpoFormProps) {
   const handleItemChange = (index: number, field: string, value: string | number | boolean) => {
     const newItems = [...items];
     const item: any = { ...newItems[index], [field]: value };
-    item.total = (Number(item.quantity) || 0) * (Number(item.rate) || 0);
+    item.total = (Number(item.noOfDays) || 0) * (Number(item.quantity) || 0) * (Number(item.rate) || 0);
     newItems[index] = item;
     setItems(newItems);
   };

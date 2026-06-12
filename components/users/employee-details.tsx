@@ -72,6 +72,7 @@ import { useState, useEffect } from "react";
 import { updateEmployee } from "@/services/employees.service";
 import { getProjectConfig } from "@/services/system-config.service";
 import type { UserRole } from "@/types/user";
+import EmployeePermissions from "@/components/users/employee-permissions";
 
 // Available roles in the system
 const availableRoles: any[] = [
@@ -585,7 +586,7 @@ export default function EmployeeDetailsPage({ employee }: any) {
 
         <div className="lg:col-span-3 space-y-6">
           <Tabs defaultValue="employment" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-12 rounded-lg  p-1">
+            <TabsList className="grid w-full grid-cols-5 h-12 rounded-lg  p-1">
               <TabsTrigger value="employment" className="rounded-md">
                 Employment
               </TabsTrigger>
@@ -597,6 +598,9 @@ export default function EmployeeDetailsPage({ employee }: any) {
               </TabsTrigger>
               <TabsTrigger value="roles" className="rounded-md">
                 Roles
+              </TabsTrigger>
+              <TabsTrigger value="permissions" className="rounded-md">
+                Permissions
               </TabsTrigger>
             </TabsList>
 
@@ -1305,6 +1309,9 @@ export default function EmployeeDetailsPage({ employee }: any) {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+            <TabsContent value="permissions" className="mt-6">
+              <EmployeePermissions employee={employee} />
             </TabsContent>
           </Tabs>
 

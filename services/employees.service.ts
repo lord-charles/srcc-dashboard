@@ -201,3 +201,36 @@ export async function getProfile() {
     };
   }
 }
+
+export async function updateUserPermissions(
+  userId: string,
+  permissions: Record<string, string[]>,
+) {
+  try {
+    const config = await getAxiosConfig();
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/permissions/${userId}`,
+      { permissions },
+      config,
+    );
+    return { success: true as const, data: response.data };
+  } catch (error: any) {
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      await handleUnauthorized();
+    }
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update permissions";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
+    };
+  }
+}
+

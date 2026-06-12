@@ -1,6 +1,7 @@
 import { Header } from "../../components/header";
 import DashboardProvider from "../dashboard-provider";
 import { Button } from "@/components/ui/button";
+import { UnauthorizedAlert } from "@/components/unauthorized-alert";
 import {
   Card,
   CardContent,
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
     return (
       <DashboardProvider>
         <Header />
+        <UnauthorizedAlert />
         <div className="flex min-h-[80vh] w-full items-center justify-center p-4 md:p-8">
           <Card className="w-full">
             <CardHeader className="text-center">

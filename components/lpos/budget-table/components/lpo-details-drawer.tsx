@@ -243,14 +243,16 @@ export function LpoDetailsDrawer({
                         <CardContent>
                           <div className="space-y-4">
                             <div className="grid grid-cols-12 gap-4 text-sm font-bold text-muted-foreground border-b pb-2">
-                              <div className="col-span-6">Description</div>
+                              <div className="col-span-5">Description</div>
+                              <div className="col-span-1 text-center">Days</div>
                               <div className="col-span-2 text-center">Qty</div>
                               <div className="col-span-2 text-right">Rate</div>
                               <div className="col-span-2 text-right">Total</div>
                             </div>
                             {lpo.items.map((item, idx) => (
                               <div key={idx} className="grid grid-cols-12 gap-4 text-sm py-1 border-b border-muted/50 last:border-0">
-                                <div className="col-span-6 font-medium">{item.description}</div>
+                                <div className="col-span-5 font-medium">{item.description}</div>
+                                <div className="col-span-1 text-center">{item.noOfDays}</div>
                                 <div className="col-span-2 text-center">{item.quantity}</div>
                                 <div className="col-span-2 text-right">{item.rate.toLocaleString()}</div>
                                 <div className="col-span-2 text-right font-bold">{item.total.toLocaleString()}</div>

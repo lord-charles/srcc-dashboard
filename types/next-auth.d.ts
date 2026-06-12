@@ -21,7 +21,7 @@ declare module "next-auth" {
       companyName?: string;
       businessEmail?: string;
       businessPhone?: string;
-      permissions?: string[];
+      permissions?: Record<string, string[]>;
       hasProject?: boolean;
     } & DefaultSession["user"];
   }
@@ -44,7 +44,7 @@ declare module "next-auth" {
     companyName?: string;
     businessEmail?: string;
     businessPhone?: string;
-    permissions?: string[];
+    permissions?: Record<string, string[]>;
     hasProject?: boolean;
   }
 }
@@ -68,7 +68,7 @@ declare module "next-auth/jwt" {
     companyName?: string;
     businessEmail?: string;
     businessPhone?: string;
-    permissions?: string[];
+    permissions?: Record<string, string[]>;
     hasProject?: boolean;
   }
 }
