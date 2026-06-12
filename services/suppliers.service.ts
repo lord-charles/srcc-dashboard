@@ -30,6 +30,8 @@ export interface Supplier {
   kraPinUrl?: string;
   incorporationCertificateUrl?: string;
   otherComplianceDocumentUrl?: string;
+  bankAttachmentUrl?: string;
+  otherAttachments?: string[];
   bankName: string;
   bankBranch: string;
   accountName: string;
@@ -40,6 +42,7 @@ export interface Supplier {
   rating?: number;
   createdAt: string;
   updatedAt: string;
+  createdBy?: any;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/srcc/api";

@@ -36,6 +36,8 @@ export function SupplierRegistrationComponent({ initialData, isEditing = false }
   const [kraPinUrl, setKraPinUrl] = useState<string>(initialData?.kraPinUrl || "");
   const [incorporationCertificateUrl, setIncorporationCertificateUrl] =
     useState<string>(initialData?.incorporationCertificateUrl || "");
+  const [bankAttachmentUrl, setBankAttachmentUrl] = useState<string>(initialData?.bankAttachmentUrl || "");
+  const [otherAttachments, setOtherAttachments] = useState<string[]>(initialData?.otherAttachments || []);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -142,6 +144,8 @@ export function SupplierRegistrationComponent({ initialData, isEditing = false }
         ...formData,
         kraPinUrl,
         incorporationCertificateUrl,
+        bankAttachmentUrl,
+        otherAttachments,
       };
 
       const result = isEditing && initialData
@@ -533,6 +537,102 @@ export function SupplierRegistrationComponent({ initialData, isEditing = false }
                   >
                     View Uploaded Document
                   </a>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Bank Attachment (e.g. Cancelled Cheque, Bank Letter)</Label>
+                <FileUpload
+                  onChange={async (files) => {
+                    if (files.length > 0) {
+                      setIsUploading(true);
+                      try {
+                        const url = await cloudinaryService.uploadFile(
+                          files[0],
+                        );
+                        setBankAttachmentUrl(url);
+                        toast({
+                          title: "Success",
+                          description: "Bank attachment uploaded.",
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to upload file.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }
+                  }}
+                />
+                {bankAttachmentUrl && (
+                  <a
+                    href={bankAttachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline"
+                  >
+                    View Uploaded Document
+                  </a>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Other Attachments</Label>
+                <FileUpload
+                  multiple={true}
+                  onChange={async (files) => {
+                    if (files.length > 0) {
+                      setIsUploading(true);
+                      try {
+                        const urls = await Promise.all(
+                          files.map((file) => cloudinaryService.uploadFile(file))
+                        );
+                        setOtherAttachments((prev) => [...prev, ...urls]);
+                        toast({
+                          title: "Success",
+                          description: `${files.length} document(s) uploaded successfully.`,
+                        });
+                      } catch (error) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to upload one or more files.",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }
+                  }}
+                />
+                {otherAttachments && otherAttachments.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs font-semibold text-muted-foreground">Uploaded Files:</p>
+                    {otherAttachments.map((url, index) => {
+                      const fileName = url.split("/").pop() || `Document ${index + 1}`;
+                      return (
+                        <div key={url} className="flex items-center justify-between text-xs bg-slate-50 dark:bg-slate-900 p-1.5 rounded">
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:underline truncate max-w-[200px]"
+                          >
+                            {fileName}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOtherAttachments((prev) => prev.filter((u) => u !== url));
+                            }}
+                            className="text-red-500 hover:text-red-700 ml-2 font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             </div>

@@ -980,9 +980,15 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                       </p>
                       <div className="flex items-center space-x-2 mt-1">
                         <Badge
-                          className={getInvoiceStatusColor(invoice.status)}
+                          className={
+                            invoice.creditNotes && invoice.creditNotes.length > 0
+                              ? "bg-blue-600 text-white"
+                              : getInvoiceStatusColor(invoice.status)
+                          }
                         >
-                          {invoice.status.replace("_", " ").toUpperCase()}
+                          {invoice.creditNotes && invoice.creditNotes.length > 0
+                            ? "CREDIT NOTE ISSUED"
+                            : invoice.status.replace("_", " ").toUpperCase()}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
                           {formatCurrency(invoice.totalAmount)}
@@ -1097,9 +1103,15 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
                           </p>
                           <div className="pt-2 border-t">
                             <Badge
-                              className={getInvoiceStatusColor(invoice.status)}
+                              className={
+                                invoice.creditNotes && invoice.creditNotes.length > 0
+                                  ? "bg-blue-600 text-white"
+                                  : getInvoiceStatusColor(invoice.status)
+                              }
                             >
-                              {invoice.status.replace("_", " ").toUpperCase()}
+                              {invoice.creditNotes && invoice.creditNotes.length > 0
+                                ? "CREDIT NOTE ISSUED"
+                                : invoice.status.replace("_", " ").toUpperCase()}
                             </Badge>
                           </div>
                         </div>

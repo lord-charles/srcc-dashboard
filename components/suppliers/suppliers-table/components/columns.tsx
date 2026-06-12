@@ -13,10 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash, Ban } from "lucide-react";
+import { MoreHorizontal, Edit, Trash, Ban, Eye } from "lucide-react";
 import Link from "next/link";
 
-export function getColumns(): ColumnDef<Supplier>[] {
+export function getColumns(isSuperAdmin: boolean): ColumnDef<Supplier>[] {
   return [
     {
       accessorKey: "name",
@@ -104,6 +104,12 @@ export function getColumns(): ColumnDef<Supplier>[] {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem asChild>
+                <Link href={`/suppliers/${supplier._id}`}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href={`/suppliers/${supplier._id}/edit`}>
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
@@ -123,21 +129,23 @@ export function getColumns(): ColumnDef<Supplier>[] {
                 <Ban className="mr-2 h-4 w-4" />
                 {isActive ? "Deactivate" : "Activate"}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
-                onClick={async () => {
-                  if (confirm("Are you sure you want to delete this supplier?")) {
-                    try {
-                      const { deleteSupplier } = await import("@/services/suppliers.service");
-                      await deleteSupplier(supplier._id);
-                      window.location.reload();
-                    } catch(e) {}
-                  }
-                }}
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
+              {isSuperAdmin && (
+                <DropdownMenuItem
+                  className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer"
+                  onClick={async () => {
+                    if (confirm("Are you sure you want to delete this supplier?")) {
+                      try {
+                        const { deleteSupplier } = await import("@/services/suppliers.service");
+                        await deleteSupplier(supplier._id);
+                        window.location.reload();
+                      } catch(e) {}
+                    }
+                  }}
+                >
+                  <Trash className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );

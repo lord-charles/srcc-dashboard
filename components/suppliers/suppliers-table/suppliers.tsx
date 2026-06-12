@@ -26,18 +26,22 @@ import { Button } from "@/components/ui/button";
 
 import { getColumns } from "./components/columns";
 import { Supplier } from "@/services/suppliers.service";
+import { useSession } from "next-auth/react";
 
 interface DataTableProps {
   suppliers: Supplier[];
 }
 
 export default function SupplierTable({ suppliers }: DataTableProps) {
+  const { data: session } = useSession();
+  const isSuperAdmin = session?.user?.roles?.includes("super_admin") || false;
+
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const columns = useMemo(() => getColumns(), []);
+  const columns = useMemo(() => getColumns(isSuperAdmin), [isSuperAdmin]);
 
   const table = useReactTable({
     data: suppliers,
