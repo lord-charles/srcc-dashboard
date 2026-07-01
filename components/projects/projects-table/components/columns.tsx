@@ -5,31 +5,22 @@ import { Project } from "@/types/project";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 import { Badge } from "@/components/ui/badge";
-import {  formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { hasProjectAccess } from "@/lib/project-utils";
 
 const customIncludesStringFilter = (
   row: Row<Project>,
   columnId: string,
-  filterValue: string
+  filterValue: string,
 ) => {
   const value = row.getValue(columnId) as string;
   return value?.toLowerCase().includes((filterValue as string).toLowerCase());
 };
 
-const shouldShowActions = (
-  roles: string[] | undefined,
-  hasProject: boolean | undefined
-): boolean => {
-  if (!roles || roles.length === 0) return false;
-  // Hide actions if user only has consultant role and doesn't have any projects
-  if (roles.length === 1 && roles[0] === "consultant" && !hasProject)
-    return false;
-  return true;
-};
-
 export const getColumns = (
   roles: string[] | undefined,
-  hasProject: boolean | undefined
+  hasProject: boolean | undefined,
+  userId?: string | undefined,
 ): ColumnDef<Project>[] => {
   const baseColumns: ColumnDef<Project>[] = [
     // {
@@ -204,10 +195,10 @@ export const getColumns = (
               status === "active"
                 ? "bg-green-100 text-green-800"
                 : status === "on-hold"
-                ? "bg-yellow-100 text-yellow-800"
-                : status === "completed"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-red-100 text-red-800"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : status === "completed"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-red-100 text-red-800"
             }
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -221,15 +212,24 @@ export const getColumns = (
   ];
 
   // Conditionally add actions column
-  if (shouldShowActions(roles, hasProject)) {
-    baseColumns.push({
-      accessorKey: "actions",
-      cell: ({ row }) => <DataTableRowActions row={row} />,
-    });
-  }
+  baseColumns.push({
+    id: "actions",
+    header: ({ table }) => {
+      const data = table.options.data as Project[];
+      const hasAnyAccess = data.some((project) =>
+        hasProjectAccess(project, userId, roles),
+      );
+      return hasAnyAccess ? "Actions" : null;
+    },
+    cell: ({ row }) => <DataTableRowActions row={row} />,
+  });
 
   return baseColumns;
 };
 
 // Default export for backward compatibility
-export const columns: ColumnDef<Project>[] = getColumns(undefined, undefined);
+export const columns: ColumnDef<Project>[] = getColumns(
+  undefined,
+  undefined,
+  undefined,
+);

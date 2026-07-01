@@ -43,9 +43,10 @@ export default function ProjectTable({ projects }: any) {
   const columns = useMemo(() => {
     return getColumns(
       session?.user?.roles as string[] | undefined,
-      session?.user?.hasProject as boolean | undefined
+      session?.user?.hasProject as boolean | undefined,
+      session?.user?.id
     );
-  }, [session?.user?.roles, session?.user?.hasProject]);
+  }, [session?.user?.roles, session?.user?.hasProject, session?.user?.id]);
 
   
   const table = useReactTable({

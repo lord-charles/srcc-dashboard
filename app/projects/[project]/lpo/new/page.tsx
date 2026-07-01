@@ -6,6 +6,7 @@ import { handleUnauthorized } from "@/services/dashboard.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { hasProjectAccess } from "@/lib/project-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -44,29 +45,8 @@ export default async function NewLpoPage({
     const userId = session.user.id;
     const roles = session.user.roles || [];
 
-    const hasAdminAccess = roles.some(
-      (r) => r === "admin" || r === "super_admin"
-    );
-
-    if (!hasAdminAccess) {
-      const pmId = project.projectManagerId?._id || project.projectManagerId;
-      const isPm = pmId === userId;
-
-      const isAssistantPm = project.assistantProjectManagers?.some(
-        (apm: any) => (apm?.userId?._id || apm?.userId || apm) === userId
-      );
-
-      const isCoachManager = project.coachManagers?.some(
-        (cm: any) => (cm?.userId?._id || cm?.userId || cm) === userId
-      );
-
-      const isCoachAssistant = project.coachAssistants?.some(
-        (ca: any) => (ca?.userId?._id || ca?.userId || ca) === userId
-      );
-
-      if (!isPm && !isAssistantPm && !isCoachManager && !isCoachAssistant) {
-        redirect("/unauthorized");
-      }
+    if (!hasProjectAccess(project, userId, roles)) {
+      redirect("/unauthorized");
     }
 
     return (

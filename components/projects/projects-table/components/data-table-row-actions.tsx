@@ -2,6 +2,7 @@
 
 import { MoreHorizontal } from "lucide-react";
 import { Row } from "@tanstack/react-table";
+import { hasProjectAccess } from "@/lib/project-utils";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -43,30 +44,12 @@ export function DataTableRowActions<TData>({
   const userId = session?.user?.id;
   const roles = session?.user?.roles || [];
 
-  const hasAdminRole = roles.some(
-    (r) => r === "admin" || r === "super_admin"
-  );
-
-  const pmId = project.projectManagerId?._id || project.projectManagerId;
-  const isPm = pmId === userId;
-
-  const isAssistantPm = project.assistantProjectManagers?.some(
-    (apm: any) => (apm?.userId?._id || apm?.userId || apm) === userId
-  );
-
-  const isCoachManager = project.coachManagers?.some(
-    (cm: any) => (cm?.userId?._id || cm?.userId || cm) === userId
-  );
-
-  const isCoachAssistant = project.coachAssistants?.some(
-    (ca: any) => (ca?.userId?._id || ca?.userId || ca) === userId
-  );
-
-  const hasAccess = hasAdminRole || isPm || isAssistantPm || isCoachManager || isCoachAssistant;
-
+  const hasAccess = hasProjectAccess(project, userId, roles);
   if (!hasAccess) {
     return null;
   }
+
+  const isSuperAdmin = roles.includes("super_admin");
 
   const handleDelete = async () => {
     if (isDeleting) return;
@@ -108,13 +91,16 @@ export function DataTableRowActions<TData>({
           <Link href={`/projects/${project._id}`}>
             <DropdownMenuItem>View Details</DropdownMenuItem>
           </Link>
-          <DropdownMenuSeparator />
-
-          <DialogTrigger asChild>
-            <DropdownMenuItem className="text-red-600">
-              Delete Project
-            </DropdownMenuItem>
-          </DialogTrigger>
+          {isSuperAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DialogTrigger asChild>
+                <DropdownMenuItem className="text-red-600">
+                  Delete Project
+                </DropdownMenuItem>
+              </DialogTrigger>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
