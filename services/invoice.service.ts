@@ -20,10 +20,18 @@ export async function createInvoice(invoiceData: any) {
       await handleUnauthorized();
     }
     console.error("Failed to create invoice:", error);
-    const message = error?.response?.data?.message || error?.message || "Failed to create invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to create invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -41,18 +49,23 @@ export async function getInvoiceById(id: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to fetch invoice ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to fetch invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to fetch invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function updateInvoice(
-  id: string,
-  invoiceData: Partial<Invoice>,
-) {
+export async function updateInvoice(id: string, invoiceData: Partial<Invoice>) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.put<Invoice>(
@@ -66,10 +79,18 @@ export async function updateInvoice(
       await handleUnauthorized();
     }
     console.error(`Failed to update invoice ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to update invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to update invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -84,10 +105,18 @@ export async function deleteInvoice(id: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to delete invoice ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to delete invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to delete invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -106,10 +135,18 @@ export async function editInvoice(invoiceId: string, invoiceData: any) {
       await handleUnauthorized();
     }
     console.error(`Failed to edit invoice ${invoiceId}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to edit invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to edit invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -127,11 +164,19 @@ export async function submitInvoice(id: string) {
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to submit invoice ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to submit invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(`Failed to submit invoice ${id}:`, error.response?.data || error);
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to submit invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -150,10 +195,18 @@ export async function approveInvoice(id: string, comments: string = "") {
       await handleUnauthorized();
     }
     console.error(`Failed to approve invoice ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to approve invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to approve invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -172,10 +225,18 @@ export async function approverRequestChanges(id: string, comments: string) {
       await handleUnauthorized();
     }
     console.error(`Failed to request changes for invoice ${id}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to request changes";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to request changes";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -197,18 +258,23 @@ export async function recordPayment(
       await handleUnauthorized();
     }
     console.error(`Failed to record payment for invoice ${invoiceId}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to record payment";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to record payment";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
 
-export async function attachActualInvoice(
-  invoiceId: string,
-  url: string,
-) {
+export async function attachActualInvoice(invoiceId: string, url: string) {
   try {
     const config = await getAxiosConfig();
     const response = await axios.patch<Invoice>(
@@ -221,11 +287,22 @@ export async function attachActualInvoice(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to attach actual invoice to invoice ${invoiceId}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to attach actual invoice";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(
+      `Failed to attach actual invoice to invoice ${invoiceId}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to attach actual invoice";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -247,11 +324,22 @@ export async function requestInvoiceRevision(
     if (error instanceof AxiosError && error.response?.status === 401) {
       await handleUnauthorized();
     }
-    console.error(`Failed to request revision for invoice ${invoiceId}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to request revision";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    console.error(
+      `Failed to request revision for invoice ${invoiceId}:`,
+      error,
+    );
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to request revision";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }
@@ -273,10 +361,18 @@ export async function addCreditNote(
       await handleUnauthorized();
     }
     console.error(`Failed to add credit note to invoice ${invoiceId}:`, error);
-    const message = error?.response?.data?.message || error?.message || "Failed to add credit note";
-    return { 
-      success: false as const, 
-      error: typeof message === 'string' ? message : Array.isArray(message) ? message[0] : JSON.stringify(message) 
+    const message =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to add credit note";
+    return {
+      success: false as const,
+      error:
+        typeof message === "string"
+          ? message
+          : Array.isArray(message)
+            ? message[0]
+            : JSON.stringify(message),
     };
   }
 }

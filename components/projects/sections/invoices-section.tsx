@@ -241,7 +241,15 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
         paidAt: paymentForm.paidAt || format(new Date(), "yyyy-MM-dd"),
       };
 
-      await recordPayment(showPaymentDrawer, paymentData);
+      const res = await recordPayment(showPaymentDrawer, paymentData);
+      if (!res.success) {
+        toast({
+          title: "Error",
+          description: res.error || "Failed to record payment.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Success",
         description: "Payment recorded successfully.",
@@ -252,7 +260,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to record payment.",
+        description: error?.message || "Failed to record payment.",
         variant: "destructive",
       });
     } finally {
@@ -299,15 +307,24 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     try {
       setApprovingInvoiceId(invoice._id);
       // For now we send an empty comment; can be extended to prompt the user
-      await approveInvoice(invoice._id, "");
+      const res = await approveInvoice(invoice._id, "");
+      if (!res.success) {
+        toast({
+          title: "Error",
+          description: res.error || "Failed to approve invoice",
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Success",
         description: "Invoice approved and moved to pending attachment",
       });
+      setTimeout(() => window.location.reload(), 1500);
     } catch (error: any) {
       const errorMessage = (
-        error.message || "Failed to approve invoice"
+        error?.message || "Failed to approve invoice"
       ).replace(/^Error: /, "");
 
       toast({
@@ -317,7 +334,6 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       });
     } finally {
       setApprovingInvoiceId(null);
-      setTimeout(() => window.location.reload(), 1500);
     }
   };
 
@@ -325,18 +341,26 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
     if (!showAttachDrawer || !attachUrl) return;
     setIsAttachSubmitting(true);
     try {
-      await attachActualInvoice(showAttachDrawer, attachUrl);
+      const res = await attachActualInvoice(showAttachDrawer, attachUrl);
+      if (!res.success) {
+        toast({
+          title: "Error",
+          description: res.error || "Failed to attach invoice URL.",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({ title: "Success", description: "Actual invoice URL attached." });
       closeAttachDrawer();
+      setTimeout(() => window.location.reload(), 1000);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to attach invoice URL.",
+        description: error?.message || "Failed to attach invoice URL.",
         variant: "destructive",
       });
     } finally {
       setIsAttachSubmitting(false);
-      setTimeout(() => window.location.reload(), 1000);
     }
   };
 
@@ -576,13 +600,29 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       };
 
       if (editingInvoice) {
-        await editInvoice(editingInvoice._id, invoiceData);
+        const res = await editInvoice(editingInvoice._id, invoiceData);
+        if (!res.success) {
+          toast({
+            title: "Error",
+            description: res.error || "Failed to update invoice. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
         toast({
           title: "Success",
           description: "Invoice updated successfully",
         });
       } else {
-        await createInvoice(invoiceData);
+        const res = await createInvoice(invoiceData);
+        if (!res.success) {
+          toast({
+            title: "Error",
+            description: res.error || "Failed to create invoice. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
         toast({
           title: "Success",
           description: "Invoice created successfully",
@@ -593,39 +633,51 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
       setFormState(initialFormState);
       setFormErrors({});
       setEditingInvoice(null);
-    } catch (error) {
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: editingInvoice
-          ? "Failed to update invoice. Please try again."
-          : "Failed to create invoice. Please try again.",
+        description:
+          error?.message ||
+          (editingInvoice
+            ? "Failed to update invoice. Please try again."
+            : "Failed to create invoice. Please try again."),
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
-      setTimeout(() => window.location.reload(), 1500);
     }
   };
 
   const handleSubmitForApproval = async (invoice: Invoice) => {
     try {
       setSubmittingInvoiceId(invoice._id);
-      await submitInvoice(invoice._id);
+      const res = await submitInvoice(invoice._id);
+      if (!res.success) {
+        toast({
+          title: "Error",
+          description: res.error || "Failed to submit invoice for approval",
+          variant: "destructive",
+        });
+        return;
+      }
       toast({
         title: "Success",
         description: "Invoice submitted for approval",
       });
+      // Delay reload to ensure any modals close first
+      setTimeout(() => window.location.reload(), 1500);
     } catch (error: any) {
-      const errorMessage = error.message.replace(/^Error: /, "") as string;
+      const errorMessage =
+        error?.message?.replace(/^Error: /, "") ||
+        "Failed to submit invoice for approval";
       toast({
         title: "Error",
-        description: errorMessage || "Failed to submit invoice for approval",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
       setSubmittingInvoiceId(null);
-      // Delay reload to ensure any modals close first
-      setTimeout(() => window.location.reload(), 1500);
     }
   };
 
