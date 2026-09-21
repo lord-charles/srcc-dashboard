@@ -94,11 +94,12 @@ export function CreateClaimOnBehalfDialog({
     const candidate =
       anyContract?.coachRate ??
       anyContract?.rate ??
+      anyContract?.contractValue ??
       anyContract?.coachContract?.rate ??
       anyContract?.coach?.contract?.rate;
     const parsed =
       typeof candidate === "string" ? parseFloat(candidate) : candidate;
-    return typeof parsed === "number" && !Number.isNaN(parsed)
+    return typeof parsed === "number" && !Number.isNaN(parsed) && parsed > 0
       ? parsed
       : undefined;
   }, [contract]);
@@ -256,10 +257,24 @@ export function CreateClaimOnBehalfDialog({
   const handleSubmit = async () => {
     const claimAmount = parseFloat(amount);
 
-    if (!amount || claimAmount <= 0) {
+    if (isCoachContract) {
+      const units = parseFloat(coachUnits);
+      if (!coachUnits || isNaN(units) || units <= 0) {
+        toast({
+          title: "Missing Sessions",
+          description: `Please enter the number of ${coachRateUnit === "per_hour" ? "hours" : "sessions"}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!amount || isNaN(claimAmount) || claimAmount <= 0) {
       toast({
         title: "Invalid Amount",
-        description: "Please enter a valid claim amount",
+        description: isCoachContract
+          ? "Please enter valid session units and rate to calculate claim amount"
+          : "Please enter a valid claim amount",
         variant: "destructive",
       });
       return;
@@ -349,109 +364,53 @@ export function CreateClaimOnBehalfDialog({
     if (!open) return;
     if (!isCoachContract) return;
 
-    if (coachRateFromContract !== undefined) {
-      setCoachRate(coachRateFromContract.toString());
+    const rate =
+      coachRateFromContract ??
+      (contract.contractValue && contract.contractValue > 0
+        ? contract.contractValue
+        : undefined);
+
+    if (rate !== undefined) {
+      setCoachRate(rate.toString());
       setCoachRateSource("contract");
     }
     if (coachRateUnitFromContract) {
       setCoachRateUnit(coachRateUnitFromContract);
       setCoachRateSource("contract");
+    } else {
+      setCoachRateUnit("per_session");
+      setCoachRateSource("contract");
     }
-    // Intentionally not resetting units/amount here to avoid wiping user input
-  }, [open, isCoachContract, coachRateFromContract, coachRateUnitFromContract]);
+  }, [open, isCoachContract, coachRateFromContract, coachRateUnitFromContract, contract.contractValue]);
 
+  // Pre-select contract milestone if available and none selected yet
   useEffect(() => {
     if (!open) return;
-    if (!isCoachContract) return;
-    if (coachRateFromContract !== undefined && coachRateUnitFromContract)
-      return;
+    if (
+      contract?.milestoneId &&
+      selectedMilestones.length === 0 &&
+      projectMilestones.length > 0
+    ) {
+      const contractMilestoneIdStr =
+        typeof contract.milestoneId === "object" && (contract.milestoneId as any)._id
+          ? (contract.milestoneId as any)._id.toString()
+          : contract.milestoneId.toString();
 
-    let cancelled = false;
-
-    const loadCoachRateFromProject = async () => {
-      try {
-        const config = await getAxiosConfig();
-        const { data: project } = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/projects/${contract.projectId}`,
-          config,
-        );
-
-        const coaches = (project?.coaches || []) as Array<any>;
-        const coachId = contract?.contractedUserId?._id;
-        if (!coachId) return;
-
-        const getIdString = (value: any): string | undefined => {
-          if (!value) return undefined;
-          if (typeof value === "string") return value;
-          if (typeof value === "object") {
-            if (value._id) return value._id.toString();
-            if (typeof value.toString === "function") return value.toString();
-          }
-          return undefined;
-        };
-
-        const coachIdStr = coachId.toString();
-        const contractMilestoneIdStr = contract.milestoneId
-          ? contract.milestoneId.toString()
-          : undefined;
-
-        const fromMilestone = contract.milestoneId
-          ? coaches.find(
-              (c) =>
-                getIdString(c?.userId) === coachIdStr &&
-                getIdString(c?.milestoneId) === contractMilestoneIdStr,
-            )
-          : undefined;
-
-        const assignment =
-          fromMilestone ||
-          coaches.find((c) => getIdString(c?.userId) === coachIdStr) ||
-          undefined;
-
-        const rate = assignment?.contract?.rate;
-        const rateUnit = assignment?.contract?.rateUnit;
-
-        if (cancelled) return;
-
-        if (typeof rate === "number" && !Number.isNaN(rate)) {
-          setCoachRate(rate.toString());
-          setCoachRateSource("project");
-        } else if (contract.contractValue && contract.contractValue > 0) {
-          setCoachRate(contract.contractValue.toString());
-          setCoachRateSource("project");
-        }
-        if (rateUnit === "per_hour" || rateUnit === "per_session") {
-          setCoachRateUnit(rateUnit);
-          setCoachRateSource("project");
-        }
-      } catch (e) {
-        if (
-          !cancelled &&
-          contract.contractValue &&
-          contract.contractValue > 0
-        ) {
-          setCoachRate(contract.contractValue.toString());
-          setCoachRateSource("project");
-        }
-        return;
+      const matched = projectMilestones.find(
+        (m) => m._id.toString() === contractMilestoneIdStr,
+      );
+      if (matched) {
+        setSelectedMilestones([
+          {
+            milestoneId: matched._id,
+            title: matched.title,
+            percentageClaimed: 0,
+            budget: matched.budget,
+          },
+        ]);
       }
-    };
-
-    void loadCoachRateFromProject();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    open,
-    isCoachContract,
-    contract.projectId,
-    contract.contractedUserId?._id,
-    contract.milestoneId,
-    contract.contractValue,
-    coachRateFromContract,
-    coachRateUnitFromContract,
-  ]);
+    }
+  }, [open, contract?.milestoneId, projectMilestones, selectedMilestones.length]);
 
   useEffect(() => {
     if (!isCoachContract) return;
@@ -490,10 +449,16 @@ export function CreateClaimOnBehalfDialog({
           <div className={sectionClassName}>
             <div className="flex items-start justify-between gap-3">
               <span className="text-xs font-medium sm:text-sm">
-                Contract Value:
+                {isCoachContract
+                  ? `Rate (${coachRateUnit === "per_hour" ? "per hour" : "per session"}):`
+                  : "Contract Value:"}
               </span>
-              <span className="text-right text-xs sm:text-sm">
-                {contract.contractValue.toLocaleString()} {contract.currency}
+              <span className="text-right text-xs sm:text-sm font-semibold">
+                {(isCoachContract
+                  ? parseFloat(coachRate) || contract.contractValue
+                  : contract.contractValue
+                ).toLocaleString()}{" "}
+                {contract.currency}
               </span>
             </div>
             <div className="flex items-start justify-between gap-3">
@@ -507,44 +472,55 @@ export function CreateClaimOnBehalfDialog({
 
           {isCoachContract && (
             <div className={sectionClassName}>
-              <Label htmlFor="coachUnits">Hours / Sessions *</Label>
+              <Label htmlFor="coachUnits" className="text-xs font-medium sm:text-sm">
+                {coachRateUnit === "per_hour" ? "Hours Worked *" : "Number of Sessions *"}
+              </Label>
               <div className="grid gap-2 sm:grid-cols-3">
-                <Input
-                  id="coachUnits"
-                  type="number"
-                  placeholder="Units"
-                  value={coachUnits}
-                  onChange={(e) => handleCoachUnitsChange(e.target.value)}
-                  min="0"
-                  step="0.01"
-                />
-                <Input
-                  id="coachRate"
-                  type="number"
-                  placeholder="Rate"
-                  value={coachRate}
-                  onChange={(e) => handleCoachRateChange(e.target.value)}
-                  min="0"
-                  step="0.01"
-                  disabled={coachRateSource !== "manual"}
-                />
-                <select
-                  id="coachRateUnit"
-                  className={selectClassName}
-                  value={coachRateUnit}
-                  onChange={(e) =>
-                    setCoachRateUnit(
-                      e.target.value as "per_session" | "per_hour",
-                    )
-                  }
-                  disabled={coachRateSource !== "manual"}
-                >
-                  <option value="per_session">per session</option>
-                  <option value="per_hour">per hour</option>
-                </select>
+                <div>
+                  <Label htmlFor="coachUnits" className="text-[11px] text-muted-foreground mb-1 block">
+                    {coachRateUnit === "per_hour" ? "Hours" : "Sessions"}
+                  </Label>
+                  <Input
+                    id="coachUnits"
+                    type="number"
+                    placeholder={coachRateUnit === "per_hour" ? "e.g. 5" : "e.g. 5"}
+                    value={coachUnits}
+                    onChange={(e) => handleCoachUnitsChange(e.target.value)}
+                    min="0"
+                    step="1"
+                    className="h-9"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="coachRate" className="text-[11px] text-muted-foreground mb-1 block">
+                    Rate per {coachRateUnit === "per_hour" ? "hour" : "session"} ({contract.currency})
+                  </Label>
+                  <Input
+                    id="coachRate"
+                    type="number"
+                    placeholder="Rate"
+                    value={coachRate}
+                    disabled={true}
+                    className="h-9 bg-muted/50 cursor-not-allowed text-muted-foreground font-medium"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="coachRateUnit" className="text-[11px] text-muted-foreground mb-1 block">
+                    Rate Unit
+                  </Label>
+                  <select
+                    id="coachRateUnit"
+                    className={`${selectClassName} bg-muted/50 cursor-not-allowed text-muted-foreground`}
+                    value={coachRateUnit}
+                    disabled={true}
+                  >
+                    <option value="per_session">per session</option>
+                    <option value="per_hour">per hour</option>
+                  </select>
+                </div>
               </div>
               <p className="text-[10px] text-muted-foreground">
-                Rate source: {coachRateSourceLabel}
+                Rate is fixed from contract
               </p>
             </div>
           )}
@@ -564,7 +540,14 @@ export function CreateClaimOnBehalfDialog({
             />
             <p className="text-xs text-muted-foreground">
               {isCoachContract ? (
-                <>Auto-calculated from units and rate</>
+                <>
+                  Auto-calculated:{" "}
+                  <span className="font-medium text-foreground">
+                    {coachUnits || 0} {coachRateUnit === "per_hour" ? "hours" : "sessions"} ×{" "}
+                    {(parseFloat(coachRate) || 0).toLocaleString()} {contract.currency} ={" "}
+                    {(parseFloat(amount) || 0).toLocaleString()} {contract.currency}
+                  </span>
+                </>
               ) : (
                 <>
                   Maximum: {contract.contractValue.toLocaleString()}{" "}

@@ -164,6 +164,10 @@ export function EditContractDialog({
 
   const isDraft = contract?.status === "draft";
 
+  const isCoach =
+    (contract?.type || "").toLowerCase() === "coach" ||
+    (contract?.description || "").toLowerCase().includes("coach");
+
   const contractDataForTemplate = {
     projectName: (contract as any)?.projectId?.name || "Project",
     teamMemberName: contract.contractedUserId
@@ -175,8 +179,8 @@ export function EditContractDialog({
     startDate: form.watch("startDate") || "",
     endDate: form.watch("endDate") || "",
     description: form.watch("description") || "",
-    // Coach-specific data (we'll assume it could be a coach contract)
-    isCoach: false, // TODO: Determine if this is a coach contract
+    // Coach-specific data
+    isCoach,
     coachRate: undefined,
     coachRateUnit: undefined,
     coachTitle: "Mr/Ms",
@@ -226,17 +230,19 @@ export function EditContractDialog({
                   name="contractValue"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contract Value</FormLabel>
+                      <FormLabel>{isCoach ? "Rate" : "Contract Value"}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="0"
+                          placeholder={isCoach ? "Rate per session" : "0"}
                           {...field}
                           disabled
                         />
                       </FormControl>
                       <FormDescription>
-                        Fixed as per budget allocation
+                        {isCoach
+                          ? "Rate per session"
+                          : "Fixed as per budget allocation"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

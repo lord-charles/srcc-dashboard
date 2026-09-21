@@ -828,7 +828,10 @@ export function ContractDetailsDrawer({
                             <div className="space-y-4">
                               <div className="space-y-1">
                                 <span className="text-sm font-medium text-muted-foreground">
-                                  Contract Value
+                                  {(contract.type || "").toLowerCase() === "coach" ||
+                                  (contract.description || "").toLowerCase().includes("coach")
+                                    ? "Rate per Session"
+                                    : "Contract Value"}
                                 </span>
                                 <p className="font-semibold text-lg text-emerald-600 dark:text-emerald-400">
                                   {formatCurrency(
@@ -1116,7 +1119,10 @@ export function ContractDetailsDrawer({
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1">
                               <span className="text-sm font-medium text-muted-foreground">
-                                Contract Value
+                                {(contract.type || "").toLowerCase() === "coach" ||
+                                (contract.description || "").toLowerCase().includes("coach")
+                                  ? "Rate per Session"
+                                  : "Contract Value"}
                               </span>
                               <p className="font-semibold text-xl text-emerald-600 dark:text-emerald-400">
                                 {formatCurrency(

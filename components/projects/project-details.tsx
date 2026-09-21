@@ -319,8 +319,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
           <TabsContent value="coaches">
             <ContractsTable
+              isCoach={true}
               contracts={
                 projectData?.teamMemberContracts?.filter((c) =>
+                  (c.type || "").toLowerCase() === "coach" ||
                   c.description?.toLowerCase().includes("coach"),
                 ) || []
               }
@@ -331,9 +333,12 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
 
           <TabsContent value="consultants">
             <ContractsTable
+              isCoach={false}
               contracts={
                 projectData?.teamMemberContracts?.filter(
-                  (c) => !c.description?.toLowerCase().includes("coach"),
+                  (c) =>
+                    (c.type || "").toLowerCase() !== "coach" &&
+                    !c.description?.toLowerCase().includes("coach"),
                 ) || []
               }
               projectId={projectData._id}

@@ -68,12 +68,21 @@ interface ContractsTableProps {
     description: string;
     budget: number;
   }>;
+  isCoach?: boolean;
 }
 
 const ContractsTable = ({
   contracts,
   projectMilestones,
+  isCoach,
 }: ContractsTableProps) => {
+  const isCoachTable =
+    isCoach ??
+    contracts.some(
+      (c) =>
+        (c.type || "").toLowerCase() === "coach" ||
+        (c.description || "").toLowerCase().includes("coach"),
+    );
   const { toast } = useToast();
   const [selectedContract, setSelectedContract] = useState<Contract | null>(
     null,
@@ -393,8 +402,8 @@ console.log(groupedContracts)
                   <TableHeader>
                     <TableRow>
                       <TableHead>Contract Number</TableHead>
-                      <TableHead>Team Member</TableHead>
-                      <TableHead>Value</TableHead>
+                      <TableHead>{isCoachTable ? "Coach" : "Team Member"}</TableHead>
+                      <TableHead>{isCoachTable ? "Rate" : "Value"}</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Duration</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -420,9 +429,11 @@ console.log(groupedContracts)
                               {contract.contractedUserId?.email || "No email"}
                             </div>
                           </TableCell>
-                          <TableCell>{`${contract.contractValue.toLocaleString()} ${
-                            contract.currency
-                          }`}</TableCell>
+                          <TableCell className="font-medium">
+                            {isCoachTable
+                              ? `${contract.contractValue.toLocaleString()} ${contract.currency} / session`
+                              : `${contract.contractValue.toLocaleString()} ${contract.currency}`}
+                          </TableCell>
                           <TableCell>
                             <Badge
                               variant="outline"

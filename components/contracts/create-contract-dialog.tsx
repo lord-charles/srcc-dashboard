@@ -340,11 +340,11 @@ export function CreateContractDialog({
                   name="contractValue"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contract Value</FormLabel>
+                      <FormLabel>{isCoach ? "Rate" : "Contract Value"}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="0"
+                          placeholder={isCoach ? "Rate per session" : "0"}
                           {...field}
                           disabled={!isCoach} // Only disable for team members (budget-based)
                         />
