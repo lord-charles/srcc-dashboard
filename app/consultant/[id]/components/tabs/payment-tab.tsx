@@ -9,13 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   CreditCard,
   Save,
   Loader2,
@@ -25,9 +18,10 @@ import {
   AlertCircle,
   Shield,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useConsultant } from "../consultant-context";
 import { useToast } from "@/hooks/use-toast";
+import { BankDetailsFields } from "@/components/users/bank-details-fields";
 
 export function PaymentTab() {
   const { data, updateSection, saving } = useConsultant();
@@ -43,8 +37,12 @@ export function PaymentTab() {
 
   const [bankData, setBankData] = useState({
     bankName: data.bankDetails?.bankName || "",
+    accountName: data.bankDetails?.accountName || "",
     accountNumber: data.bankDetails?.accountNumber || "",
     branchCode: data.bankDetails?.branchCode || "",
+    bankCountry: data.bankDetails?.bankCountry || "KEN",
+    swiftCode: data.bankDetails?.swiftCode || "",
+    iban: data.bankDetails?.iban || "",
   });
 
   const [mpesaData, setMpesaData] = useState({
@@ -53,31 +51,27 @@ export function PaymentTab() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const kenyanBanks = [
-    "Equity Bank",
-    "KCB Bank",
-    "Cooperative Bank",
-    "ABSA Bank Kenya",
-    "Standard Chartered Bank",
-    "NCBA Bank",
-    "Stanbic Bank",
-    "Diamond Trust Bank",
-    "I&M Bank",
-    "Family Bank",
-    "Prime Bank",
-    "Gulf African Bank",
-    "Sidian Bank",
-    "UBA Kenya",
-    "Bank of Africa",
-    "Credit Bank",
-    "Mayfair Bank",
-    "Middle East Bank",
-    "Victoria Commercial Bank",
-    "Other",
-  ];
+  useEffect(() => {
+    if (!data || Object.keys(data).length === 0) return;
+    setBankData({
+      bankName: data.bankDetails?.bankName || "",
+      accountName: data.bankDetails?.accountName || "",
+      accountNumber: data.bankDetails?.accountNumber || "",
+      branchCode: data.bankDetails?.branchCode || "",
+      bankCountry: data.bankDetails?.bankCountry || "KEN",
+      swiftCode: data.bankDetails?.swiftCode || "",
+      iban: data.bankDetails?.iban || "",
+    });
+    setMpesaData({ phoneNumber: data.mpesaDetails?.phoneNumber || "" });
+    if (data.bankDetails?.bankName || data.bankDetails?.accountNumber) {
+      setPaymentMethod("bank");
+    } else if (data.mpesaDetails?.phoneNumber) {
+      setPaymentMethod("mpesa");
+    }
+  }, [data]);
 
-  const validateAccountNumber = (accountNumber: string) => {
-    if (accountNumber && !/^[0-9]{8,20}$/.test(accountNumber)) {
+  const validateAccountNumber = (accountNumber: string, international: boolean) => {
+    if (accountNumber && !international && !/^[0-9]{8,20}$/.test(accountNumber)) {
       return "Account number should be 8-20 digits";
     }
     return "";
@@ -102,10 +96,14 @@ export function PaymentTab() {
       if (!bankData.bankName) {
         newErrors.bankName = "Bank name is required";
       }
-      if (!bankData.accountNumber) {
-        newErrors.accountNumber = "Account number is required";
+      const international = bankData.bankCountry !== "KEN";
+      if (international && bankData.bankCountry === "INTL") {
+        newErrors.bankCountry = "Select the country where the bank is located";
+      }
+      if (!bankData.accountNumber && !(international && bankData.iban)) {
+        newErrors.accountNumber = "Account number or IBAN is required";
       } else {
-        const accountError = validateAccountNumber(bankData.accountNumber);
+        const accountError = validateAccountNumber(bankData.accountNumber, international);
         if (accountError) newErrors.accountNumber = accountError;
       }
     } else {
@@ -146,7 +144,10 @@ export function PaymentTab() {
 
   const isComplete = () => {
     if (paymentMethod === "bank") {
-      return bankData.bankName && bankData.accountNumber;
+      return (
+        bankData.bankName &&
+        (bankData.accountNumber || (bankData.bankCountry !== "KEN" && bankData.iban))
+      );
     }
     return mpesaData.phoneNumber;
   };
@@ -240,86 +241,22 @@ export function PaymentTab() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="bankName" className="text-sm font-medium">
-                    Bank Name *
-                  </Label>
-                  <Select
-                    value={bankData.bankName}
-                    onValueChange={(value) =>
-                      setBankData((b) => ({ ...b, bankName: value }))
-                    }
-                  >
-                    <SelectTrigger
-                      className={`h-11 ${
-                        errors.bankName ? "border-destructive" : ""
-                      }`}
-                    >
-                      <SelectValue placeholder="Select your bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {kenyanBanks.map((bank) => (
-                        <SelectItem key={bank} value={bank}>
-                          {bank}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.bankName && (
-                    <div className="flex items-center gap-1 text-sm text-destructive">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.bankName}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="branchCode" className="text-sm font-medium">
-                    Branch Code
-                  </Label>
-                  <Input
-                    id="branchCode"
-                    value={bankData.branchCode}
-                    onChange={(e) =>
-                      setBankData((b) => ({ ...b, branchCode: e.target.value }))
-                    }
-                    placeholder="e.g., 001"
-                    className="h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="accountNumber" className="text-sm font-medium">
-                  Account Number *
-                </Label>
-                <Input
-                  id="accountNumber"
-                  value={bankData.accountNumber}
-                  onChange={(e) =>
-                    setBankData((b) => ({
-                      ...b,
-                      accountNumber: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter your account number"
-                  className={`h-11 transition-all duration-200 focus:ring-2 focus:ring-primary/20 ${
-                    errors.accountNumber
-                      ? "border-destructive focus:ring-destructive/20"
-                      : ""
-                  }`}
-                />
-                {errors.accountNumber && (
-                  <div className="flex items-center gap-1 text-sm text-destructive">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.accountNumber}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Enter your account number without spaces or special characters
-                </p>
-              </div>
+              <BankDetailsFields
+                value={bankData}
+                onChange={(value) =>
+                  setBankData((current) => ({
+                    ...current,
+                    bankName: value.bankName ?? "",
+                    accountName: value.accountName ?? "",
+                    accountNumber: value.accountNumber ?? "",
+                    branchCode: value.branchCode ?? "",
+                    bankCountry: value.bankCountry ?? "KEN",
+                    swiftCode: value.swiftCode ?? "",
+                    iban: value.iban ?? "",
+                  }))
+                }
+                errors={errors}
+              />
             </CardContent>
           </Card>
         )}

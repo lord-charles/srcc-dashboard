@@ -529,6 +529,7 @@ console.log(groupedContracts)
           contract={selectedContract}
           isSubmitting={isUpdatingContract}
           templates={templates}
+          milestones={projectMilestones}
         />
       )}
 

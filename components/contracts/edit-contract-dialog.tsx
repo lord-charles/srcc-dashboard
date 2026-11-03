@@ -334,17 +334,12 @@ export function EditContractDialog({
                 control={form.control}
                 name="milestoneId"
                 render={({ field }) => {
-                  const hasExistingMilestone =
-                    (contract as any)?.milestoneId != null &&
-                    (contract as any)?.milestoneId !== "none";
-
                   return (
                     <FormItem>
                       <FormLabel>Linked Milestone</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value || "none"}
-                        disabled={hasExistingMilestone}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -361,9 +356,7 @@ export function EditContractDialog({
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        {hasExistingMilestone
-                          ? "Milestone cannot be changed once assigned."
-                          : "Assign a milestone to this contract."}
+                        Change or remove the milestone linked to this contract.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

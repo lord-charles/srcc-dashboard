@@ -52,7 +52,7 @@ import {
 } from "@/components/contracts/create-contract-dialog";
 import { EditContractDialog } from "@/components/contracts/edit-contract-dialog";
 import { CoachesSection } from "./coaches-section";
-import { TeamMemberCard } from "./team-member-card";
+import { TeamMembersTable } from "./team-members-table";
 
 export interface TeamSectionProps {
   teamMembers: TeamMember[];
@@ -140,66 +140,30 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     );
   };
 
-  const getMemberContract = (
+  const getNormalizedId = (value: any): string | undefined =>
+    typeof value === "object" && value !== null
+      ? value._id?.toString()
+      : value?.toString();
+
+  const getMemberAssignments = (memberId: string): TeamMember[] => {
+    const normalizedMemberId = getNormalizedId(memberId);
+    return teamMembers.filter(
+      (member) => getNormalizedId(member.userId) === normalizedMemberId,
+    );
+  };
+
+  const getMemberContracts = (
     memberId: string,
     milestoneId?: string,
-  ): Contract | null => {
-    if (
-      !projectData?.teamMemberContracts ||
-      projectData.teamMemberContracts.length === 0
-    ) {
-      return null;
-    }
-
-    // 1. Try exact match (milestoneId matches and not a coach contract)
-    const exactMatch = projectData.teamMemberContracts.find((contract) => {
-      const contractMilestoneId =
-        contract?.milestoneId &&
-        typeof contract.milestoneId === "object" &&
-        "_id" in contract.milestoneId
-          ? (contract.milestoneId as any)._id
-          : (contract?.milestoneId as string | undefined);
-
-      return (
-        contract?.contractedUserId?._id === memberId &&
-        contractMilestoneId === milestoneId &&
-        contract?.type !== "coach"
-      );
-    });
-    if (exactMatch) return exactMatch;
-
-    // 2. Fallback for legacy contracts (no milestoneId)
-    // If we are looking for a specific milestone contract, and haven't found one,
-    // check if this is the earliest milestone for the user.
-    if (milestoneId) {
-      const userMilestones = projectData.teamMembers
-        .filter((m) => m.userId?._id === memberId && m.milestoneId)
-        .map((m) => m.milestoneId as string);
-
-      if (userMilestones.length > 0) {
-        // Find if milestoneId is the first one in the project's milestones list among user's assignments
-        const projectMilestoneIds = (projectData.milestones || []).map(
-          (m) => m._id,
-        );
-        const userOrderedMilestones = projectMilestoneIds.filter((id) =>
-          userMilestones.includes(id),
-        );
-
-        if (userOrderedMilestones[0] === milestoneId) {
-          // Return the contract that has no milestoneId
-          return (
-            projectData.teamMemberContracts.find(
-              (contract) =>
-                contract?.contractedUserId?._id === memberId &&
-                !contract?.milestoneId &&
-                contract?.type !== "coach",
-            ) || null
-          );
-        }
-      }
-    }
-
-    return null;
+  ): Contract[] => {
+    const normalizedMemberId = getNormalizedId(memberId);
+    const normalizedMilestoneId = getNormalizedId(milestoneId);
+    return (projectData?.teamMemberContracts || []).filter(
+      (contract) =>
+        getNormalizedId(contract?.contractedUserId) === normalizedMemberId &&
+        contract?.type !== "coach" &&
+        getNormalizedId(contract?.milestoneId) === normalizedMilestoneId,
+    );
   };
 
   const handleCreateContractSubmit = async (values: ContractFormValues) => {
@@ -217,11 +181,16 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         isOrganization: isOrganizationContract,
         status: values.status,
         // Use the milestone from the member's assignment, or allow override from form
-        ...(values.milestoneId
-          ? { milestoneId: values.milestoneId }
-          : selectedMemberMilestone
-            ? { milestoneId: selectedMemberMilestone }
-            : {}),
+        ...((values.milestoneId === "none"
+          ? undefined
+          : values.milestoneId || selectedMemberMilestone)
+          ? {
+              milestoneId:
+                values.milestoneId === "none"
+                  ? undefined
+                  : values.milestoneId || selectedMemberMilestone,
+            }
+          : {}),
         ...(values.templateId ? { templateId: values.templateId } : {}),
         ...(values.editedTemplateContent
           ? { editedTemplateContent: values.editedTemplateContent }
@@ -456,127 +425,92 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                 Add Member
               </Button>
             </div>
-            <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-              {/* Group team members by milestone */}
+            <div className="space-y-6">
               {(() => {
-                const groupedMembers = new Map<string, TeamMember[]>();
-                const projectWideMembers: TeamMember[] = [];
-
-                teamMembers.forEach((member) => {
-                  if (member.milestoneId) {
-                    const rawMilestoneId = member.milestoneId as any;
-                    const key =
-                      rawMilestoneId &&
-                      typeof rawMilestoneId === "object" &&
-                      "_id" in rawMilestoneId
-                        ? (rawMilestoneId._id as string)
-                        : (rawMilestoneId as string);
-                    if (!groupedMembers.has(key)) {
-                      groupedMembers.set(key, []);
-                    }
-                    groupedMembers.get(key)!.push(member);
-                  } else {
-                    projectWideMembers.push(member);
-                  }
+                const coachIds = new Set(
+                  (projectData.coaches || []).map((coach: any) =>
+                    getNormalizedId(coach.userId),
+                  ),
+                );
+                const eligibleTeamMembers = teamMembers.filter(
+                  (member) =>
+                    !coachIds.has(getNormalizedId(member.userId)),
+                );
+                const membersByUser = new Map<string, TeamMember[]>();
+                eligibleTeamMembers.forEach((member) => {
+                  const id = getNormalizedId(member.userId);
+                  if (!id) return;
+                  membersByUser.set(id, [...(membersByUser.get(id) || []), member]);
                 });
 
-                return (
-                  <div className="col-span-full space-y-6">
-                    {/* Project-wide members */}
-                    {projectWideMembers.length > 0 && (
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3 text-blue-700">
-                          Project-wide Team Members
-                        </h3>
-                        <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-                          {projectWideMembers.map((member) => (
-                            <TeamMemberCard
-                              key={member._id}
-                              member={member}
-                              projectData={projectData}
-                              onEdit={() => {
-                                setSelectedMember(member);
-                                setShowEditDialog(true);
-                              }}
-                              onDelete={() =>
-                                handleDeleteTeamMember(member.userId?._id)
-                              }
-                              onCreateContract={() =>
-                                handleOpenContractDialog(
-                                  member.userId?._id,
-                                  undefined,
-                                  member.isOrganization,
-                                )
-                              }
-                              onEditContract={(contract) =>
-                                handleEditContract(contract)
-                              }
-                              getMemberContract={(memberId) =>
-                                getMemberContract(memberId, undefined)
-                              }
-                              isDeleting={isDeleting}
-                            />
-                          ))}
+                const scopes = new Map<string, { id?: string; title: string }>();
+                scopes.set("__project_wide__", { title: "Project-wide Team Members" });
+                (projectData.milestones || []).forEach((milestone: any) => {
+                  const id = getNormalizedId(milestone._id);
+                  if (id) scopes.set(id, { id, title: `${milestone.title} Team Members` });
+                });
+                // Preserve groups for contracts or assignments whose milestone is no longer in the project list.
+                eligibleTeamMembers.forEach((assignment) => {
+                  const id = getNormalizedId((assignment as any).milestoneId);
+                  if (id && !scopes.has(id)) scopes.set(id, { id, title: "Other Milestone Team Members" });
+                });
+                (projectData.teamMemberContracts || []).forEach((contract: any) => {
+                  if (contract.type === "coach") return;
+                  const id = getNormalizedId(contract.milestoneId);
+                  if (id && !scopes.has(id)) scopes.set(id, { id, title: "Other Milestone Team Members" });
+                });
+
+                const scopedTables = Array.from(scopes.entries()).flatMap(([key, scope]) => {
+                  const rows = Array.from(membersByUser.entries()).flatMap(([memberId, assignments]) => {
+                    const assignment = assignments.find(
+                      (item) => getNormalizedId((item as any).milestoneId) === scope.id,
+                    );
+                    const contracts = getMemberContracts(memberId, scope.id);
+                    if (!assignment && contracts.length === 0) return [];
+                    return [{ member: assignment || assignments[0], assignment, contracts }];
+                  });
+                  return rows.length ? [{ key, scope, rows }] : [];
+                });
+
+                return scopedTables.length > 0 ? (
+                  <div className="space-y-7">
+                    {scopedTables.map(({ key, scope, rows }) => (
+                      <section key={key} className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold">{scope.title}</h3>
+                          <Badge variant="secondary">{rows.length}</Badge>
                         </div>
-                      </div>
-                    )}
-
-                    {/* Milestone-specific members */}
-                    {Array.from(groupedMembers.entries()).map(
-                      ([milestoneId, members]) => {
-                        const milestone = projectData.milestones?.find(
-                          (m) => m._id === milestoneId,
-                        );
-                        return (
-                          <div key={milestoneId}>
-                            <h3 className="text-lg font-semibold mb-3 text-green-700">
-                              {milestone
-                                ? `${milestone.title} Team Members`
-                                : `Milestone ${String(milestoneId)} Team Members`}
-                            </h3>
-                            <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-                              {members.map((member) => (
-                                <TeamMemberCard
-                                  key={member._id}
-                                  member={member}
-                                  projectData={projectData}
-                                  milestone={milestone}
-                                  onEdit={() => {
-                                    setSelectedMember(member);
-                                    setShowEditDialog(true);
-                                  }}
-                                  onDelete={() =>
-                                    handleDeleteTeamMember(member.userId?._id)
-                                  }
-                                  onCreateContract={() =>
-                                    handleOpenContractDialog(
-                                      member.userId?._id,
-                                      milestoneId,
-                                      member.isOrganization,
-                                    )
-                                  }
-                                  onEditContract={(contract) =>
-                                    handleEditContract(contract)
-                                  }
-                                  getMemberContract={(memberId) =>
-                                    getMemberContract(memberId, milestoneId)
-                                  }
-                                  isDeleting={isDeleting}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      },
-                    )}
-
-                    {teamMembers.length === 0 && (
-                      <p className="col-span-full text-center text-sm text-muted-foreground py-8">
-                        No team members added yet. Click &quot;Add Member&quot;
-                        to get started.
-                      </p>
-                    )}
+                        <TeamMembersTable
+                          rows={rows}
+                          scopeMilestoneId={scope.id}
+                          onEditAssignment={(assignment) => {
+                            setSelectedMember(assignment);
+                            setShowEditDialog(true);
+                          }}
+                          onDeleteMember={(member) => {
+                            const memberId = getNormalizedId(member.userId);
+                            if (memberId) handleDeleteTeamMember(memberId);
+                          }}
+                          onCreateContract={(member, milestoneId) => {
+                            const memberId = getNormalizedId(member.userId);
+                            if (memberId) {
+                              handleOpenContractDialog(
+                                memberId,
+                                milestoneId,
+                                member.isOrganization,
+                              );
+                            }
+                          }}
+                          onEditContract={handleEditContract}
+                          isDeleting={isDeleting}
+                        />
+                      </section>
+                    ))}
                   </div>
+                ) : (
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    No team members added yet. Click &quot;Add Member&quot; to get started.
+                  </p>
                 );
               })()}
             </div>
@@ -861,6 +795,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         isSubmitting={isCreatingContract}
         templates={templates}
         defaultMilestoneId={selectedMemberMilestone}
+        budgetCurrency={projectData?.budgetId?.currency || projectData?.currency}
       />
       {selectedContract && (
         <EditContractDialog

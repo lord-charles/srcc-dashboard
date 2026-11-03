@@ -15,8 +15,10 @@ import {
   Settings,
   Truck,
   Receipt,
+  UserRound,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 import {
   Sidebar,
@@ -147,12 +149,17 @@ const data = {
       url: "/settings",
       icon: "Settings",
     },
+    {
+      title: "My Profile",
+      url: "",
+      icon: "UserRound",
+    },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = useSession();
-  const [currentPath, setCurrentPath] = React.useState("");
+  const currentPath = usePathname();
   const canRenderNav =
     session?.user?.status === "active" &&
     (session?.user?.type === "user" || session?.user?.type === "organization");
@@ -163,10 +170,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     session?.user?.status === "terminated"
       ? session.user.status
       : undefined;
-
-  React.useEffect(() => {
-    setCurrentPath(window.location.pathname);
-  }, []);
 
   const isActive = (url: string) => {
     if (url === "#") return false;
@@ -208,7 +211,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return true;
   };
 
-  const filteredNavMain = data.navMain
+  const navMain = data.navMain.map((item) =>
+    item.title === "My Profile"
+      ? {
+          ...item,
+          url: `/${session?.user?.type === "organization" ? "organization" : "consultant"}/${session?.user?.id || ""}`,
+        }
+      : item,
+  );
+
+  const filteredNavMain = navMain
     .filter((item) => isVisible(item.url))
     .map((item) => {
       if (!item.items) return item;
@@ -268,6 +280,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 return <LayoutDashboard {...iconProps} />;
                               case "Users":
                                 return <Users {...iconProps} />;
+                              case "UserRound":
+                                return <UserRound {...iconProps} />;
                               case "Briefcase":
                                 return <Briefcase {...iconProps} />;
                               case "Wallet":

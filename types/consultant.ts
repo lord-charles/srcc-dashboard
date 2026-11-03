@@ -13,8 +13,12 @@ export interface AcademicCertificate {
 
 export interface BankDetails {
   bankName?: string
+  accountName?: string
   accountNumber?: string
   branchCode?: string
+  bankCountry?: string
+  swiftCode?: string
+  iban?: string
 }
 
 export interface MpesaDetails {

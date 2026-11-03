@@ -4,16 +4,23 @@ import DashboardProvider from "../dashboard-provider";
 import { getAllEmployees } from "@/services/employees.service";
 import EmployeeModule from "@/components/users/employees";
 import { getAllOrganizations } from "@/services/organization.service";
+import { getProject } from "@/services/projects-service";
 
 // Disable caching for this page
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function EmployeesPage() {
+export default async function EmployeesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ projectId?: string }>;
+}) {
+  const params = await searchParams;
   const [employeesData, organizationsData] = await Promise.all([
     getAllEmployees(),
     getAllOrganizations(),
   ]);
+  const projectResult = params.projectId ? await getProject(params.projectId) : null;
   return (
     <DashboardProvider>
       <Header />
@@ -24,6 +31,7 @@ export default async function EmployeesPage() {
             employeesData?.data || { data: [], total: 0, page: 1, limit: 100 }
           }
           organizations={organizationsData?.data || []}
+          projectData={projectResult?.data}
         />
       </Suspense>
     </DashboardProvider>

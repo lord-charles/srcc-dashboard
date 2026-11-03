@@ -101,6 +101,7 @@ interface CreateContractDialogProps {
     rateUnit: "per_session" | "per_hour";
   }; // Coach's embedded contract data
   defaultMilestoneId?: string; // Default milestone to pre-select
+  budgetCurrency?: string;
 }
 
 export function CreateContractDialog({
@@ -117,6 +118,7 @@ export function CreateContractDialog({
   isCoach = false,
   coachContractData,
   defaultMilestoneId,
+  budgetCurrency,
 }: CreateContractDialogProps) {
   const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<
@@ -125,31 +127,25 @@ export function CreateContractDialog({
 
   // Find user in internal budget (code 2237) - only for team members, not coaches
   // We look through all categories named "2237" as budget items can be split across multiple instances of the same category code
-  const userBudgetItem = !isCoach
+  const budgetItems = !isCoach
     ? internalCategories
         ?.filter((cat: any) => cat.name === "2237")
         ?.flatMap((cat: any) => cat.items || [])
-        ?.find((item: any) => {
-          const emailMatch = item.name.includes(teamMemberEmail);
-          // If we have a defaultMilestoneId, we MUST match it
-          if (defaultMilestoneId) {
-            return emailMatch && item.milestoneId === defaultMilestoneId;
-          }
-          // Fallback for project-wide (no milestone) or legacy
-          return emailMatch;
-        })
+        ?.filter((item: any) =>
+          String(item.name || "").toLowerCase().includes(teamMemberEmail.toLowerCase()),
+        )
     : null;
-
-  // For coaches, we don't require budget allocation - use coach contract data instead
-  const canCreateContract = isCoach || !!userBudgetItem;
+  const defaultBudgetItem = budgetItems?.find(
+    (item: any) => (item.milestoneId || undefined) === defaultMilestoneId,
+  );
 
   // Extract budget details if user is found - memoize to prevent recalculation
   const budgetStartDate = useMemo(() => {
     if (isCoach) {
       return new Date().toISOString().split("T")[0];
     }
-    return userBudgetItem?.startDate || new Date().toISOString().split("T")[0];
-  }, [isCoach, userBudgetItem?.startDate]);
+    return defaultBudgetItem?.startDate || new Date().toISOString().split("T")[0];
+  }, [isCoach, defaultBudgetItem?.startDate]);
 
   const budgetEndDate = useMemo(() => {
     if (isCoach) {
@@ -158,28 +154,28 @@ export function CreateContractDialog({
         .split("T")[0];
     }
     return (
-      userBudgetItem?.endDate ||
+      defaultBudgetItem?.endDate ||
       new Date(new Date().setFullYear(new Date().getFullYear() + 1))
         .toISOString()
         .split("T")[0]
     );
-  }, [isCoach, userBudgetItem?.endDate]);
+  }, [isCoach, defaultBudgetItem?.endDate]);
 
   // Calculate default contract value
   const defaultContractValue = useMemo(() => {
     if (isCoach && coachContractData) {
       return coachContractData.rate;
     }
-    return userBudgetItem?.estimatedAmount || 0;
-  }, [isCoach, coachContractData, userBudgetItem?.estimatedAmount]);
+    return defaultBudgetItem?.estimatedAmount || 0;
+  }, [isCoach, coachContractData, defaultBudgetItem?.estimatedAmount]);
 
   // Get default currency
   const defaultCurrency = useMemo(() => {
     if (isCoach && coachContractData) {
       return coachContractData.currency;
     }
-    return "KES";
-  }, [isCoach, coachContractData]);
+    return budgetCurrency || "KES";
+  }, [isCoach, coachContractData, budgetCurrency]);
 
   // Filter templates based on contract type
   const filteredTemplates = useMemo(() => {
@@ -226,6 +222,15 @@ export function CreateContractDialog({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
+  const selectedMilestoneId = form.watch("milestoneId");
+  const selectedBudgetItem = budgetItems?.find(
+    (item: any) =>
+      (item.milestoneId || undefined) ===
+      (selectedMilestoneId && selectedMilestoneId !== "none"
+        ? selectedMilestoneId
+        : undefined),
+  );
+  const canCreateContract = isCoach || !!selectedBudgetItem;
 
   const {
     fields: attachmentFields,
@@ -248,6 +253,22 @@ export function CreateContractDialog({
   }, [defaultValues]);
 
   const handleSubmit = async (values: ContractFormValues) => {
+    const selectedItem = budgetItems?.find(
+      (item: any) =>
+        (item.milestoneId || undefined) ===
+        (values.milestoneId && values.milestoneId !== "none"
+          ? values.milestoneId
+          : undefined),
+    );
+    if (!isCoach && (!selectedItem || values.contractValue > selectedItem.estimatedAmount)) {
+      form.setError("contractValue", {
+        type: "validate",
+        message: selectedItem
+          ? `Cannot exceed the internal budget allocation of ${selectedItem.estimatedAmount.toLocaleString()} ${budgetCurrency || "KES"}.`
+          : "There is no internal budget allocation for this milestone.",
+      });
+      return;
+    }
     await onSubmit(values);
   };
 
@@ -344,15 +365,18 @@ export function CreateContractDialog({
                       <FormControl>
                         <Input
                           type="number"
+                          min={0}
+                          max={!isCoach ? selectedBudgetItem?.estimatedAmount : undefined}
                           placeholder={isCoach ? "Rate per session" : "0"}
                           {...field}
-                          disabled={!isCoach} // Only disable for team members (budget-based)
                         />
                       </FormControl>
                       <FormDescription>
                         {isCoach
                           ? `Based on coach rate (${coachContractData?.rate || 0} ${coachContractData?.currency || "KES"} per ${coachContractData?.rateUnit === "per_session" ? "session" : "hour"})`
-                          : "Fixed as per budget allocation"}
+                          : selectedBudgetItem
+                            ? `Maximum: ${selectedBudgetItem.estimatedAmount.toLocaleString()} ${budgetCurrency || "KES"}`
+                            : "Select a milestone with an internal budget allocation"}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -367,6 +391,7 @@ export function CreateContractDialog({
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
+                        disabled={!isCoach}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -447,10 +472,10 @@ export function CreateContractDialog({
                   name="milestoneId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Milestone (Optional)</FormLabel>
+                      <FormLabel>Assign to milestone{isCoach ? "" : " (Optional)"}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value || undefined}
+                        value={field.value || "none"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -458,9 +483,9 @@ export function CreateContractDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">
-                            No specific milestone
-                          </SelectItem>
+                          {!isCoach && (
+                            <SelectItem value="none">No specific milestone</SelectItem>
+                          )}
                           {milestones.map((milestone) => (
                             <SelectItem
                               key={milestone._id}

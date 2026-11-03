@@ -291,7 +291,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
       <TabsContent value="budget">
         <ModernBudgetDisplay
           budget={projectData.budgetId}
-          currency={projectData.currency}
+          currency={projectData.budgetId?.currency || projectData.currency}
           projectId={projectData._id}
           teamMembers={projectData.teamMembers}
           milestones={projectData.milestones || []}

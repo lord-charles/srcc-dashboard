@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { updateEmployee } from "@/services/employees.service";
 import { FileUpload } from "@/components/ui/file-upload";
 import { cloudinaryService } from "@/lib/cloudinary-service";
+import { BankDetailsFields } from "@/components/users/bank-details-fields";
 
 // Skill Schema
 const skillSchema = z.object({
@@ -66,8 +67,12 @@ const academicCertificateSchema = z.object({
 // Bank Details Schema
 const bankDetailsSchema = z.object({
   bankName: z.string().optional(),
+  accountName: z.string().optional(),
   accountNumber: z.string().optional(),
   branchCode: z.string().optional(),
+  bankCountry: z.string().optional(),
+  swiftCode: z.string().optional(),
+  iban: z.string().optional(),
 });
 
 // Mpesa Details Schema
@@ -1191,39 +1196,16 @@ export function UpdateEmployeeComponent({ employee }: any) {
               </div>
 
               {/* Bank Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Bank Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bankDetails.bankName">Bank Name</Label>
-                    <Input
-                      id="bankDetails.bankName"
-                      {...register("bankDetails.bankName")}
-                      placeholder="Equity Bank"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bankDetails.accountNumber">
-                      Account Number
-                    </Label>
-                    <Input
-                      id="bankDetails.accountNumber"
-                      {...register("bankDetails.accountNumber")}
-                      placeholder="1234567890"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bankDetails.branchCode">Branch Code</Label>
-                    <Input
-                      id="bankDetails.branchCode"
-                      {...register("bankDetails.branchCode")}
-                      placeholder="123"
-                    />
-                  </div>
-                </div>
-              </div>
+              <BankDetailsFields
+                value={watch("bankDetails") || { bankCountry: "KEN"}}
+                onChange={(value) =>
+                  setValue("bankDetails", value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+                prefix="edit-bank-details"
+              />
 
               {/* M-Pesa Details */}
               <div className="space-y-4">

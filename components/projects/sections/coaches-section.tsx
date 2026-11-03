@@ -37,7 +37,7 @@ import {
   updateContract,
   getContractTemplates,
 } from "@/services/contracts.service";
-import { CoachCard } from "./coach-card";
+import { CoachContractsTable } from "./coach-contracts-table";
 import {
   CreateContractDialog,
   ContractFormValues,
@@ -120,38 +120,46 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
     fetchTemplates();
   }, []);
 
+  const teamMemberIds = new Set(
+    (projectData.teamMembers || []).map((member: any) =>
+      String(member.userId?._id || member.userId),
+    ),
+  );
+  const eligibleCoaches = (projectData.coaches || []).filter(
+    (coach: any) => !teamMemberIds.has(String(coach.userId?._id || coach.userId)),
+  );
   const groups = groupCoachesByMilestone(
-    projectData.coaches || [],
+    eligibleCoaches,
     projectData.milestones || [],
   );
 
-  const getCoachContract = (
+  const getCoachContracts = (
     coachId: string,
-    milestoneId: string,
-  ): Contract | null => {
+    milestoneId: unknown,
+  ): Contract[] => {
     if (
       !projectData?.teamMemberContracts ||
       projectData.teamMemberContracts.length === 0
     ) {
-      return null;
+      return [];
     }
 
-    // 1. Try exact match (milestoneId matches and type is 'coach')
-    const exactMatch = projectData.teamMemberContracts.find((contract) => {
-      const contractMilestoneId =
-        contract?.milestoneId &&
-        typeof contract.milestoneId === "object" &&
-        "_id" in contract.milestoneId
-          ? (contract.milestoneId as any)._id
-          : (contract?.milestoneId as string | undefined);
+    const getId = (value: any) =>
+      typeof value === "object" && value !== null
+        ? value._id?.toString()
+        : value?.toString();
+    const normalizedCoachId = getId(coachId);
+    const normalizedMilestoneId = getId(milestoneId);
 
+    // 1. Try exact match (milestoneId matches and type is 'coach')
+    const exactMatches = projectData.teamMemberContracts.filter((contract) => {
       return (
-        contract?.contractedUserId?._id === coachId &&
-        contractMilestoneId === milestoneId &&
+        getId(contract?.contractedUserId) === normalizedCoachId &&
+        getId(contract?.milestoneId) === normalizedMilestoneId &&
         contract?.type === "coach"
       );
     });
-    if (exactMatch) return exactMatch;
+    if (exactMatches.length > 0) return exactMatches;
 
     // 2. Fallback for legacy contracts (no milestoneId)
     // If we are looking for a specific milestone contract, and haven't found one,
@@ -159,8 +167,11 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
     if (milestoneId) {
       const coachMilestoneIds =
         projectData.coaches
-          ?.filter((c) => c.userId?._id === coachId && c.milestoneId)
-          ?.map((c) => c.milestoneId as string) || [];
+          ?.filter(
+            (c) =>
+              getId(c.userId) === normalizedCoachId && c.milestoneId,
+          )
+          ?.map((c) => getId(c.milestoneId)) || [];
 
       if (coachMilestoneIds.length > 0) {
         // Find if milestoneId is the first one in the project's milestones list among coach's assignments
@@ -171,21 +182,21 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
           coachMilestoneIds.includes(id),
         );
 
-        if (coachOrderedMilestones[0] === milestoneId) {
+          if (coachOrderedMilestones[0] === normalizedMilestoneId) {
           // Return the contract that has no milestoneId
           return (
-            projectData.teamMemberContracts.find(
+            projectData.teamMemberContracts.filter(
               (contract) =>
-                contract?.contractedUserId?._id === coachId &&
+                getId(contract?.contractedUserId) === normalizedCoachId &&
                 !contract?.milestoneId &&
                 contract?.type === "coach",
-            ) || null
+            ) || []
           );
         }
       }
     }
 
-    return null;
+    return [];
   };
 
   const handleCreateContractSubmit = async (values: ContractFormValues) => {
@@ -211,7 +222,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
         startDate: values.startDate.toString().split("T")[0],
         endDate: values.endDate.toString().split("T")[0],
         projectId: projectData._id,
-        milestoneId: contractMilestoneId,
+        milestoneId: values.milestoneId || contractMilestoneId,
         contractedUserId: contractCoachId,
         type: "coach",
         status: values.status,
@@ -757,23 +768,16 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
                 </div>
               </div>
               <Separator className="my-3" />
-              <div className="grid gap-3">
-                {g.coaches.map((c) => (
-                  <CoachCard
-                    key={c._id}
-                    coach={c}
-                    projectData={projectData}
-                    milestone={g.milestone || undefined}
-                    onDelete={() => handleRemoveCoach(c)}
-                    onCreateContract={() =>
-                      handleOpenContractDialog(c.userId._id, c.milestoneId)
-                    }
-                    onEditContract={(contract) => handleEditContract(contract)}
-                    getCoachContract={getCoachContract}
-                    isDeleting={isDeleting}
-                  />
-                ))}
-              </div>
+              <CoachContractsTable
+                coaches={g.coaches}
+                getContracts={getCoachContracts}
+                onDeleteCoach={handleRemoveCoach}
+                onCreateContract={(coach) =>
+                  handleOpenContractDialog(coach.userId._id, coach.milestoneId)
+                }
+                onEditContract={handleEditContract}
+                isDeleting={isDeleting}
+              />
             </Card>
           ))}
         </div>
@@ -804,11 +808,8 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
           return coach?.userId.email || "";
         })()}
         internalCategories={projectData?.budgetId?.internalCategories || []}
-        milestones={
-          projectData?.milestones?.filter(
-            (m) => m._id === contractMilestoneId,
-          ) || []
-        }
+        milestones={projectData?.milestones || []}
+        defaultMilestoneId={contractMilestoneId}
         isSubmitting={isCreatingContract}
         templates={templates}
         isCoach={true}

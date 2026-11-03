@@ -38,7 +38,7 @@ interface CoachCardProps {
   onDelete: () => void;
   onCreateContract: () => void;
   onEditContract: (contract: Contract) => void;
-  getCoachContract: (coachId: string, milestoneId: string) => Contract | null;
+  getCoachContracts: (coachId: string, milestoneId: string) => Contract[];
   isDeleting: boolean;
 }
 
@@ -50,14 +50,29 @@ export const CoachCard: React.FC<CoachCardProps> = ({
   onDelete,
   onCreateContract,
   onEditContract,
-  getCoachContract,
+  getCoachContracts,
   isDeleting,
 }) => {
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0)}${lastName?.charAt(0)}`?.toUpperCase();
   };
 
-  const contract = getCoachContract(coach.userId?._id, coach.milestoneId);
+  const contracts = getCoachContracts(coach.userId?._id, coach.milestoneId);
+
+  const getContractStatusLabel = (status: Contract["status"]) =>
+    status
+      .replace(/^pending_/, "Pending ")
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+  const getContractStatusStyle = (status: Contract["status"]) =>
+    status.startsWith("pending_")
+      ? "border-amber-200 bg-amber-50 text-amber-800"
+      : status === "active"
+        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+        : status === "rejected" || status === "terminated"
+          ? "border-rose-200 bg-rose-50 text-rose-800"
+          : "border-slate-200 bg-slate-50 text-slate-700";
 
   return (
     <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
@@ -105,61 +120,35 @@ export const CoachCard: React.FC<CoachCardProps> = ({
       </div>
       <div className="flex flex-col items-end">
         <div className="mb-2">
-          {contract ? (
-            <div className="">
-              <Badge
-                variant="outline"
-                className="bg-green-50 text-green-700 border-green-200 flex gap-1 items-center cursor-pointer hover:bg-green-100"
-                onClick={() => onEditContract(contract)}
-              >
-                <FileSignature className="h-3 w-3" />
-                <div className="text-[8px]">{contract.contractNumber}</div>
-              </Badge>
-              <Badge
-                variant="outline"
-                className="ml-2 text-xs cursor-pointer hover:bg-gray-100"
-                style={{
-                  backgroundColor:
-                    contract.status === "active"
-                      ? "rgb(240, 253, 244)"
-                      : contract.status === "draft"
-                        ? "rgb(240, 249, 255)"
-                        : contract.status === "pending_signature"
-                          ? "rgb(254, 249, 195)"
-                          : contract.status === "suspended"
-                            ? "rgb(254, 242, 242)"
-                            : contract.status === "terminated"
-                              ? "rgb(249, 250, 251)"
-                              : "rgb(249, 250, 251)",
-                  color:
-                    contract.status === "active"
-                      ? "rgb(22, 101, 52)"
-                      : contract.status === "draft"
-                        ? "rgb(3, 105, 161)"
-                        : contract.status === "pending_signature"
-                          ? "rgb(161, 98, 7)"
-                          : contract.status === "suspended"
-                            ? "rgb(185, 28, 28)"
-                            : contract.status === "terminated"
-                              ? "rgb(107, 114, 128)"
-                              : "rgb(107, 114, 128)",
-                  borderColor:
-                    contract.status === "active"
-                      ? "rgb(187, 247, 208)"
-                      : contract.status === "draft"
-                        ? "rgb(186, 230, 253)"
-                        : contract.status === "pending_signature"
-                          ? "rgb(254, 240, 138)"
-                          : contract.status === "suspended"
-                            ? "rgb(254, 202, 202)"
-                            : contract.status === "terminated"
-                              ? "rgb(229, 231, 235)"
-                              : "rgb(229, 231, 235)",
-                }}
-                onClick={() => onEditContract(contract)}
-              >
-                <div className="text-[8px]">{contract.status}</div>
-              </Badge>
+          {contracts.length > 0 ? (
+            <div className="mb-2 flex min-w-56 flex-col gap-1.5">
+              {contracts.map((contract) => (
+                <div
+                  key={contract._id}
+                  className="rounded-md border bg-background px-2.5 py-2 text-left"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto justify-start p-0 text-xs font-semibold"
+                      onClick={() => onEditContract(contract)}
+                    >
+                      <FileSignature className="mr-1.5 h-3.5 w-3.5" />
+                      {contract.contractNumber || "View contract"}
+                    </Button>
+                    <Badge
+                      variant="outline"
+                      className={getContractStatusStyle(contract.status)}
+                    >
+                      {getContractStatusLabel(contract.status)}
+                    </Badge>
+                  </div>
+                  <div className="mt-1 text-[11px] text-muted-foreground">
+                    {contract.contractValue.toLocaleString()} {contract.currency}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <Button
@@ -170,6 +159,17 @@ export const CoachCard: React.FC<CoachCardProps> = ({
             >
               <FileSignature className="h-3 w-3 mr-1" />
               Award Contract
+            </Button>
+          )}
+          {contracts.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-1 h-7 text-xs"
+              onClick={onCreateContract}
+            >
+              <FileSignature className="h-3 w-3 mr-1" />
+              Add contract
             </Button>
           )}
         </div>

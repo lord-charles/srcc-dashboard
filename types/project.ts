@@ -340,11 +340,20 @@ export interface Contract {
   currency: string;
   status:
     | "draft"
+    | "pending_finance_approval"
+    | "pending_md_approval"
+    | "pending_coach_admin_review"
+    | "pending_coach_manager_approval"
+    | "pending_coach_finance_approval"
+    | "pending_srcc_checker_approval"
+    | "pending_srcc_finance_approval"
+    | "pending_acceptance"
     | "pending_signature"
     | "active"
     | "suspended"
     | "terminated"
-    | "completed";
+    | "completed"
+    | "rejected";
   createdBy: string | User;
   updatedBy: string | User;
   startDate?: string;
