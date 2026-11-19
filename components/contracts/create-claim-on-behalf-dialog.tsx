@@ -23,6 +23,7 @@ import { getAxiosConfig } from "@/services/dashboard.service";
 import { createClaim } from "@/services/claims.service";
 import { FileUpload } from "@/components/ui/file-upload";
 import { cloudinaryService } from "@/lib/cloudinary-service";
+import { isCoachContract as isCoachContractType } from "@/lib/contract-type";
 
 interface CreateClaimOnBehalfDialogProps {
   open: boolean;
@@ -85,9 +86,7 @@ export function CreateClaimOnBehalfDialog({
   const [newDocUploading, setNewDocUploading] = useState(false);
   const [newDocUrl, setNewDocUrl] = useState<string>("");
   const [documents, setDocuments] = useState<ClaimDocumentInput[]>([]);
-  const isCoachContract =
-    (contract.type || "").toLowerCase() === "coach" ||
-    (contract.description || "").toLowerCase().includes("coach");
+  const isCoachContract = isCoachContractType(contract);
 
   const coachRateFromContract = useMemo(() => {
     const anyContract = contract as any;
