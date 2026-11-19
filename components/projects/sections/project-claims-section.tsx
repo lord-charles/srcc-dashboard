@@ -16,6 +16,7 @@ import { Claim } from "@/types/claim";
 import ClaimTable from "@/components/claims/claims-table/claim";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { isCoachContract } from "@/lib/contract-type";
 
 interface ProjectClaimsSectionProps {
   projectId: string;
@@ -125,13 +126,11 @@ export function ProjectClaimsSection({
     return Object.values(groups);
   };
 
-  const consultantClaims = claims.filter(
-    (c) => !(c.contractId as any)?.description?.toLowerCase().includes("coach"),
-  );
-
-  const coachClaims = claims.filter((c) =>
-    (c.contractId as any)?.description?.toLowerCase().includes("coach"),
-  );
+  const isCoachClaim = (claim: Claim) =>
+    typeof claim.contractId === "object" && claim.contractId !== null &&
+    isCoachContract(claim.contractId as any);
+  const consultantClaims = claims.filter((claim) => !isCoachClaim(claim));
+  const coachClaims = claims.filter(isCoachClaim);
 
   const groupedConsultantClaims = groupClaimsByMilestone(consultantClaims);
   const groupedCoachClaims = groupClaimsByMilestone(coachClaims);
