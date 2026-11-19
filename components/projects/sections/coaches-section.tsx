@@ -38,6 +38,7 @@ import {
   getContractTemplates,
 } from "@/services/contracts.service";
 import { CoachContractsTable } from "./coach-contracts-table";
+import { isCoachContract } from "@/lib/contract-type";
 import {
   CreateContractDialog,
   ContractFormValues,
@@ -156,7 +157,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
       return (
         getId(contract?.contractedUserId) === normalizedCoachId &&
         getId(contract?.milestoneId) === normalizedMilestoneId &&
-        contract?.type === "coach"
+        isCoachContract(contract)
       );
     });
     if (exactMatches.length > 0) return exactMatches;
@@ -189,7 +190,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
               (contract) =>
                 getId(contract?.contractedUserId) === normalizedCoachId &&
                 !contract?.milestoneId &&
-                contract?.type === "coach",
+                isCoachContract(contract),
             ) || []
           );
         }

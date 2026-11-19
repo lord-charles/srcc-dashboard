@@ -53,6 +53,7 @@ import {
 import { EditContractDialog } from "@/components/contracts/edit-contract-dialog";
 import { CoachesSection } from "./coaches-section";
 import { TeamMembersTable } from "./team-members-table";
+import { isCoachContract } from "@/lib/contract-type";
 
 export interface TeamSectionProps {
   teamMembers: TeamMember[];
@@ -161,7 +162,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
     return (projectData?.teamMemberContracts || []).filter(
       (contract) =>
         getNormalizedId(contract?.contractedUserId) === normalizedMemberId &&
-        contract?.type !== "coach" &&
+        !isCoachContract(contract) &&
         getNormalizedId(contract?.milestoneId) === normalizedMilestoneId,
     );
   };
@@ -178,6 +179,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         endDate: values.endDate.toString().split("T")[0],
         projectId: projectData._id,
         contractedUserId: contractMemberId,
+        type: "consultant",
         isOrganization: isOrganizationContract,
         status: values.status,
         // Use the milestone from the member's assignment, or allow override from form
@@ -268,6 +270,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
         projectId: projectData._id,
         milestoneId: values.milestoneId === "none" ? null : values.milestoneId,
         contractedUserId: selectedContract.contractedUserId,
+        type: "consultant",
         status: values.status,
       };
 
@@ -455,7 +458,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
                   if (id && !scopes.has(id)) scopes.set(id, { id, title: "Other Milestone Team Members" });
                 });
                 (projectData.teamMemberContracts || []).forEach((contract: any) => {
-                  if (contract.type === "coach") return;
+                  if (isCoachContract(contract)) return;
                   const id = getNormalizedId(contract.milestoneId);
                   if (id && !scopes.has(id)) scopes.set(id, { id, title: "Other Milestone Team Members" });
                 });

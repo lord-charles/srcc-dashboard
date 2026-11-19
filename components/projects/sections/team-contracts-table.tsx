@@ -245,6 +245,7 @@ const ContractsTable = ({
         endDate: formatDateToISO(values.endDate),
         projectId: selectedContract.projectId,
         contractedUserId: selectedContract.contractedUserId?._id,
+        type: isCoachTable ? "coach" : "consultant",
         status: values.status,
       };
 

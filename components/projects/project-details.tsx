@@ -29,6 +29,7 @@ import ProjectOverview from "./sections/project-overview";
 import ContractsTable from "./sections/team-contracts-table";
 import { ProjectClaimsSection } from "./sections/project-claims-section";
 import { ProjectImprestsSection } from "./sections/project-imprests-section";
+import { isCoachContract } from "@/lib/contract-type";
 
 interface ProjectDetailsProps {
   project?: Project;
@@ -304,14 +305,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
             <TabsTrigger value="consultants">
               Consultant Contracts (
               {projectData?.teamMemberContracts?.filter(
-                (c) => !c.description?.toLowerCase().includes("coach"),
+                (contract) => !isCoachContract(contract),
               ).length || 0}
               )
             </TabsTrigger>
             <TabsTrigger value="coaches">
               Coach Contracts (
-              {projectData?.teamMemberContracts?.filter((c) =>
-                c.description?.toLowerCase().includes("coach"),
+              {projectData?.teamMemberContracts?.filter((contract) =>
+                isCoachContract(contract),
               ).length || 0}
               )
             </TabsTrigger>
@@ -322,8 +323,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               isCoach={true}
               contracts={
                 projectData?.teamMemberContracts?.filter((c) =>
-                  (c.type || "").toLowerCase() === "coach" ||
-                  c.description?.toLowerCase().includes("coach"),
+                  isCoachContract(c),
                 ) || []
               }
               projectId={projectData._id}
@@ -336,9 +336,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({
               isCoach={false}
               contracts={
                 projectData?.teamMemberContracts?.filter(
-                  (c) =>
-                    (c.type || "").toLowerCase() !== "coach" &&
-                    !c.description?.toLowerCase().includes("coach"),
+                  (contract) => !isCoachContract(contract),
                 ) || []
               }
               projectId={projectData._id}
