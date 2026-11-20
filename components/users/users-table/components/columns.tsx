@@ -17,7 +17,8 @@ const customIncludesStringFilter = (
   filterValue: string
 ) => {
   const value = row.getValue(columnId) as string;
-  return value?.toLowerCase().includes((filterValue as string).toLowerCase());
+  const normalize = (text: string) => text.toLowerCase().trim().replace(/\s+/g, " ");
+  return normalize(value || "").includes(normalize(filterValue || ""));
 };
 
 const getProficiencyColor = (level: string) => {
@@ -68,7 +69,7 @@ export const getColumns = (
         row.lastName || ""
       } ${row.phoneNumber || ""} ${row.email || ""} ${row.employeeId || ""} ${
         row.nationalId || ""
-      } ${row.kraPinNumber || ""} ${skillsText}`;
+      } ${row.kraPinNumber || ""} ${skillsText} ${row.department || ""} ${(row.roles || []).join(" ")}`;
     },
     filterFn: customIncludesStringFilter,
     enableHiding: true,

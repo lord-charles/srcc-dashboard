@@ -121,14 +121,7 @@ export const CoachesSection: React.FC<CoachesSectionProps> = ({
     fetchTemplates();
   }, []);
 
-  const teamMemberIds = new Set(
-    (projectData.teamMembers || []).map((member: any) =>
-      String(member.userId?._id || member.userId),
-    ),
-  );
-  const eligibleCoaches = (projectData.coaches || []).filter(
-    (coach: any) => !teamMemberIds.has(String(coach.userId?._id || coach.userId)),
-  );
+  const eligibleCoaches = projectData.coaches || [];
   const groups = groupCoachesByMilestone(
     eligibleCoaches,
     projectData.milestones || [],

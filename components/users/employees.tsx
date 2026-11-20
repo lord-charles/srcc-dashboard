@@ -40,24 +40,7 @@ export default function EmployeeModule({
   const returnUrl = searchParams.get("returnUrl");
 
   const isAddingToProject = !!projectId && !!projectName;
-  const isAddingCoach = searchParams.get("isCoach") === "true";
-  const teamMemberIds = new Set(
-    (projectData?.teamMembers || []).map((member: any) =>
-      String(member.userId?._id || member.userId),
-    ),
-  );
-  const coachIds = new Set(
-    (projectData?.coaches || []).map((coach: any) =>
-      String(coach.userId?._id || coach.userId),
-    ),
-  );
-  const availableEmployees = !isAddingToProject
-    ? initialData.data
-    : initialData.data.filter((employee) =>
-        isAddingCoach
-          ? !teamMemberIds.has(employee._id)
-          : !coachIds.has(employee._id),
-      );
+  const availableEmployees = initialData.data;
 
   const handleAddIndividual = () => {
     toast({

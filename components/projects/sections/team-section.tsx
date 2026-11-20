@@ -430,15 +430,7 @@ export const TeamSection: React.FC<TeamSectionProps> = ({
             </div>
             <div className="space-y-6">
               {(() => {
-                const coachIds = new Set(
-                  (projectData.coaches || []).map((coach: any) =>
-                    getNormalizedId(coach.userId),
-                  ),
-                );
-                const eligibleTeamMembers = teamMembers.filter(
-                  (member) =>
-                    !coachIds.has(getNormalizedId(member.userId)),
-                );
+                const eligibleTeamMembers = teamMembers;
                 const membersByUser = new Map<string, TeamMember[]>();
                 eligibleTeamMembers.forEach((member) => {
                   const id = getNormalizedId(member.userId);
