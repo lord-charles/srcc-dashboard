@@ -257,7 +257,10 @@ export const InternalBudget = ({
                     target.disabled = true;
                     setIsSubmitting(true);
                     try {
-                      await submitBudget(budget?._id);
+                      const result = await submitBudget(budget?._id);
+                      if (!result.success) {
+                        throw new Error(result.error);
+                      }
                       toast({
                         title: "Success",
                         description: "Budget submitted for approval",
